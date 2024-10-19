@@ -1,4 +1,20 @@
-PRINT 2
-PRINT 5
-PRINT 69
+MOV l21, 2
+MOV l22, 8
+MOV l20, 1
+MOV l19, 0
+; ADSF
+; ADSF
+
+
+
+
+
+LABEL 5
+MUL l20, l21
+MOV l20, r1
+INC l19
+MOV l19, r1
+CMP l19, l22
+JNE 5
+PRINT l20
 HLT
