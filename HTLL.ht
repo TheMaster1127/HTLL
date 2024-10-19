@@ -6,7 +6,7 @@ str params := GetParams()
 
 if (params = "")
 {
-print("")
+print("Usage:`nHTLL yourFile.htll")
 return
 }
 
