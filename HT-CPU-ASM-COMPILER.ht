@@ -1,0 +1,22 @@
+
+
+func void compiler()
+{
+str params := GetParams()
+
+if (params = "")
+{
+print("")
+return
+}
+
+Loop, Parse, params, `n, `r
+{
+
+}
+
+}
+
+main
+compiler()
+

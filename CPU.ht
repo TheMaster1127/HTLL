@@ -1,0 +1,790 @@
+str MOVinB := "00000"
+str ADDinB := "00001"
+str SUBinB := "00010"
+str MULinB := "00011"
+str DEVinB := "00100"
+str INCinB := "00101"
+str DECinB := "00110"
+str LABELinB := "00111"
+str JMPinB := "01000"
+str CMPinB := "01001"
+str JEinB := "01010"
+str JNEinB := "01011"
+str JMinB := "01100"
+str JLinB := "01101"
+str JEMinB := "01110"
+str JELinB := "01111"
+str LOADinB := "10000"
+str DRAWXinB := "10001"
+str DRAWYinB := "10010"
+str DRAWinB := "10011"
+str PRINTinB := "10100"
+str PRINTSinB := "10101"
+str MODinB := "10110"
+str HLTinB := "10111"
+str XXX1inB := "11000"
+str XXX2inB := "11001"
+str XXX3inB := "11010"
+str XXX4inB := "11011"
+str XXX5inB := "11100"
+str XXX6inB := "11101"
+str XXX7inB := "11110"
+str XXX8inB := "11111"
+
+str str1 := ""
+str str2 := ""
+str str3 := ""
+str str4 := ""
+str str5 := ""
+str str6 := ""
+str str7 := ""
+str str8 := ""
+str str9 := ""
+str str10 := ""
+
+func str getStringPosChar(str TheString, int pos)
+{
+Loop, Parse, TheString
+{
+if (pos = A_Index + 1)
+{
+return A_LoopField
+}
+}
+return ""
+}
+
+func int powerOf(int base, int exp)
+{
+    int res := 1
+    Loop, % exp
+    {
+        res *= base
+    }
+    return res
+}
+
+func int binToDec(str binaryString)
+{
+    int decimalValue := 0
+    int length := StrLen(binaryString)  ; Get the length of the binary string
+
+    Loop, Parse, binaryString
+    {
+        str char123 := A_LoopField  ; Get the current character (0 or 1)
+
+        if (char123 = "1")  ; If the character is '1'
+        {
+            decimalValue += powerOf(2, length - A_Index - 1)  ; Use zero-based indexing and calculate contribution
+        }
+    }
+
+    return decimalValue
+}
+
+
+func str padBinary(str binaryString, int length)
+{
+    while (StrLen(binaryString) < length)
+    {
+        binaryString := "0" . binaryString  ; Prepend '0' until it reaches the desired length
+    }
+    return binaryString
+}
+
+func str printBinary(int num, int totalBits)
+{
+    str binaryString := ""
+    int remainder := 0
+    while (num > 0)
+    {
+        remainder := Mod(num, 2)  ; Using the built-in Mod() function
+        binaryString := STR(remainder) . binaryString
+        num := Floor(num / 2)
+    }
+
+    if (binaryString = "")
+    {
+        binaryString := "0"
+    }
+
+    binaryString := padBinary(binaryString, totalBits)  ; Pad the binary string to the desired length
+    return binaryString
+}
+
+func str decodeToBinary(str theCode)
+{
+str outInB := ""
+
+if (InStr(theCode, "r")) or (InStr(theCode, "l"))
+{
+outInB .= "1" 
+StringTrimLeft, theCode, theCode, 1
+}
+else
+{
+outInB .= "0" 
+}
+
+arr str BinaryRepresentation
+
+Loop, % powerOf(2, 11)
+{
+BinaryRepresentation.add(printBinary(A_Index, 11))
+}
+
+
+int indexOfARR := INT(theCode)
+
+outInB .= BinaryRepresentation[indexOfARR]
+
+return outInB
+}
+
+func str compiler(str code)
+{
+str outCodeInBinaryFIX := ""
+str outCodeInBinary := ""
+
+Loop, Parse, code, `n, `r
+{
+outCodeInBinaryFIX .= Trim(StrSplit(A_LoopField, ";", 1)) . "`n"
+}
+StringTrimRight, code, outCodeInBinaryFIX, 1
+
+
+Loop, Parse, code, `n, `r
+{
+if (SubStr(A_LoopField, 1, 1) = ";")
+{
+outCodeInBinary .= ""
+}
+else if (SubStr(A_LoopField, 1, 4) = "MOV ")
+{
+    StringTrimLeft, str1, A_LoopField, 4
+    str2 := Trim(StrSplit(str1, ",", 2))
+    outCodeInBinary .= MOVinB . " " . decodeToBinary(str1) . " " . decodeToBinary(str2) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 4) = "ADD ")
+{
+    StringTrimLeft, str1, A_LoopField, 4
+    str2 := Trim(StrSplit(str1, ",", 2))
+    outCodeInBinary .= ADDinB . " " . decodeToBinary(str1) . " " . decodeToBinary(str2) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 4) = "SUB ")
+{
+    StringTrimLeft, str1, A_LoopField, 4
+    str2 := Trim(StrSplit(str1, ",", 2))
+    outCodeInBinary .= SUBinB . " " . decodeToBinary(str1) . " " . decodeToBinary(str2) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 4) = "MUL ")
+{
+    StringTrimLeft, str1, A_LoopField, 4
+    str2 := Trim(StrSplit(str1, ",", 2))
+    outCodeInBinary .= MULinB . " " . decodeToBinary(str1) . " " . decodeToBinary(str2) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 4) = "DEV ")
+{
+    StringTrimLeft, str1, A_LoopField, 4
+    str2 := Trim(StrSplit(str1, ",", 2))
+    outCodeInBinary .= DEVinB . " " . decodeToBinary(str1) . " " . decodeToBinary(str2) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 4) = "INC ")
+{
+    StringTrimLeft, str1, A_LoopField, 4
+    outCodeInBinary .= INCinB . " " . decodeToBinary(str1) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 4) = "DEC ")
+{
+    StringTrimLeft, str1, A_LoopField, 4
+    outCodeInBinary .= DECinB . " " . decodeToBinary(str1) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 6) = "LABEL ")
+{
+    StringTrimLeft, str1, A_LoopField, 6
+    outCodeInBinary .= LABELinB . " " . decodeToBinary(str1) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 4) = "JMP ")
+{
+    StringTrimLeft, str1, A_LoopField, 4
+    outCodeInBinary .= JMPinB . " " . decodeToBinary(str1) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 4) = "CMP ")
+{
+    StringTrimLeft, str1, A_LoopField, 4
+    str2 := Trim(StrSplit(str1, ",", 2))
+    outCodeInBinary .= CMPinB . " " . decodeToBinary(str1) . " " . decodeToBinary(str2) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 3) = "JE ")
+{
+    StringTrimLeft, str1, A_LoopField, 3
+    outCodeInBinary .= JEinB . " " . decodeToBinary(str1) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 4) = "JNE ")
+{
+    StringTrimLeft, str1, A_LoopField, 4
+    outCodeInBinary .= JNEinB . " " . decodeToBinary(str1) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 3) = "JM ")
+{
+    StringTrimLeft, str1, A_LoopField, 3
+    outCodeInBinary .= JMinB . " " . decodeToBinary(str1) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 3) = "JL ")
+{
+    StringTrimLeft, str1, A_LoopField, 3
+    outCodeInBinary .= JLinB . " " . decodeToBinary(str1) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 4) = "JEM ")
+{
+    StringTrimLeft, str1, A_LoopField, 4
+    outCodeInBinary .= JEMinB . " " . decodeToBinary(str1) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 4) = "JEL ")
+{
+    StringTrimLeft, str1, A_LoopField, 4
+    outCodeInBinary .= JELinB . " " . decodeToBinary(str1) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 5) = "LOAD ")
+{
+    StringTrimLeft, str1, A_LoopField, 5
+    str2 := Trim(StrSplit(str1, ",", 2))
+    outCodeInBinary .= LOADinB . " " . decodeToBinary(str1) . " " . decodeToBinary(str2) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 6) = "DRAWX ")
+{
+    StringTrimLeft, str1, A_LoopField, 6
+    outCodeInBinary .= DRAWXinB . " " . decodeToBinary(str1) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 6) = "DRAWY ")
+{
+    StringTrimLeft, str1, A_LoopField, 6
+    outCodeInBinary .= DRAWYinB . " " . decodeToBinary(str1) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 5) = "DRAW ")
+{
+    StringTrimLeft, str1, A_LoopField, 5
+    outCodeInBinary .= DRAWinB . " " . decodeToBinary(str1) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 6) = "PRINT ")
+{
+    StringTrimLeft, str1, A_LoopField, 6
+    outCodeInBinary .= PRINTinB . " " . decodeToBinary(str1) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 7) = "PRINTS ")
+{
+    StringTrimLeft, str1, A_LoopField, 7
+    outCodeInBinary .= PRINTSinB . " " . decodeToBinary(str1) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 4) = "MOD ")
+{
+    StringTrimLeft, str1, A_LoopField, 4
+    str2 := Trim(StrSplit(str1, ",", 2))
+    outCodeInBinary .= MODinB . " " . decodeToBinary(str1) . " " . decodeToBinary(str2) . "`n"
+}
+else if (SubStr(A_LoopField, 1, 3) = "HLT")
+{
+    StringTrimLeft, str1, A_LoopField, 3
+    outCodeInBinary .= HLTinB . "`n"  ; No additional arguments needed for HLT
+}
+
+
+
+}
+
+StringTrimRight, outCodeInBinary, outCodeInBinary, 1
+return outCodeInBinary
+}
+
+; how my asm will look like
+'''1
+MOV r1, 2
+MOV r2, 3
+ADD r1, r2
+; 17 since 1-16 is resereved for the registors
+MOV l17, r1
+PRINT l17
+'''2
+
+arr int memLoc
+int PC := 0
+bool halted := false
+
+func void ALU(str in1, str in2, str instruction)
+{
+int temp1 := 0
+int temp2 := 0
+
+if (SubStr(in1, 1, 1) = "1")
+{
+StringTrimLeft, in1, in1, 1
+temp1 := memLoc[binToDec(in1)]
+}
+else
+{
+StringTrimLeft, in1, in1, 1
+temp1 := binToDec(in1)
+}
+
+if (SubStr(in2, 1, 1) = "1")
+{
+StringTrimLeft, in2, in2, 1
+temp2 := memLoc[binToDec(in2)]
+}
+else
+{
+StringTrimLeft, in2, in2, 1
+temp2 := binToDec(in2)
+}
+
+
+int r1 := temp1
+int r2 := temp2
+
+if (instruction = "00001")
+{
+r1 := r1 + r2
+}
+if (instruction = "00010")
+{
+r1 := r1 - r2
+}
+if (instruction = "00011")
+{
+r1 := r1 * r2
+}
+if (instruction = "00100")
+{
+r1 := r1 / r2
+}
+if (instruction = "00101")
+{
+r1 := r1 + 1
+}
+if (instruction = "00100")
+{
+r1 := r1 - 1
+}
+
+memLoc[1] := r1
+}
+
+func void PRINTinst(str in1)
+{
+int temp1 := 0
+int temp2 := 0
+bool readFrom1 := false
+
+if (SubStr(in1, 1, 1) = "1")
+{
+StringTrimLeft, in1, in1, 1
+readFrom1 := true
+temp1 := binToDec(in1)
+}
+else
+{
+StringTrimLeft, in1, in1, 1
+readFrom1 := false
+temp1 := binToDec(in1)
+}
+
+
+if (readFrom1)
+{
+temp2 := memLoc[temp1]
+}
+else
+{
+temp2 := temp1
+}
+
+print(temp2)
+}
+
+func void PRINTSinst(str in1)
+{
+
+int temp1 := 0
+int temp2 := 0
+bool readFrom1 := false
+
+if (SubStr(in1, 1, 1) = "1")
+{
+StringTrimLeft, in1, in1, 1
+readFrom1 := true
+temp1 := binToDec(in1)
+}
+else
+{
+StringTrimLeft, in1, in1, 1
+readFrom1 := false
+temp1 := binToDec(in1)
+}
+
+
+if (readFrom1)
+{
+temp2 := memLoc[temp1]
+}
+else
+{
+temp2 := temp1
+}
+
+print(Chr(temp2))
+}
+
+func void MOVinst(str in1, str in2)
+{
+
+bool readFrom2 := false
+
+int temp1 := 0
+int temp2 := 0
+
+if (SubStr(in1, 1, 1) = "1")
+{
+StringTrimLeft, in1, in1, 1
+temp1 := binToDec(in1)
+}
+
+
+if (SubStr(in2, 1, 1) = "1")
+{
+StringTrimLeft, in2, in2, 1
+readFrom2 := true
+temp2 := binToDec(in2)
+}
+else
+{
+StringTrimLeft, in2, in2, 1
+readFrom2 := false
+temp2 := binToDec(in2)
+}
+
+int temp3 := 0
+
+if (readFrom2)
+{
+temp3 := memLoc[temp2]
+}
+else
+{
+temp3 := temp2
+}
+
+memLoc[temp1] := temp3
+}
+
+func void LOADinst(str in1, str in2)
+{
+
+int temp1 := 0
+int temp2 := 0
+
+if (SubStr(in1, 1, 1) = "1")
+{
+StringTrimLeft, in1, in1, 1
+temp1 := binToDec(in1)
+}
+
+if (SubStr(in2, 1, 1) = "1")
+{
+StringTrimLeft, in2, in2, 1
+temp2 := binToDec(in2)
+}
+else
+{
+StringTrimLeft, in2, in2, 1
+temp2 := binToDec(in2)
+}
+
+memLoc[temp1] := memLoc[temp2] 
+}
+
+func void CMPinst(str in1, str in2)
+{
+
+int temp1 := 0
+int temp2 := 0
+
+if (SubStr(in1, 1, 1) = "1")
+{
+StringTrimLeft, in1, in1, 1
+temp1 := memLoc[binToDec(in1)]
+}
+else
+{
+StringTrimLeft, in1, in1, 1
+temp1 := binToDec(in1)
+}
+
+if (SubStr(in2, 1, 1) = "1")
+{
+StringTrimLeft, in2, in2, 1
+temp2 := memLoc[binToDec(in2)]
+}
+else
+{
+StringTrimLeft, in2, in2, 1
+temp2 := binToDec(in2)
+}
+
+; Clear all comparison flags
+memLoc[2] := 0  ; Equal
+memLoc[3] := 0  ; Not Equal
+memLoc[4] := 0  ; Greater Than
+memLoc[5] := 0  ; Less Than
+memLoc[6] := 0  ; Greater or Equal
+memLoc[7] := 0  ; Less or Equal
+
+
+if (temp1 = temp2)
+{
+memLoc[2] := 1
+}
+else
+{
+memLoc[2] := 0
+}
+
+if (temp1 != temp2)
+{
+memLoc[3] := 1
+}
+else
+{
+memLoc[3] := 0
+}
+
+if (temp1 > temp2)
+{
+memLoc[4] := 1
+}
+else
+{
+memLoc[4] := 0
+}
+
+if (temp1 < temp2)
+{
+memLoc[5] := 1
+}
+else
+{
+memLoc[5] := 0
+}
+
+if (temp1 >= temp2)
+{
+memLoc[6] := 1
+}
+else
+{
+memLoc[6] := 0
+}
+
+if (temp1 <= temp2)
+{
+memLoc[7] := 1
+}
+else
+{
+memLoc[7] := 0
+}
+
+}
+
+func void JEinst(str in1)
+{
+if (memLoc[2] = 1)
+{
+PC := binToDec(in1) - 1
+}
+}
+func void JNEinst(str in1)
+{
+if (memLoc[3] = 1)
+{
+PC := binToDec(in1) - 1
+}
+}
+func void JMinst(str in1)
+{
+if (memLoc[4] = 1)
+{
+PC := binToDec(in1) - 1
+}
+}
+func void JLinst(str in1)
+{
+if (memLoc[5] = 1)
+{
+PC := binToDec(in1) - 1
+}
+}
+func void JEMinst(str in1)
+{
+if (memLoc[6] = 1)
+{
+PC := binToDec(in1) - 1
+}
+}
+func void JELinst(str in1)
+{
+if (memLoc[7] = 1)
+{
+PC := binToDec(in1) - 1
+}
+}
+
+func void JMPinst(str in1)
+{
+PC := binToDec(in1) - 1
+}
+
+func void decoder(str instrunction)
+{
+str1 := ""
+str2 := ""
+str3 := ""
+
+str1 := StrSplit(instrunction, " ", 1)
+str2 := StrSplit(instrunction, " ", 2)
+str3 := StrSplit(instrunction, " ", 3)
+
+if (str1 = "10111")
+{
+halted := true
+}
+
+if (str1 = "00000")
+{
+MOVinst(str2, str3)
+}
+
+if (str1 = "10100")
+{
+PRINTinst(str2)
+}
+
+if (str1 = "10101")
+{
+PRINTSinst(str2)
+}
+
+if (str1 = "00001")
+{
+ALU(str2, str3, str1)
+}
+if (str1 = "00010")
+{
+ALU(str2, str3, str1)
+}
+if (str1 = "00011")
+{
+ALU(str2, str3, str1)
+}
+if (str1 = "00100")
+{
+ALU(str2, str3, str1)
+}
+if (str1 = "00101")
+{
+ALU(str2, str3, str1)
+}
+if (str1 = "00110")
+{
+ALU(str2, str3, str1)
+}
+
+if (str1 = "10000")
+{
+LOADinst(str2, str3)
+}
+
+if (str1 = "01001")
+{
+CMPinst(str2, str3)
+}
+if (str1 = "01000")
+{
+JMPinst(str2)
+}
+
+if (str1 = "01010")
+{
+JEinst(str2)
+}
+if (str1 = "01011")
+{
+JNEinst(str2)
+}
+if (str1 = "01100")
+{
+JMinst(str2)
+}
+if (str1 = "01101")
+{
+JLinst(str2)
+}
+if (str1 = "01110")
+{
+JEMinst(str2)
+}
+if (str1 = "01111")
+{
+JELinst(str2)
+}
+
+}
+
+
+func void executeInst(str allInst, int thePC)
+{
+Loop, Parse, allInst, `n, `r
+{
+if (A_Index = thePC)
+{
+decoder(A_LoopField)
+PC++
+break
+}
+}
+
+}
+
+func void cpu()
+{
+Loop, 2048
+{
+memLoc.add(0)
+}
+
+str BinaryInstructions := ""
+
+;print(compiler("MOV r3, 6`nMOV r4, 5`nADD r3, r4"))
+;BinaryInstructions := compiler("MOV r3, 6`nMOV r4, 5`nADD r3, r4`nPRINT r1`nHLT")
+;BinaryInstructions := compiler("MOV l17, 64`nLABEL 2`nINC l17`nMOV l17, r1`nPRINTS r1`nCMP r1, 70`nJNE 2`nHLT")
+;BinaryInstructions := compiler("MOV l21, 2`nMOV l22, 8`nMOV l20, 1`nMOV l19, 0`nLABEL 5`nMUL l20, l21`nMOV l20, r1`nINC l19`nMOV l19, r1`nCMP l19, l22`nJNE 5`nPRINT l20`nHLT")
+BinaryInstructions := compiler("MOV l30, 69`nMOV l21, l30`nLOAD l50, l21`nPRINT l50`nHLT")
+print(BinaryInstructions)
+int limitIndexDebug := 0
+while (!halted)
+{
+limitIndexDebug++
+if (limitIndexDebug > 2048)
+{
+print("it never halted")
+break
+}
+executeInst(BinaryInstructions, PC)
+
+}
+
+
+}
+
+main
+cpu()
+
