@@ -754,7 +754,7 @@ break
 
 }
 
-func void cpu()
+func void cpu(str htasm)
 {
 Loop, 2048
 {
@@ -767,7 +767,8 @@ str BinaryInstructions := ""
 ;BinaryInstructions := compiler("MOV r3, 6`nMOV r4, 5`nADD r3, r4`nPRINT r1`nHLT")
 ;BinaryInstructions := compiler("MOV l17, 64`nLABEL 2`nINC l17`nMOV l17, r1`nPRINTS r1`nCMP r1, 70`nJNE 2`nHLT")
 ;BinaryInstructions := compiler("MOV l21, 2`nMOV l22, 8`nMOV l20, 1`nMOV l19, 0`nLABEL 5`nMUL l20, l21`nMOV l20, r1`nINC l19`nMOV l19, r1`nCMP l19, l22`nJNE 5`nPRINT l20`nHLT")
-BinaryInstructions := compiler("MOV l30, 69`nMOV l21, l30`nLOAD l50, l21`nPRINT l50`nHLT")
+;BinaryInstructions := compiler("MOV l30, 69`nMOV l21, l30`nLOAD l50, l21`nPRINT l50`nHLT")
+BinaryInstructions := compiler(htasm)
 print(BinaryInstructions)
 int limitIndexDebug := 0
 while (!halted)
@@ -786,5 +787,15 @@ executeInst(BinaryInstructions, PC)
 }
 
 main
-cpu()
+str params := GetParams()
+
+if (params = "")
+{
+print("Usage:`nCPU-ASM-EMULATOR yourFile.htasm")
+ExitApp()
+}
+
+str ASMcode := FileRead(Trim(params))
+cpu(ASMcode)
+
 
