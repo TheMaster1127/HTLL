@@ -164,6 +164,16 @@ std::string Trim(const std::string &inputString) {
     return (start == std::string::npos) ? "" : inputString.substr(start, end - start + 1);
 }
 
+std::string StrReplace(const std::string &originalString, const std::string &find, const std::string &replaceWith) {
+    std::string result = originalString;
+    size_t pos = 0;
+    while ((pos = result.find(find, pos)) != std::string::npos) {
+        result.replace(pos, find.length(), replaceWith);
+        pos += replaceWith.length();
+    }
+    return result;
+}
+
 std::string StringTrimLeft(const std::string &input, int numChars) {
     return (numChars <= input.length()) ? input.substr(numChars) : input;
 }
@@ -683,7 +693,15 @@ void JELinst(std::string in1) {
     }
 }
 void JMPinst(std::string in1) {
-    PC = binToDec(in1) - 1;
+    int temp1 = 0;
+    if (SubStr(in1, 1, 1) == "1") {
+        in1 = StringTrimLeft(in1, 1);
+        temp1 = memLoc[binToDec(in1)];
+    } else {
+        in1 = StringTrimLeft(in1, 1);
+        temp1 = binToDec(in1);
+    }
+    PC = temp1 - 1;
 }
 void decoder(std::string instrunction) {
     str1 = "";
@@ -790,6 +808,7 @@ int main(int argc, char* argv[]) {
         ExitApp();
     }
     std::string ASMcode = FileRead(Trim(params));
+    ASMcode = StrReplace(ASMcode, Chr(13), "");
     cpu(ASMcode);
     return 0;
 }

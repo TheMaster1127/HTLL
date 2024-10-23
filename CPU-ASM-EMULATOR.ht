@@ -640,7 +640,22 @@ PC := binToDec(in1) - 1
 
 func void JMPinst(str in1)
 {
-PC := binToDec(in1) - 1
+
+
+int temp1 := 0
+
+if (SubStr(in1, 1, 1) = "1")
+{
+StringTrimLeft, in1, in1, 1
+temp1 := memLoc[binToDec(in1)]
+}
+else
+{
+StringTrimLeft, in1, in1, 1
+temp1 := binToDec(in1)
+}
+
+PC := temp1 - 1
 }
 
 func void decoder(str instrunction)
@@ -796,6 +811,8 @@ ExitApp()
 }
 
 str ASMcode := FileRead(Trim(params))
+ASMcode := StrReplace(ASMcode, Chr(13), "")
+
 cpu(ASMcode)
 
 

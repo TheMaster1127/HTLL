@@ -1,4 +1,137 @@
 
+; global vars
+arr str allVars
+int varsDecNum := 16
+int labelNum := 1
+
+func bool isNum(str theString)
+{
+
+bool isNum := false
+
+int countNums := 0
+int countNums2 := 0
+Loop, Parse, theString
+{
+countNums++
+}
+
+Loop, Parse, theString
+{
+if (A_LoopField = "0") or (A_LoopField = "1") or (A_LoopField = "2") or (A_LoopField = "3") or (A_LoopField = "4") or (A_LoopField = "5") or (A_LoopField = "6") or (A_LoopField = "7") or (A_LoopField = "8") or (A_LoopField = "9")
+{
+countNums2++
+}
+}
+
+if (countNums = countNums2)
+{
+isNum := true
+}
+
+return isNum
+}
+
+func str getMemLocFromVarName(str varName)
+{
+
+Loop, % allVars.size()
+{
+if (Trim(allVars[A_Index]) = Trim(varName))
+{
+return STR(A_Index + 17)
+}
+}
+
+return "0"
+}
+
+
+
+func str expresionCompiler(str TheExpresion)
+{
+TheExpresion := Trim(TheExpresion)
+
+if (!(InStr(TheExpresion, " ")))
+{
+return "false"
+}
+
+str expresionOut := ""
+if (isNum(StrSplit(TheExpresion, " ", 1)))
+{
+expresionOut := "MOV r1, " . StrSplit(TheExpresion, " ", 1)
+}
+else
+{
+expresionOut := "MOV r1, l" . getMemLocFromVarName(StrSplit(TheExpresion, " ", 1))
+}
+
+
+arr str TheExpresionARR
+
+Loop, Parse, TheExpresion, " "
+{
+TheExpresionARR.add(A_LoopField)
+}
+
+int onceFixLoopExpresion := 0
+
+Loop, Parse, TheExpresion, " "
+{
+if (A_LoopField != "+") and (A_LoopField != "-") and (A_LoopField != "*")
+{
+onceFixLoopExpresion++
+if (onceFixLoopExpresion != 1)
+{
+if (TheExpresionARR[A_Index - 1] = "+")
+{
+
+if (isNum(A_LoopField))
+{
+expresionOut .= "`nADD r1, " . A_LoopField
+}
+else
+{
+expresionOut .= "`nADD r1, l" . getMemLocFromVarName(A_LoopField)
+}
+
+}
+if (TheExpresionARR[A_Index - 1] = "-")
+{
+
+if (isNum(A_LoopField))
+{
+expresionOut .= "`nSUB r1, " . A_LoopField
+}
+else
+{
+expresionOut .= "`nSUB r1, l" . getMemLocFromVarName(A_LoopField)
+}
+
+}
+if (TheExpresionARR[A_Index - 1] = "*")
+{
+
+if (isNum(A_LoopField))
+{
+expresionOut .= "`nMUL r1, " . A_LoopField
+}
+else
+{
+expresionOut .= "`nMUL r1, l" . getMemLocFromVarName(A_LoopField)
+}
+
+
+}
+
+}
+}
+
+}
+
+return expresionOut
+}
 
 func void compiler()
 {
@@ -21,7 +154,7 @@ StringTrimRight, fileNameASM, fileName, 4
 
 fileNameASM := fileNameASM . "htasm"
 
-
+HTLLcode := StrReplace(HTLLcode, Chr(13), "")
 
 str str1 := ""
 str str2 := ""
@@ -36,11 +169,31 @@ str str10 := ""
 
 str HTLLout := ""
 str HTLLoutFix := ""
+
+arr str holdNextLines
+
 Loop, Parse, HTLLcode, `n, `r
 {
 HTLLoutFix .= Trim(A_LoopField) . "`n"
+holdNextLines.add(Trim(A_LoopField))
 }
 StringTrimRight, HTLLcode, HTLLoutFix, 1
+
+
+str lastIfStatement := ""
+str lastIfStatementType := ""
+int curlyBracesDepth := 1
+arr str curlyBracesHold
+curlyBracesHold.add("")
+arr str lastIfHold
+arr str lastIfHoldType
+lastIfHold.add("")
+lastIfHoldType.add("")
+int loopNum := 0
+int funcNum := 0
+arr str allFuncs
+int funcCallNum := 0
+
 
 Loop, Parse, HTLLcode, `n, `r
 {
@@ -48,10 +201,467 @@ if (SubStr(A_LoopField, 1, 6) = "print(")
 {
 StringTrimLeft, str1, A_LoopField, 6
 StringTrimRight, str1, str1, 1
+
+if (expresionCompiler(str1) = "false")
+{
+
+
+if (isNum(str1))
+{
 HTLLout .= "PRINT " . str1 . "`n"
 }
+else
+{
+HTLLout .= "PRINT l" . getMemLocFromVarName(str1) . "`n"
+}
+
+}
+else
+{
+HTLLout .= expresionCompiler(str1) . "`nPRINT r1`n"
+}
+
+
+}
+else if (SubStr(A_LoopField, 1, 7) = "prints(")
+{
+StringTrimLeft, str1, A_LoopField, 7
+StringTrimRight, str1, str1, 1
+
+if (expresionCompiler(str1) = "false")
+{
+
+
+if (isNum(str1))
+{
+HTLLout .= "PRINTS " . str1 . "`n"
+}
+else
+{
+HTLLout .= "PRINTS l" . getMemLocFromVarName(str1) . "`n"
+}
+
+}
+else
+{
+HTLLout .= expresionCompiler(str1) . "`nPRINTS r1`n"
+}
+
+
+}
+else if (InStr(A_LoopField, " := ")) && (SubStr(StrLower(A_LoopField), 1, 6) != "loop, ")
+{
+str1 := StrSplit(A_LoopField, " := ", 1)
+
+if (getMemLocFromVarName(str1) = "0")
+{
+varsDecNum++
+allVars.add(str1)
+}
+
+str2 := StrSplit(A_LoopField, " := ", 2)
+
+if (expresionCompiler(str2) != "false")
+{
+
+str5 := expresionCompiler(str2)
+
+if (getMemLocFromVarName(str1) = "0")
+{
+str4 := str5 . "`nMOV l" . STR(varsDecNum) . ", r1"
+}
+else
+{
+str4 := str5 . "`nMOV l" . getMemLocFromVarName(str1) . ", r1"
+}
+
+
+
+}
+else
+{
+
+if (isNum(str2))
+{
+str3 := str2
+}
+else
+{
+str3 := "l" . getMemLocFromVarName(str2)
+}
+
+
+if (getMemLocFromVarName(str1) = "0")
+{
+str4 := "MOV l" . STR(varsDecNum) . ", " . str3
+}
+else
+{
+str4 := "MOV l" . getMemLocFromVarName(str1) . ", " . str3
+}
+
+
+
+}
+HTLLout .= str4 . "`n"
+
+
+
+
+
+}
+else if (SubStr(A_LoopField, 1, 3) = "if ") && (InStr(A_LoopField, " = "))
+{
+curlyBracesDepth++
+StringTrimLeft, str1, A_LoopField, 3
+str1 := StrReplace(str1, "(", "")
+str1 := StrReplace(str1, ")", "")
+
+str2 := Trim(StrSplit(str1, "=", 1))
+str3 := Trim(StrSplit(str1, "=", 2))
+lastIfStatementType := "="
+if (isNum(str3))
+{
+str4 := "CMP l" . getMemLocFromVarName(str2) . ", " . str3 . "`nJNE " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_"
+lastIfStatement := "CMP l" . getMemLocFromVarName(str2) . ", " . str3
+}
+else
+{
+str4 := "CMP l" . getMemLocFromVarName(str2) . ", l" . getMemLocFromVarName(str3) . "`nJNE " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_"
+lastIfStatement := "CMP l" . getMemLocFromVarName(str2) . ", l" . getMemLocFromVarName(str3)
+}
+
+lastIfHold.add(lastIfStatement)
+lastIfHoldType.add(lastIfStatementType)
+
+curlyBracesHold.add(STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_")
+HTLLout .= str4 . "`n"
+}
+else if (SubStr(A_LoopField, 1, 3) = "if ") && (InStr(A_LoopField, " != "))
+{
+curlyBracesDepth++
+StringTrimLeft, str1, A_LoopField, 3
+str1 := StrReplace(str1, "(", "")
+str1 := StrReplace(str1, ")", "")
+
+str2 := Trim(StrSplit(str1, "!=", 1))
+str3 := Trim(StrSplit(str1, "!=", 2))
+lastIfStatementType := "!="
+if (isNum(str3))
+{
+str4 := "CMP l" . getMemLocFromVarName(str2) . ", " . str3 . "`nJE " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_"
+lastIfStatement := "CMP l" . getMemLocFromVarName(str2) . ", " . str3
+}
+else
+{
+str4 := "CMP l" . getMemLocFromVarName(str2) . ", l" . getMemLocFromVarName(str3) . "`nJE " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_"
+lastIfStatement := "CMP l" . getMemLocFromVarName(str2) . ", l" . getMemLocFromVarName(str3)
+}
+lastIfHold.add(lastIfStatement)
+lastIfHoldType.add(lastIfStatementType)
+curlyBracesHold.add(STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_")
+HTLLout .= str4 . "`n"
+}
+else if (StrLower(Trim(A_LoopField)) = "else")
+{
+curlyBracesDepth++
+
+
+str8 := lastIfHoldType[lastIfHoldType.size() - 1]
+str9 := lastIfHold[lastIfHold.size() - 1]
+
+
+if (str8 = "=")
+{
+HTLLout .= str9 . "`nJE " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_`n"
+}
+if (str8 = "!=")
+{
+HTLLout .= str9 . "`nJNE " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_`n"
+}
+curlyBracesHold.add(STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_")
+
+lastIfHoldType.pop()
+lastIfHold.pop()
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+}
+else if (SubStr(StrLower(A_LoopField), 1, 6) = "loop, ")
+{
+curlyBracesDepth++
+StringTrimLeft, str1, A_LoopField, 6
+loopNum++
+
+str2 := Trim(StrSplit(str1, ",", 1))
+str6 := Trim(StrSplit(str1, ",", 1))
+str7 := Trim(StrSplit(str1, ",", 2))
+
+
+
+lastIfHold.add("")
+lastIfHoldType.add("")
+
+
+
+
+
+
+
+
+
+
+if (getMemLocFromVarName(StrSplit(str2, " := ", 1)) = "0")
+{
+varsDecNum++
+allVars.add(StrSplit(str2, " := ", 1))
+}
+
+str3 := StrSplit(str2, " := ", 2)
+
+if (expresionCompiler(str3) != "false")
+{
+
+str5 := expresionCompiler(str3)
+
+if (getMemLocFromVarName(str2) = "0")
+{
+str4 := str5 . "`nMOV l" . STR(varsDecNum) . ", r1"
+}
+else
+{
+str4 := str5 . "`nMOV l" . getMemLocFromVarName(str2) . ", r1"
+}
+
+
+
+}
+else
+{
+
+if (isNum(str3))
+{
+str5 := str3
+}
+else
+{
+str5 := "l" . getMemLocFromVarName(str3)
+}
+
+
+if (getMemLocFromVarName(str2) = "0")
+{
+str4 := "MOV l" . STR(varsDecNum) . ", " . str5
+}
+else
+{
+str4 := "MOV l" . getMemLocFromVarName(str2) . ", " . str5
+}
+
+
+
+}
+HTLLout .= str4 . "`n"
+
+HTLLout .= "LABEL loop_" . STR(loopNum) . "`n"
+; loopNum | count | indexNameVar
+curlyBracesHold.add(STR(loopNum) . "|" . Trim(StrSplit(str6, " := ", 1)) . "|" . str7)
+}
+else if (Trim(A_LoopField) = "break")
+{
+Loop
+{
+str8 := STR(curlyBracesHold.size())
+str9 := curlyBracesHold[INT(str8) - (A_Index + 1)]
+if (InStr(str9, "|"))
+{
+break
+}
+}
+HTLLout .= "JMP loopexit_" . Trim(StrSplit(str9, "|", 1)) . "`n"
+}
+else if (SubStr(StrLower(A_LoopField), 1, 5) = "func ")
+{
+StringTrimLeft, str1, A_LoopField, 5
+
+funcNum++
+allFuncs.add(str1 . "|" . STR(funcNum))
+lastIfHold.add("")
+lastIfHoldType.add("")
+HTLLout .= "JMP funcClose_" . STR(funcNum) . "`nLABEL funcUp_" . STR(funcNum) . "`n"
+curlyBracesHold.add("~|" . STR(funcNum))
+
+}
+else if (!(SubStr(StrLower(A_LoopField), 1, 5) = "func ")) && (InStr(A_LoopField, "()"))
+{
+str1 := Trim(A_LoopField)
+
+'''1
+MOV r10, 11
+JMP 2
+LABEL 11
+'''2
+
+Loop, % allFuncs.size()
+{
+if (StrSplit(allFuncs[A_Index], "|", 1) = str1)
+{
+str3 := StrSplit(allFuncs[A_Index], "|", 2)
+break
+}
+}
+
+funcCallNum++
+HTLLout .= "MOV r10, funcBack_" . STR(funcCallNum) . "`nJMP funcUp_" . str3 . "`nLABEL funcBack_" . STR(funcCallNum) . "`n"
+}
+else if (A_LoopField = "}")
+{
+if (holdNextLines[A_Index + 1] != "else")
+{
+lastIfHoldType.pop()
+lastIfHold.pop()
+}
+
+str9 := curlyBracesHold[curlyBracesHold.size() - 1]
+if (InStr(str9, "|")) && (!(InStr(str9, "~")))
+{
+; loopNum | count | indexNameVar
+HTLLout .= "INC l" . getMemLocFromVarName(Trim(StrSplit(str9, "|", 2))) . "`nMOV l" . getMemLocFromVarName(Trim(StrSplit(str9, "|", 2))) . ", r1`nCMP l" . getMemLocFromVarName(Trim(StrSplit(str9, "|", 2))) . ", " . Trim(StrSplit(str9, "|", 3)) . "`nJNE loop_" . StrSplit(str9, "|", 1) . "`nLABEL loopexit_" . StrSplit(str9, "|", 1) . "`n"
+}
+else if (InStr(str9, "~"))
+{
+HTLLout .= "JMP r10`nLABEL funcClose_" . Trim(StrSplit(str9, "|", 2)) . "`n"
+}
+else
+{
+HTLLout .= "LABEL _" . str9 . "`n"
+}
+curlyBracesHold.pop()
+curlyBracesDepth--
+labelNum++
+}
+
+
 }
 HTLLout .= "HLT"
+
+; fix labels
+
+str fixLabels := ""
+print(HTLLout)
+Loop, Parse, HTLLout, `n, `r
+{
+if (SubStr(A_LoopField, 1, 6) = "LABEL ")
+{
+
+if (SubStr(A_LoopField, 1, 11) != "LABEL loop_")
+{
+StringTrimLeft, str1, A_LoopField, 6
+
+str1 := Trim(str1)
+
+str2 := StrSplit(str1, "_", 2)
+str1 := Trim(StrSplit(str1, "_", 3))
+if (str2 = "0")
+{
+str2 := "1"
+}
+if (str1 = "0")
+{
+str1 := "1"
+}
+HTLLout := StrReplace(HTLLout, "LABEL _" . str2 . "_" . str1 . "_", "LABEL " .  STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JMP " . str2 . "_" . str1 . "_", "JMP " . STR(A_Index + 1))
+
+HTLLout := StrReplace(HTLLout, "JE " . str2 . "_" . str1 . "_", "JE " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JNE " . str2 . "_" . str1 . "_", "JNE " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JM " . str2 . "_" . str1 . "_", "JM " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JL " . str2 . "_" . str1 . "_", "JL " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JEM " . str2 . "_" . str1 . "_", "JEM " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JEL " . str2 . "_" . str1 . "_", "JEL " . STR(A_Index + 1))
+
+}
+}
+if (SubStr(A_LoopField, 1, 11) = "LABEL loop_")
+{
+StringTrimLeft, str1, A_LoopField, 11
+str1 := Trim(str1)
+
+
+HTLLout := StrReplace(HTLLout, "LABEL loop_" . str1, "LABEL " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JNE loop_" . str1, "JNE " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JL loop_" . str1, "JL " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JM loop_" . str1, "JM " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JEM loop_" . str1, "JEM " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JEL loop_" . str1, "JNL " . STR(A_Index + 1))
+}
+if (SubStr(A_LoopField, 1, 15) = "LABEL loopexit_")
+{
+StringTrimLeft, str1, A_LoopField, 15
+str1 := Trim(str1)
+
+
+HTLLout := StrReplace(HTLLout, "LABEL loopexit_" . str1, "LABEL " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JMP loopexit_" . str1, "JMP " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JNE loopexit_" . str1, "JNE " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JL loopexit_" . str1, "JL " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JM loopexit_" . str1, "JM " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JEM loopexit_" . str1, "JEM " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JEL loopexit_" . str1, "JEL " . STR(A_Index + 1))
+}
+if (SubStr(A_LoopField, 1, 15) = "LABEL funcBack_")
+{
+StringTrimLeft, str1, A_LoopField, 15
+str1 := Trim(str1)
+
+
+HTLLout := StrReplace(HTLLout, "LABEL funcBack_" . str1, "LABEL " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JMP funcBack_" . str1, "JMP " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JNE funcBack_" . str1, "JNE " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JL funcBack_" . str1, "JL " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JM funcBack_" . str1, "JM " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JEM funcBack_" . str1, "JEM " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JEL funcBack_" . str1, "JEL " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "MOV r10, funcBack_" . str1, "MOV r10, " . STR(A_Index + 1))
+
+
+}
+if (SubStr(A_LoopField, 1, 13) = "LABEL funcUp_")
+{
+StringTrimLeft, str1, A_LoopField, 13
+str1 := Trim(str1)
+
+
+HTLLout := StrReplace(HTLLout, "LABEL funcUp_" . str1, "LABEL " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JMP funcUp_" . str1, "JMP " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JNE funcUp_" . str1, "JNE " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JL funcUp_" . str1, "JL " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JM funcUp_" . str1, "JM " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JEM funcUp_" . str1, "JEM " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JEL funcUp_" . str1, "JEL " . STR(A_Index + 1))
+}
+if (SubStr(A_LoopField, 1, 16) = "LABEL funcClose_")
+{
+StringTrimLeft, str1, A_LoopField, 16
+str1 := Trim(str1)
+
+
+HTLLout := StrReplace(HTLLout, "LABEL funcClose_" . str1, "LABEL " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JMP funcClose_" . str1, "JMP " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JNE funcClose_" . str1, "JNE " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JL funcClose_" . str1, "JL " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JM funcClose_" . str1, "JM " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JEM funcClose_" . str1, "JEM " . STR(A_Index + 1))
+HTLLout := StrReplace(HTLLout, "JEL funcClose_" . str1, "JEL " . STR(A_Index + 1))
+}
+
+
+
+
+
+}
+
 print(HTLLout)
 FileDelete(Trim(fileNameASM))
 FileAppend(HTLLout, Trim(fileNameASM))
