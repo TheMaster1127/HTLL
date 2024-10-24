@@ -248,7 +248,6 @@ std::string MOVinB = "00000";
 std::string ADDinB = "00001";
 std::string SUBinB = "00010";
 std::string MULinB = "00011";
-std::string DEVinB = "00100";
 std::string INCinB = "00101";
 std::string DECinB = "00110";
 std::string LABELinB = "00111";
@@ -268,14 +267,6 @@ std::string PRINTinB = "10100";
 std::string PRINTSinB = "10101";
 std::string MODinB = "10110";
 std::string HLTinB = "10111";
-std::string XXX1inB = "11000";
-std::string XXX2inB = "11001";
-std::string XXX3inB = "11010";
-std::string XXX4inB = "11011";
-std::string XXX5inB = "11100";
-std::string XXX6inB = "11101";
-std::string XXX7inB = "11110";
-std::string XXX8inB = "11111";
 std::string str1 = "";
 std::string str2 = "";
 std::string str3 = "";
@@ -386,11 +377,6 @@ std::string compiler(std::string code) {
             str1 = StringTrimLeft(A_LoopField6, 4);
             str2 = Trim(StrSplit(str1, ",", 2));
             outCodeInBinary += MULinB + " " + decodeToBinary(str1) + " " + decodeToBinary(str2) + "\n";
-        }
-        else if (SubStr(A_LoopField6, 1, 4) == "DEV ") {
-            str1 = StringTrimLeft(A_LoopField6, 4);
-            str2 = Trim(StrSplit(str1, ",", 2));
-            outCodeInBinary += DEVinB + " " + decodeToBinary(str1) + " " + decodeToBinary(str2) + "\n";
         }
         else if (SubStr(A_LoopField6, 1, 4) == "INC ") {
             str1 = StringTrimLeft(A_LoopField6, 4);
@@ -516,13 +502,10 @@ void ALU(std::string in1, std::string in2, std::string instruction) {
     if (instruction == "00011") {
         r1 = r1 * r2;
     }
-    if (instruction == "00100") {
-        r1 = r1 / r2;
-    }
     if (instruction == "00101") {
         r1 = r1 + 1;
     }
-    if (instruction == "00100") {
+    if (instruction == "00110") {
         r1 = r1 - 1;
     }
     memLoc[1] = r1;
@@ -792,9 +775,6 @@ void decoder(std::string instrunction) {
         ALU(str2, str3, str1);
     }
     if (str1 == "00011") {
-        ALU(str2, str3, str1);
-    }
-    if (str1 == "00100") {
         ALU(str2, str3, str1);
     }
     if (str1 == "00101") {

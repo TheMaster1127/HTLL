@@ -172,6 +172,47 @@ str HTLLoutFix := ""
 
 arr str holdNextLines
 
+str fixRemoveCommenst := ""
+
+Loop, Parse, HTLLcode, `n, `r
+{
+if (InStr(A_LoopField, ";"))
+{
+fixRemoveCommenst .= Trim(StrSplit(A_LoopField, ";", 1)) . "`n"
+}
+else
+{
+fixRemoveCommenst .= Trim(A_LoopField) . "`n"
+}
+}
+
+StringTrimRight, HTLLcode, fixRemoveCommenst, 1
+
+str outCodeFixBraces := ""
+Loop, 2
+{
+outCodeFixBraces := ""
+Loop, Parse, HTLLcode, `n, `r
+{
+if (InStr(Trim(A_LoopField), "{")) && (Trim(A_LoopField) != "{")
+{
+outCodeFixBraces .= Trim(StrReplace(Trim(A_LoopField), "{", "")) . "`n{`n"
+}
+else if (InStr(Trim(A_LoopField), "}")) && (Trim(A_LoopField) != "}")
+{
+outCodeFixBraces .= "}`n" . Trim(StrReplace(Trim(A_LoopField), "}", "")) . "`n"
+}
+else
+{
+outCodeFixBraces .= Trim(A_LoopField) . "`n"
+}
+
+}
+
+StringTrimRight, HTLLcode, outCodeFixBraces, 1
+}
+print(HTLLcode)
+
 Loop, Parse, HTLLcode, `n, `r
 {
 HTLLoutFix .= Trim(A_LoopField) . "`n"
@@ -193,6 +234,7 @@ int loopNum := 0
 int funcNum := 0
 arr str allFuncs
 int funcCallNum := 0
+
 
 
 Loop, Parse, HTLLcode, `n, `r
@@ -310,6 +352,20 @@ HTLLout .= str4 . "`n"
 
 
 }
+else if (InStr(A_LoopField, "++")) && (!(InStr(A_LoopField, " ")))
+{
+str4 := Trim(StrReplace(A_LoopField, "+", ""))
+HTLLout .= "INC l" . getMemLocFromVarName(str4) . "`nMOV l" . getMemLocFromVarName(str4) . ", r1`n"
+}
+else if (InStr(A_LoopField, "--")) && (!(InStr(A_LoopField, " ")))
+{
+str4 := Trim(StrReplace(A_LoopField, "-", ""))
+HTLLout .= "DEC l" . getMemLocFromVarName(str4) . "`nMOV l" . getMemLocFromVarName(str4) . ", r1`n"
+}
+else if (Trim(StrLower(A_LoopField)) = "exitapp()")
+{
+HTLLout .= "HLT`n"
+}
 else if (SubStr(A_LoopField, 1, 3) = "if ") && (InStr(A_LoopField, " = "))
 {
 curlyBracesDepth++
@@ -362,6 +418,106 @@ lastIfHoldType.add(lastIfStatementType)
 curlyBracesHold.add(STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_")
 HTLLout .= str4 . "`n"
 }
+else if (SubStr(A_LoopField, 1, 3) = "if ") && (InStr(A_LoopField, " > "))
+{
+curlyBracesDepth++
+StringTrimLeft, str1, A_LoopField, 3
+str1 := StrReplace(str1, "(", "")
+str1 := StrReplace(str1, ")", "")
+
+str2 := Trim(StrSplit(str1, ">", 1))
+str3 := Trim(StrSplit(str1, ">", 2))
+lastIfStatementType := ">"
+if (isNum(str3))
+{
+str4 := "CMP l" . getMemLocFromVarName(str2) . ", " . str3 . "`nJEL " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_"
+lastIfStatement := "CMP l" . getMemLocFromVarName(str2) . ", " . str3
+}
+else
+{
+str4 := "CMP l" . getMemLocFromVarName(str2) . ", l" . getMemLocFromVarName(str3) . "`nJEL " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_"
+lastIfStatement := "CMP l" . getMemLocFromVarName(str2) . ", l" . getMemLocFromVarName(str3)
+}
+lastIfHold.add(lastIfStatement)
+lastIfHoldType.add(lastIfStatementType)
+curlyBracesHold.add(STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_")
+HTLLout .= str4 . "`n"
+}
+else if (SubStr(A_LoopField, 1, 3) = "if ") && (InStr(A_LoopField, " < "))
+{
+curlyBracesDepth++
+StringTrimLeft, str1, A_LoopField, 3
+str1 := StrReplace(str1, "(", "")
+str1 := StrReplace(str1, ")", "")
+
+str2 := Trim(StrSplit(str1, "<", 1))
+str3 := Trim(StrSplit(str1, "<", 2))
+lastIfStatementType := "<"
+if (isNum(str3))
+{
+str4 := "CMP l" . getMemLocFromVarName(str2) . ", " . str3 . "`nJEM " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_"
+lastIfStatement := "CMP l" . getMemLocFromVarName(str2) . ", " . str3
+}
+else
+{
+str4 := "CMP l" . getMemLocFromVarName(str2) . ", l" . getMemLocFromVarName(str3) . "`nJEM " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_"
+lastIfStatement := "CMP l" . getMemLocFromVarName(str2) . ", l" . getMemLocFromVarName(str3)
+}
+lastIfHold.add(lastIfStatement)
+lastIfHoldType.add(lastIfStatementType)
+curlyBracesHold.add(STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_")
+HTLLout .= str4 . "`n"
+}
+else if (SubStr(A_LoopField, 1, 3) = "if ") && (InStr(A_LoopField, " <= "))
+{
+curlyBracesDepth++
+StringTrimLeft, str1, A_LoopField, 3
+str1 := StrReplace(str1, "(", "")
+str1 := StrReplace(str1, ")", "")
+
+str2 := Trim(StrSplit(str1, "<=", 1))
+str3 := Trim(StrSplit(str1, "<=", 2))
+lastIfStatementType := "<="
+if (isNum(str3))
+{
+str4 := "CMP l" . getMemLocFromVarName(str2) . ", " . str3 . "`nJM " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_"
+lastIfStatement := "CMP l" . getMemLocFromVarName(str2) . ", " . str3
+}
+else
+{
+str4 := "CMP l" . getMemLocFromVarName(str2) . ", l" . getMemLocFromVarName(str3) . "`nJM " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_"
+lastIfStatement := "CMP l" . getMemLocFromVarName(str2) . ", l" . getMemLocFromVarName(str3)
+}
+lastIfHold.add(lastIfStatement)
+lastIfHoldType.add(lastIfStatementType)
+curlyBracesHold.add(STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_")
+HTLLout .= str4 . "`n"
+}
+else if (SubStr(A_LoopField, 1, 3) = "if ") && (InStr(A_LoopField, " >= "))
+{
+curlyBracesDepth++
+StringTrimLeft, str1, A_LoopField, 3
+str1 := StrReplace(str1, "(", "")
+str1 := StrReplace(str1, ")", "")
+
+str2 := Trim(StrSplit(str1, ">=", 1))
+str3 := Trim(StrSplit(str1, ">=", 2))
+lastIfStatementType := ">="
+if (isNum(str3))
+{
+str4 := "CMP l" . getMemLocFromVarName(str2) . ", " . str3 . "`nJL " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_"
+lastIfStatement := "CMP l" . getMemLocFromVarName(str2) . ", " . str3
+}
+else
+{
+str4 := "CMP l" . getMemLocFromVarName(str2) . ", l" . getMemLocFromVarName(str3) . "`nJL " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_"
+lastIfStatement := "CMP l" . getMemLocFromVarName(str2) . ", l" . getMemLocFromVarName(str3)
+}
+lastIfHold.add(lastIfStatement)
+lastIfHoldType.add(lastIfStatementType)
+curlyBracesHold.add(STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_")
+HTLLout .= str4 . "`n"
+}
 else if (StrLower(Trim(A_LoopField)) = "else")
 {
 curlyBracesDepth++
@@ -378,6 +534,23 @@ HTLLout .= str9 . "`nJE " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_
 if (str8 = "!=")
 {
 HTLLout .= str9 . "`nJNE " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_`n"
+}
+
+if (str8 = ">")
+{
+HTLLout .= str9 . "`nJM " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_`n"
+}
+if (str8 = "<")
+{
+HTLLout .= str9 . "`nJL " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_`n"
+}
+if (str8 = ">=")
+{
+HTLLout .= str9 . "`nJEM " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_`n"
+}
+if (str8 = "<=")
+{
+HTLLout .= str9 . "`nJEL " . STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_`n"
 }
 curlyBracesHold.add(STR(curlyBracesDepth - 1) . "_" . STR(labelNum) . "_")
 

@@ -2,7 +2,6 @@ str MOVinB := "00000"
 str ADDinB := "00001"
 str SUBinB := "00010"
 str MULinB := "00011"
-str DEVinB := "00100"
 str INCinB := "00101"
 str DECinB := "00110"
 str LABELinB := "00111"
@@ -22,14 +21,7 @@ str PRINTinB := "10100"
 str PRINTSinB := "10101"
 str MODinB := "10110"
 str HLTinB := "10111"
-str XXX1inB := "11000"
-str XXX2inB := "11001"
-str XXX3inB := "11010"
-str XXX4inB := "11011"
-str XXX5inB := "11100"
-str XXX6inB := "11101"
-str XXX7inB := "11110"
-str XXX8inB := "11111"
+
 
 str str1 := ""
 str str2 := ""
@@ -182,12 +174,6 @@ else if (SubStr(A_LoopField, 1, 4) = "MUL ")
     StringTrimLeft, str1, A_LoopField, 4
     str2 := Trim(StrSplit(str1, ",", 2))
     outCodeInBinary .= MULinB . " " . decodeToBinary(str1) . " " . decodeToBinary(str2) . "`n"
-}
-else if (SubStr(A_LoopField, 1, 4) = "DEV ")
-{
-    StringTrimLeft, str1, A_LoopField, 4
-    str2 := Trim(StrSplit(str1, ",", 2))
-    outCodeInBinary .= DEVinB . " " . decodeToBinary(str1) . " " . decodeToBinary(str2) . "`n"
 }
 else if (SubStr(A_LoopField, 1, 4) = "INC ")
 {
@@ -354,15 +340,11 @@ if (instruction = "00011")
 {
 r1 := r1 * r2
 }
-if (instruction = "00100")
-{
-r1 := r1 / r2
-}
 if (instruction = "00101")
 {
 r1 := r1 + 1
 }
-if (instruction = "00100")
+if (instruction = "00110")
 {
 r1 := r1 - 1
 }
@@ -797,10 +779,6 @@ if (str1 = "00010")
 ALU(str2, str3, str1)
 }
 if (str1 = "00011")
-{
-ALU(str2, str3, str1)
-}
-if (str1 = "00100")
 {
 ALU(str2, str3, str1)
 }
