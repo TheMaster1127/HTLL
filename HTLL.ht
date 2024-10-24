@@ -493,6 +493,79 @@ HTLLout .= "JMP funcClose_" . STR(funcNum) . "`nLABEL funcUp_" . STR(funcNum) . 
 curlyBracesHold.add("~|" . STR(funcNum))
 
 }
+else if (SubStr(StrLower(A_LoopField), 1, 5) = "draw(")
+{
+StringTrimRight, str1, A_LoopField, 1
+if (SubStr(StrLower(A_LoopField), 1, 7) = "draw(0)")
+{
+HTLLout .= "DRAW 0`n"
+}
+else if (SubStr(StrLower(A_LoopField), 1, 7) = "draw(1)")
+{
+HTLLout .= "DRAW 1`n"
+}
+else
+{
+if (isNum(Trim(StrSplit(str1, "(", 2))))
+{
+HTLLout .= "DRAW " . Trim(StrSplit(str1, "(", 2)) . "`n"
+}
+else
+{
+HTLLout .= "DRAW l" . getMemLocFromVarName(Trim(StrSplit(str1, "(", 2))) . "`n"
+}
+
+}
+
+}
+else if (SubStr(StrLower(A_LoopField), 1, 6) = "drawx(")
+{
+StringTrimRight, str1, A_LoopField, 1
+if (SubStr(StrLower(A_LoopField), 1, 8) = "drawx(0)")
+{
+HTLLout .= "DRAWX 0`n"
+}
+else if (SubStr(StrLower(A_LoopField), 1, 8) = "drawx(1)")
+{
+HTLLout .= "DRAWX 1`n"
+}
+else
+{
+if (isNum(Trim(StrSplit(str1, "(", 2))))
+{
+HTLLout .= "DRAWX " . Trim(StrSplit(str1, "(", 2)) . "`n"
+}
+else
+{
+HTLLout .= "DRAWX l" . getMemLocFromVarName(Trim(StrSplit(str1, "(", 2))) . "`n"
+}
+}
+
+}
+else if (SubStr(StrLower(A_LoopField), 1, 6) = "drawy(")
+{
+StringTrimRight, str1, A_LoopField, 1
+if (SubStr(StrLower(A_LoopField), 1, 8) = "drawy(0)")
+{
+HTLLout .= "DRAWY 0`n"
+}
+else if (SubStr(StrLower(A_LoopField), 1, 8) = "drawy(1)")
+{
+HTLLout .= "DRAWY 1`n"
+}
+else
+{
+if (isNum(Trim(StrSplit(str1, "(", 2))))
+{
+HTLLout .= "DRAWY " . Trim(StrSplit(str1, "(", 2)) . "`n"
+}
+else
+{
+HTLLout .= "DRAWY l" . getMemLocFromVarName(Trim(StrSplit(str1, "(", 2))) . "`n"
+}
+}
+
+}
 else if (!(SubStr(StrLower(A_LoopField), 1, 5) = "func ")) && (InStr(A_LoopField, "()"))
 {
 str1 := Trim(A_LoopField)

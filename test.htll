@@ -21,3 +21,35 @@ Loop, index := 0, 5
 hello2()
 print(var1)
 }
+
+y := 0
+
+Loop, indexY := 0, 20
+{
+y := indexY + 1
+Loop, indexX := 1, 10
+{
+drawX(indexX)
+drawY(y)
+draw(1)
+}
+
+}
+
+
+Loop, indexX := 1, 10
+{
+drawX(indexX)
+drawY(y)
+draw(0)
+}
+
+drawX(5)
+drawY(5)
+draw(0)
+
+
+drawX(7)
+drawY(7)
+draw(0)
+

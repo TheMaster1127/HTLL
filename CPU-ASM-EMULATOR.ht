@@ -309,6 +309,7 @@ PRINT l17
 arr int memLoc
 int PC := 0
 bool halted := false
+str screen := "          `n          `n          `n          `n          `n          `n          `n          `n          `n          `n          `n          `n          `n          `n          `n          `n          `n          `n          `n          "
 
 func void ALU(str in1, str in2, str instruction)
 {
@@ -367,6 +368,105 @@ r1 := r1 - 1
 }
 
 memLoc[1] := r1
+}
+
+func void DRAWinst(str in1)
+{
+
+int temp1 := 0
+
+if (SubStr(in1, 1, 1) = "1")
+{
+StringTrimLeft, in1, in1, 1
+temp1 := memLoc[binToDec(in1)]
+}
+else
+{
+StringTrimLeft, in1, in1, 1
+temp1 := binToDec(in1)
+}
+
+str outPrint := ""
+int screenX := 0
+int screenY := 0
+
+
+Loop, Parse, screen, `n, `r
+{
+screenY++
+screenX := 0
+Loop, Parse, A_LoopField
+{
+screenX++
+if (screenX = memLoc[8]) && (screenY = memLoc[9])
+{
+if (temp1 = 0)
+{
+outPrint .= " "
+}
+else
+{
+outPrint .= "#"
+}
+}
+else
+{
+if (A_LoopField = " ")
+{
+outPrint .= " "
+}
+else
+{
+outPrint .= "#"
+}
+}
+
+}
+outPrint .= "`n"
+}
+
+
+
+StringTrimRight, screen, outPrint, 1
+print(screen)
+}
+
+func void DRAWXinst(str in1)
+{
+
+int temp1 := 0
+
+if (SubStr(in1, 1, 1) = "1")
+{
+StringTrimLeft, in1, in1, 1
+temp1 := memLoc[binToDec(in1)]
+}
+else
+{
+StringTrimLeft, in1, in1, 1
+temp1 := binToDec(in1)
+}
+
+memLoc[8] := temp1
+}
+
+func void DRAWYinst(str in1)
+{
+
+int temp1 := 0
+
+if (SubStr(in1, 1, 1) = "1")
+{
+StringTrimLeft, in1, in1, 1
+temp1 := memLoc[binToDec(in1)]
+}
+else
+{
+StringTrimLeft, in1, in1, 1
+temp1 := binToDec(in1)
+}
+
+memLoc[9] := temp1
 }
 
 func void PRINTinst(str in1)
@@ -751,6 +851,21 @@ if (str1 = "01111")
 {
 JELinst(str2)
 }
+
+
+if (str1 = "10001")
+{
+DRAWXinst(str2)
+}
+if (str1 = "10010")
+{
+DRAWYinst(str2)
+}
+if (str1 = "10011")
+{
+DRAWinst(str2)
+}
+
 
 }
 

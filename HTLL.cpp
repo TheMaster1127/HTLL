@@ -561,6 +561,51 @@ void compiler() {
             HTLLout += "JMP funcClose_" + STR(funcNum) + "\nLABEL funcUp_" + STR(funcNum) + "\n";
             curlyBracesHold.push_back("~|" + STR(funcNum));
         }
+        else if (SubStr(StrLower(A_LoopField7), 1, 5) == "draw(") {
+            str1 = StringTrimRight(A_LoopField7, 1);
+            if (SubStr(StrLower(A_LoopField7), 1, 7) == "draw(0)") {
+                HTLLout += "DRAW 0\n";
+            }
+            else if (SubStr(StrLower(A_LoopField7), 1, 7) == "draw(1)") {
+                HTLLout += "DRAW 1\n";
+            } else {
+                if (isNum(Trim(StrSplit(str1, "(", 2)))) {
+                    HTLLout += "DRAW " + Trim(StrSplit(str1, "(", 2)) + "\n";
+                } else {
+                    HTLLout += "DRAW l" + getMemLocFromVarName(Trim(StrSplit(str1, "(", 2))) + "\n";
+                }
+            }
+        }
+        else if (SubStr(StrLower(A_LoopField7), 1, 6) == "drawx(") {
+            str1 = StringTrimRight(A_LoopField7, 1);
+            if (SubStr(StrLower(A_LoopField7), 1, 8) == "drawx(0)") {
+                HTLLout += "DRAWX 0\n";
+            }
+            else if (SubStr(StrLower(A_LoopField7), 1, 8) == "drawx(1)") {
+                HTLLout += "DRAWX 1\n";
+            } else {
+                if (isNum(Trim(StrSplit(str1, "(", 2)))) {
+                    HTLLout += "DRAWX " + Trim(StrSplit(str1, "(", 2)) + "\n";
+                } else {
+                    HTLLout += "DRAWX l" + getMemLocFromVarName(Trim(StrSplit(str1, "(", 2))) + "\n";
+                }
+            }
+        }
+        else if (SubStr(StrLower(A_LoopField7), 1, 6) == "drawy(") {
+            str1 = StringTrimRight(A_LoopField7, 1);
+            if (SubStr(StrLower(A_LoopField7), 1, 8) == "drawy(0)") {
+                HTLLout += "DRAWY 0\n";
+            }
+            else if (SubStr(StrLower(A_LoopField7), 1, 8) == "drawy(1)") {
+                HTLLout += "DRAWY 1\n";
+            } else {
+                if (isNum(Trim(StrSplit(str1, "(", 2)))) {
+                    HTLLout += "DRAWY " + Trim(StrSplit(str1, "(", 2)) + "\n";
+                } else {
+                    HTLLout += "DRAWY l" + getMemLocFromVarName(Trim(StrSplit(str1, "(", 2))) + "\n";
+                }
+            }
+        }
         else if (!(SubStr(StrLower(A_LoopField7), 1, 5) == "func ") && InStr(A_LoopField7, "()")) {
             str1 = Trim(A_LoopField7);
             /*

@@ -487,6 +487,7 @@ PRINT l17
 std::vector<int> memLoc;
 int PC = 0;
 bool halted = false;
+std::string screen = "          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n          \n          ";
 void ALU(std::string in1, std::string in2, std::string instruction) {
     int temp1 = 0;
     int temp2 = 0;
@@ -525,6 +526,68 @@ void ALU(std::string in1, std::string in2, std::string instruction) {
         r1 = r1 - 1;
     }
     memLoc[1] = r1;
+}
+void DRAWinst(std::string in1) {
+    int temp1 = 0;
+    if (SubStr(in1, 1, 1) == "1") {
+        in1 = StringTrimLeft(in1, 1);
+        temp1 = memLoc[binToDec(in1)];
+    } else {
+        in1 = StringTrimLeft(in1, 1);
+        temp1 = binToDec(in1);
+    }
+    std::string outPrint = "";
+    int screenX = 0;
+    int screenY = 0;
+    std::vector<std::string> items7 = LoopParseFunc(screen, "\n", "\r");
+    for (size_t A_Index7 = 0; A_Index7 < items7.size() + 0; A_Index7++) {
+        std::string A_LoopField7 = items7[A_Index7 - 0];
+        screenY++;
+        screenX = 0;
+        std::vector<std::string> items8 = LoopParseFunc(A_LoopField7);
+        for (size_t A_Index8 = 0; A_Index8 < items8.size() + 0; A_Index8++) {
+            std::string A_LoopField8 = items8[A_Index8 - 0];
+            screenX++;
+            if (screenX == memLoc[8] && screenY == memLoc[9]) {
+                if (temp1 == 0) {
+                    outPrint += " ";
+                } else {
+                    outPrint += "#";
+                }
+            } else {
+                if (A_LoopField8 == " ") {
+                    outPrint += " ";
+                } else {
+                    outPrint += "#";
+                }
+            }
+        }
+        outPrint += "\n";
+    }
+    screen = StringTrimRight(outPrint, 1);
+    print(screen);
+}
+void DRAWXinst(std::string in1) {
+    int temp1 = 0;
+    if (SubStr(in1, 1, 1) == "1") {
+        in1 = StringTrimLeft(in1, 1);
+        temp1 = memLoc[binToDec(in1)];
+    } else {
+        in1 = StringTrimLeft(in1, 1);
+        temp1 = binToDec(in1);
+    }
+    memLoc[8] = temp1;
+}
+void DRAWYinst(std::string in1) {
+    int temp1 = 0;
+    if (SubStr(in1, 1, 1) == "1") {
+        in1 = StringTrimLeft(in1, 1);
+        temp1 = memLoc[binToDec(in1)];
+    } else {
+        in1 = StringTrimLeft(in1, 1);
+        temp1 = binToDec(in1);
+    }
+    memLoc[9] = temp1;
 }
 void PRINTinst(std::string in1) {
     int temp1 = 0;
@@ -767,20 +830,29 @@ void decoder(std::string instrunction) {
     if (str1 == "01111") {
         JELinst(str2);
     }
+    if (str1 == "10001") {
+        DRAWXinst(str2);
+    }
+    if (str1 == "10010") {
+        DRAWYinst(str2);
+    }
+    if (str1 == "10011") {
+        DRAWinst(str2);
+    }
 }
 void executeInst(std::string allInst, int thePC) {
-    std::vector<std::string> items7 = LoopParseFunc(allInst, "\n", "\r");
-    for (size_t A_Index7 = 0; A_Index7 < items7.size() + 0; A_Index7++) {
-        std::string A_LoopField7 = items7[A_Index7 - 0];
-        if (A_Index7 == thePC) {
-            decoder(A_LoopField7);
+    std::vector<std::string> items9 = LoopParseFunc(allInst, "\n", "\r");
+    for (size_t A_Index9 = 0; A_Index9 < items9.size() + 0; A_Index9++) {
+        std::string A_LoopField9 = items9[A_Index9 - 0];
+        if (A_Index9 == thePC) {
+            decoder(A_LoopField9);
             PC++;
             break;
         }
     }
 }
 void cpu(std::string htasm) {
-    for (int A_Index8 = 0; A_Index8 < 2048 + 0; A_Index8++) {
+    for (int A_Index10 = 0; A_Index10 < 2048 + 0; A_Index10++) {
         memLoc.push_back(0);
     }
     std::string BinaryInstructions = "";
