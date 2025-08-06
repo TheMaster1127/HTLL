@@ -1,24 +1,10 @@
-func code() {
-    var1 := 5
-    Loop, i := 0, 0 {
-        var1--
-        if (var1 = 0) {
-            break
-        }
-    }
-    if (var1 = 0) {
-        var1 := 5 ;asdfgfse
-        print(var1);asdfgfse
-    }
-}
-code()
-Loop, i2 := 1, 7 {
-    print(i2)
-    if (i2 = 5) {
-        break
-    }
-    if (i2 != 5) {
-        code()
-    }
-}
+; test commnets
+;;;;;;;;;;;;;;;
+; qwaesdfg
+print(5)  ; test commnets WADSFDG
 
+;asdfx
+; wasdf
+ ;waesdfg   aadsf ; ; ;waedsfdgv
+ 
+ print("hello man")

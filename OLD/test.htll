@@ -1,0 +1,23 @@
+func code() {
+    var1 := 5
+    Loop, i := 0, 0 {
+        var1--
+        if (var1 = 0) {
+            break
+        }
+    }
+    if (var1 = 0) {
+        var1 := 5 ; Comment
+        print(var1); Comment
+    }
+}
+code()
+Loop, i2 := 1, 7 {
+    print(i2)
+    if (i2 = 5) {
+        break
+    }
+    if (i2 != 5) {
+        code()
+    }
+}
