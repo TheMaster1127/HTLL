@@ -478,10 +478,70 @@ std::string compiler(std::string code) {
             if (InStr(str1, ":=")) {
                 str2 = Trim(StrSplit(str1, ":=", 1));
                 str3 = Trim(StrSplit(str1, ":=", 2));
-                dot_data_ints += str2 + ": dq " + str3 + Chr(10);
+                if (RegExMatch(str3, "^\\d+$")) {
+                    dot_data_ints += str2 + ": dq " + str3 + Chr(10);
+                } else {
+                    dot_data_ints += str2 + ": dq 0" + Chr(10);
+                }
             } else {
-                dot_data_ints += Trim(str1) + ": dq 0" + Chr(10);
+                if (InStr(str1, ":=") == false && InStr(str1, "+=") == false && InStr(str1, "-=") == false && InStr(str1, "*=") == false) {
+                    dot_data_ints += Trim(str1) + ": dq 0" + Chr(10);
+                }
             }
+            if (InStr(str1, "*=")) {
+                str2 = Trim(StrSplit(str1, "*=", 1));
+                str3 = Trim(StrSplit(str1, "*=", 2));
+                dot_data_ints += str2 + ": dq 0" + Chr(10);
+            }
+            else if (InStr(str1, "+=")) {
+                str2 = Trim(StrSplit(str1, "+=", 1));
+                str3 = Trim(StrSplit(str1, "+=", 2));
+                dot_data_ints += str2 + ": dq 0" + Chr(10);
+            }
+            else if (InStr(str1, "-=")) {
+                str2 = Trim(StrSplit(str1, "-=", 1));
+                str3 = Trim(StrSplit(str1, "-=", 2));
+                dot_data_ints += str2 + ": dq 0" + Chr(10);
+            }
+            //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            if (InStr(A_LoopField11, " += ")) {
+                str2 = Trim(StrSplit(str1, "+=", 1));
+                str3 = Trim(StrSplit(str1, "+=", 2));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    out += "add qword [" + str2 + "], " + str3 + Chr(10);
+                } else {
+                    out += "mov rdi, [" + str3 + "]" + Chr(10);
+                    out += "add qword [" + str2 + "], rdi" + Chr(10);
+                }
+            }
+            else if (InStr(A_LoopField11, " *= ")) {
+                str2 = Trim(StrSplit(str1, "*=", 1));
+                str3 = Trim(StrSplit(str1, "*=", 2));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    // *= constant
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "imul rax, " + str3 + Chr(10);
+                    out += "mov [" + str2 + "], rax" + Chr(10);
+                } else {
+                    // *= another variable
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "imul rax, [" + str3 + "]" + Chr(10);
+                    out += "mov [" + str2 + "], rax" + Chr(10);
+                }
+            }
+            else if (InStr(A_LoopField11, " -= ")) {
+                str2 = Trim(StrSplit(str1, "-=", 1));
+                str3 = Trim(StrSplit(str1, "-=", 2));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    out += "sub qword [" + str2 + "], " + str3 + Chr(10);
+                } else {
+                    out += "mov rdi, [" + str3 + "]" + Chr(10);
+                    out += "sub qword [" + str2 + "], rdi" + Chr(10);
+                }
+            }
+            //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
         }
         else if (SubStr(A_LoopField11, 1, 4) == "str ") {
             str1 = Trim(StringTrimLeft(A_LoopField11, 4));
@@ -489,6 +549,57 @@ std::string compiler(std::string code) {
             str2 = Trim(StrSplit(str2, "]", 1));
             str1 = Trim(StrSplit(str1, "[", 1));
             dot_bss_str += str1 + ": resb " + str2 + Chr(10);
+        }
+        else if (InStr(A_LoopField11, " := ") || InStr(A_LoopField11, " += ") || InStr(A_LoopField11, " -= ") || InStr(A_LoopField11, " *= ")) {
+            if (InStr(A_LoopField11, " := ")) {
+                str1 = Trim(A_LoopField11);
+                str2 = Trim(StrSplit(str1, ":=", 1));
+                str3 = Trim(StrSplit(str1, ":=", 2));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    out += "mov qword [" + str2 + "], " + str3 + Chr(10);
+                } else {
+                    out += "mov rdi, [" + str3 + "]" + Chr(10);
+                    out += "mov [" + str2 + "], rdi" + Chr(10);
+                }
+            }
+            else if (InStr(A_LoopField11, " += ")) {
+                str1 = Trim(A_LoopField11);
+                str2 = Trim(StrSplit(str1, "+=", 1));
+                str3 = Trim(StrSplit(str1, "+=", 2));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    out += "add qword [" + str2 + "], " + str3 + Chr(10);
+                } else {
+                    out += "mov rdi, [" + str3 + "]" + Chr(10);
+                    out += "add qword [" + str2 + "], rdi" + Chr(10);
+                }
+            }
+            else if (InStr(A_LoopField11, " *= ")) {
+                str1 = Trim(A_LoopField11);
+                str2 = Trim(StrSplit(str1, "*=", 1));
+                str3 = Trim(StrSplit(str1, "*=", 2));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    // *= constant
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "imul rax, " + str3 + Chr(10);
+                    out += "mov [" + str2 + "], rax" + Chr(10);
+                } else {
+                    // *= another variable
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "imul rax, [" + str3 + "]" + Chr(10);
+                    out += "mov [" + str2 + "], rax" + Chr(10);
+                }
+            }
+            else if (InStr(A_LoopField11, " -= ")) {
+                str1 = Trim(A_LoopField11);
+                str2 = Trim(StrSplit(str1, "-=", 1));
+                str3 = Trim(StrSplit(str1, "-=", 2));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    out += "sub qword [" + str2 + "], " + str3 + Chr(10);
+                } else {
+                    out += "mov rdi, [" + str3 + "]" + Chr(10);
+                    out += "sub qword [" + str2 + "], rdi" + Chr(10);
+                }
+            }
         }
         else if (SubStr(A_LoopField11, 1, 6) == "print(") {
             str1 = StringTrimLeft(A_LoopField11, 6);

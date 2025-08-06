@@ -16,9 +16,34 @@ section .data
 
 ASM_STR_TEMP_PRINT_1: db "hello man", 10
 ASM_STR_TEMP_PRINT_1_len: equ $-ASM_STR_TEMP_PRINT_1
+ASM_STR_TEMP_PRINT_2: db "---------------", 10
+ASM_STR_TEMP_PRINT_2_len: equ $-ASM_STR_TEMP_PRINT_2
+ASM_STR_TEMP_PRINT_3: db "---------------", 10
+ASM_STR_TEMP_PRINT_3_len: equ $-ASM_STR_TEMP_PRINT_3
+ASM_STR_TEMP_PRINT_4: db "---------------", 10
+ASM_STR_TEMP_PRINT_4_len: equ $-ASM_STR_TEMP_PRINT_4
+ASM_STR_TEMP_PRINT_5: db "---------------", 10
+ASM_STR_TEMP_PRINT_5_len: equ $-ASM_STR_TEMP_PRINT_5
+ASM_STR_TEMP_PRINT_6: db "---------------", 10
+ASM_STR_TEMP_PRINT_6_len: equ $-ASM_STR_TEMP_PRINT_6
+ASM_STR_TEMP_PRINT_7: db "---------------", 10
+ASM_STR_TEMP_PRINT_7_len: equ $-ASM_STR_TEMP_PRINT_7
 
 
 var1: dq 5
+var2: dq 10
+var3: dq 5
+var4: dq 5
+var10: dq 20
+var11: dq 5
+var100: dq 20
+var110: dq 5
+v1: dq 0
+v2: dq 5
+v3: dq 0
+v4: dq 0
+v5: dq 0
+v7: dq 0
 
 
 
@@ -26,7 +51,7 @@ section .bss
     print_buffer_n: resb 20
 
 
-var2: resb 1024
+strVar2: resb 1024
 
 
 section .text
@@ -458,6 +483,87 @@ mov rsi, ASM_STR_TEMP_PRINT_1
 mov rdx, ASM_STR_TEMP_PRINT_1_len
 call print_str
 mov rdi, [var1]
+mov rsi, 0
+call print_number
+mov qword [var1], 5
+mov rdi, [var2]
+mov [var1], rdi
+mov rdi, [var1]
+mov rsi, 0
+call print_number
+mov rsi, ASM_STR_TEMP_PRINT_2
+mov rdx, ASM_STR_TEMP_PRINT_2_len
+call print_str
+mov rax, [var4]
+imul rax, [var3]
+mov [var4], rax
+mov rdi, [var4]
+mov rsi, 0
+call print_number
+mov rax, [var4]
+imul rax, 5
+mov [var4], rax
+mov rdi, [var4]
+mov rsi, 0
+call print_number
+mov rsi, ASM_STR_TEMP_PRINT_3
+mov rdx, ASM_STR_TEMP_PRINT_3_len
+call print_str
+mov rdi, [var11]
+sub qword [var10], rdi
+mov rdi, [var10]
+mov rsi, 0
+call print_number
+sub qword [var10], 5
+mov rdi, [var10]
+mov rsi, 0
+call print_number
+mov rsi, ASM_STR_TEMP_PRINT_4
+mov rdx, ASM_STR_TEMP_PRINT_4_len
+call print_str
+mov rdi, [var110]
+add qword [var100], rdi
+mov rdi, [var100]
+mov rsi, 0
+call print_number
+add qword [var100], 5
+mov rdi, [var100]
+mov rsi, 0
+call print_number
+mov rsi, ASM_STR_TEMP_PRINT_5
+mov rdx, ASM_STR_TEMP_PRINT_5_len
+call print_str
+mov rsi, ASM_STR_TEMP_PRINT_6
+mov rdx, ASM_STR_TEMP_PRINT_6_len
+call print_str
+mov rsi, ASM_STR_TEMP_PRINT_7
+mov rdx, ASM_STR_TEMP_PRINT_7_len
+call print_str
+add qword [v3], 5
+mov rax, [v4]
+imul rax, 5
+mov [v4], rax
+mov rdi, [var100]
+add qword [v5], rdi
+mov rax, [v7]
+imul rax, [var100]
+mov [v7], rax
+mov rdi, [v1]
+mov rsi, 0
+call print_number
+mov rdi, [v2]
+mov rsi, 0
+call print_number
+mov rdi, [v3]
+mov rsi, 0
+call print_number
+mov rdi, [v4]
+mov rsi, 0
+call print_number
+mov rdi, [v5]
+mov rsi, 0
+call print_number
+mov rdi, [v7]
 mov rsi, 0
 call print_number
 
