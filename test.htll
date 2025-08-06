@@ -8,3 +8,9 @@ print(5)  ; test commnets WADSFDG
  ;waesdfg   aadsf ; ; ;waedsfdgv
  
  print("hello man")
+ 
+ 
+ int var1 := 5
+ print(var1)
+ 
+ str var2[1024]

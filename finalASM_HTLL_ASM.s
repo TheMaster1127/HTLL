@@ -18,9 +18,15 @@ ASM_STR_TEMP_PRINT_1: db "hello man", 10
 ASM_STR_TEMP_PRINT_1_len: equ $-ASM_STR_TEMP_PRINT_1
 
 
+var1: dq 5
+
+
 
 section .bss
     print_buffer_n: resb 20
+
+
+var2: resb 1024
 
 
 section .text
@@ -451,6 +457,9 @@ call print_number
 mov rsi, ASM_STR_TEMP_PRINT_1
 mov rdx, ASM_STR_TEMP_PRINT_1_len
 call print_str
+mov rdi, [var1]
+mov rsi, 0
+call print_number
 
 
     ; --- Exit cleanly ---
