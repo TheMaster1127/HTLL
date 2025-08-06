@@ -482,6 +482,8 @@ std::string compiler(std::string code) {
                     dot_data_ints += str2 + ": dq " + str3 + Chr(10);
                 } else {
                     dot_data_ints += str2 + ": dq 0" + Chr(10);
+                    out += "mov rdi, [" + str3 + "]" + Chr(10);
+                    out += "mov [" + str2 + "], rdi" + Chr(10);
                 }
             } else {
                 if (InStr(str1, ":=") == false && InStr(str1, "+=") == false && InStr(str1, "-=") == false && InStr(str1, "*=") == false) {

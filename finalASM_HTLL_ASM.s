@@ -539,6 +539,8 @@ call print_str
 mov rsi, ASM_STR_TEMP_PRINT_7
 mov rdx, ASM_STR_TEMP_PRINT_7_len
 call print_str
+mov rdi, [var100]
+mov [v1], rdi
 add qword [v3], 5
 mov rax, [v4]
 imul rax, 5
