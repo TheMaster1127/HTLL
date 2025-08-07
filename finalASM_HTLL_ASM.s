@@ -28,6 +28,12 @@ ASM_STR_TEMP_PRINT_6: db "---------------", 10
 ASM_STR_TEMP_PRINT_6_len: equ $-ASM_STR_TEMP_PRINT_6
 ASM_STR_TEMP_PRINT_7: db "---------------", 10
 ASM_STR_TEMP_PRINT_7_len: equ $-ASM_STR_TEMP_PRINT_7
+ASM_STR_TEMP_PRINT_8: db "---------------", 10
+ASM_STR_TEMP_PRINT_8_len: equ $-ASM_STR_TEMP_PRINT_8
+ASM_STR_TEMP_PRINT_9: db "---nint-test---", 10
+ASM_STR_TEMP_PRINT_9_len: equ $-ASM_STR_TEMP_PRINT_9
+ASM_STR_TEMP_PRINT_10: db "---------------", 10
+ASM_STR_TEMP_PRINT_10_len: equ $-ASM_STR_TEMP_PRINT_10
 
 
 var1: dq 5
@@ -44,6 +50,8 @@ v3: dq 0
 v4: dq 0
 v5: dq 0
 v7: dq 0
+n1: dq 0
+n1_is_negative: dq 0
 
 
 
@@ -62,6 +70,55 @@ global _start
 ; =============================================================================
 
 ;-----------------------------------------------------------------------------
+;-----------------------------------------------------------------------------
+; is_nint_negative: Reads a signed number, updates its corresponding sign
+;                   flag, AND converts the original number to its positive
+;                   magnitude if it was negative.
+;
+; [In]
+;   rdi - Pointer to the nint variable (which holds a signed value).
+;   rsi - Pointer to the is_negative flag variable for that nint.
+;
+; [Out]
+;   The memory at [rsi] will be overwritten with 0 or 1.
+;   The memory at [rdi] will be overwritten with its positive magnitude.
+;-----------------------------------------------------------------------------
+is_nint_negative:
+    push rbp
+    mov rbp, rsp
+    push rax
+
+    ; Load the actual signed value from the first pointer
+    mov rax, [rdi]
+
+    ; Check its sign using the CPU's Sign Flag
+    test rax, rax
+    jns .is_positive_or_zero    ; Jump if Not Sign
+
+.is_negative:
+    ; The number is negative.
+    ; 1. Update the flag variable to 1.
+    mov qword [rsi], 1
+    
+    ; 2. Negate the value to get its positive magnitude.
+    neg rax
+    
+    ; 3. Store the positive magnitude BACK into the original variable.
+    mov [rdi], rax
+    jmp .done
+
+.is_positive_or_zero:
+    ; The number is positive or zero.
+    ; 1. Update the flag variable to 0.
+    mov qword [rsi], 0
+    ; 2. The value at [rdi] is already its own positive magnitude, so we do nothing to it.
+
+.done:
+    pop rax
+    pop rbp
+    ret
+
+
 ; divide_and_store: Performs fixed-point division and stores results in memory.
 ; [In] rdi: dividend_int, rsi: dividend_dec
 ;      rdx: divisor_int,  rcx: divisor_dec
@@ -567,6 +624,24 @@ mov rsi, 0
 call print_number
 mov rdi, [v7]
 mov rsi, 0
+call print_number
+mov rsi, ASM_STR_TEMP_PRINT_8
+mov rdx, ASM_STR_TEMP_PRINT_8_len
+call print_str
+mov rsi, ASM_STR_TEMP_PRINT_9
+mov rdx, ASM_STR_TEMP_PRINT_9_len
+call print_str
+mov rsi, ASM_STR_TEMP_PRINT_10
+mov rdx, ASM_STR_TEMP_PRINT_10_len
+call print_str
+dec qword [var100]
+inc qword [var100]
+sub qword [n1], 5
+lea rdi, [n1]
+lea rsi, [n1_is_negative]
+call is_nint_negative
+mov rdi, [n1]
+mov rsi, [n1_is_negative]
 call print_number
 
 
