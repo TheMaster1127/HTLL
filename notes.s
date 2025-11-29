@@ -12,23 +12,58 @@ section .data
     dot:            db '.'
     minus_sign:     db '-'
     nl:   db 10
+    msg1: db "--- Array 1 Contents ---", 10
+    msg1_len: equ $-msg1
+    msg2: db "--- Array 2 Contents ---", 10
+    msg2_len: equ $-msg2
+    msg3: db "--- Popping from Array 1 ---", 10
+    msg3_len: equ $-msg3
+    
+    someInt1: dq 25
+    someInt2: dq 26
+    someIntOut: dq 0
+    
+    big_string_addr: dq 0
+    big_string_size: dq 0
 
+    ; --------------------------------------------------------------------
+    prompt:         db "Please enter your name: "
+    prompt_len:     equ $-prompt
 
+    greeting:       db "Hello, "
+    greeting_len:   equ $-greeting
+    userName_len:   dq 0
 
+    ; -------------------------------------------------------------------
 
-COUNT: dq 5
-i: dq 0
+    ; -- Inputs for our calculation: 10.5 / 3.7
+    dividend_int:   dq 10
+    dividend_dec:   dq 500000      ; .5 as 6 decimal digits
+
+    divisor_int:    dq 3
+    divisor_dec:    dq 700000       ; .7 as 6 decimal digits
+
+    ; -- Outputs from our calculation
+    result_digit:   dq 0
+    result_decimal: dq 0
+
+	test_int_neg: dq 6
+	test_int_neg_isNegative: dq 0
 
 
 
 section .bss
     print_buffer_n: resb 20
+    ; These are our three "Array objects". They start completely zeroed out.
+    array1: resb DynamicArray_size
+    array2: resb DynamicArray_size
+    array3: resb DynamicArray_size ; We'll leave array3 empty to test that case
 
-arr1: resb DynamicArray_size
+    array69: resb DynamicArray_size
 
+    big_string: resb 10  ; reserve a buffer
 
-
-
+    userName: resb 100
 
 section .text
 global _start
@@ -38,55 +73,6 @@ global _start
 ; =============================================================================
 
 ;-----------------------------------------------------------------------------
-;-----------------------------------------------------------------------------
-; is_nint_negative: Reads a signed number, updates its corresponding sign
-;                   flag, AND converts the original number to its positive
-;                   magnitude if it was negative.
-;
-; [In]
-;   rdi - Pointer to the nint variable (which holds a signed value).
-;   rsi - Pointer to the is_negative flag variable for that nint.
-;
-; [Out]
-;   The memory at [rsi] will be overwritten with 0 or 1.
-;   The memory at [rdi] will be overwritten with its positive magnitude.
-;-----------------------------------------------------------------------------
-is_nint_negative:
-    push rbp
-    mov rbp, rsp
-    push rax
-
-    ; Load the actual signed value from the first pointer
-    mov rax, [rdi]
-
-    ; Check its sign using the CPU's Sign Flag
-    test rax, rax
-    jns .is_positive_or_zero    ; Jump if Not Sign
-
-.is_negative:
-    ; The number is negative.
-    ; 1. Update the flag variable to 1.
-    mov qword [rsi], 1
-    
-    ; 2. Negate the value to get its positive magnitude.
-    neg rax
-    
-    ; 3. Store the positive magnitude BACK into the original variable.
-    mov [rdi], rax
-    jmp .done
-
-.is_positive_or_zero:
-    ; The number is positive or zero.
-    ; 1. Update the flag variable to 0.
-    mov qword [rsi], 0
-    ; 2. The value at [rdi] is already its own positive magnitude, so we do nothing to it.
-
-.done:
-    pop rax
-    pop rbp
-    ret
-
-
 ; divide_and_store: Performs fixed-point division and stores results in memory.
 ; [In] rdi: dividend_int, rsi: dividend_dec
 ;      rdx: divisor_int,  rcx: divisor_dec
@@ -297,49 +283,36 @@ print_str:
     ret
 
 ;-----------------------------------------------------------------------------
-; input: Reads a line from stdin, handles empty input, removes the trailing
-;        newline, and stores the raw string and its length.
-;
-; [In]
-;   rdi - Pointer to the buffer where the string should be stored.
-;   rsi - Pointer to a qword where the length of the clean string will be stored.
+; input: Corrected version.
+; [In] rdi: Pointer to buffer, rsi: Pointer to length variable
 ;-----------------------------------------------------------------------------
 input:
     push rbp
     mov rbp, rsp
-    push r12
-    push r13
+    push r12 ; To save the buffer pointer
+    push r13 ; To save the length pointer
 
     ; Save the pointers passed as arguments immediately
-    mov r12, rdi ; r12 holds pointer to the buffer
-    mov r13, rsi ; r13 holds pointer to the length variable
+    mov r12, rdi ; r12 now holds the pointer to the userName buffer
+    mov r13, rsi ; r13 now holds the pointer to the userName_len variable
 
-    ; Correctly set up all registers for the sys_read syscall
-    mov rax, 0
-    mov rdi, 0
-    mov rsi, r12
-    mov rdx, 100
+    ; --- Correctly set up all registers for the sys_read syscall ---
+    mov rax, 0              ; syscall number for sys_read
+    mov rdi, 0              ; file descriptor for stdin (THIS WAS THE MISSING PART)
+    mov rsi, r12            ; pointer to our buffer (from r12)
+    mov rdx, 100            ; maximum number of bytes to read
     syscall
-    ; The program waits here. rax will return with bytes read.
+    ; The program will now correctly wait here for user input.
 
-    ; Check if the user entered anything. If they just press Enter, rax will be 1.
-    ; If they press Ctrl+D, rax will be 0. Both cases mean empty input.
+    ; Check if the user entered anything
     cmp rax, 1
-    jle .read_empty     ; Jump if Less or Equal (handles 0 and 1)
+    jle .read_empty
 
-    ; This code only runs for valid input (rax > 1).
-    ; The length of the clean string is (bytes_read - 1).
+    ; Input is valid, length is (bytes_read - 1)
     dec rax
-    jmp .store_length   ; Jump to the end to store the calculated length
-
+    
 .read_empty:
-    ; === THE FIX IS HERE ===
-    ; If the input was empty, explicitly set the length to 0.
-    xor rax, rax
-
-.store_length:
-    ; Store the final calculated length (either from dec rax or xor rax)
-    ; into the memory location pointed to by r13.
+    ; Store the calculated length into the memory location pointed to by r13
     mov [r13], rax
 
     pop r13
@@ -495,48 +468,307 @@ print_char:
 
 
 
+; ========================================================================
+; test func call
+
+func1:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+	mov qword [rbp - 8], 5 ; var1
+
+
+	mov rax, [rbp + 16]
+    add rax, [rbp + 24]
+	add rax, [rbp + 32]
+	add rax, [rbp - 8]
+
+.func1_return:
+    add rsp, 16
+    pop rbp
+	ret
 
 ; =============================================================================
 ; MAIN PROGRAM ENTRY POINT
 ; =============================================================================
 _start:
 
-xor r13, r13
-mov r12, [COUNT]
-.loop_0:
-cmp r12, 0
-je .loop_end0
-mov rsi, [i]
-mov rdi, arr1
-
-call array_append
-inc qword [i]
-inc r13
-dec r12
-jmp .loop_0
-.loop_end0:
-mov qword [i], 0
-mov rax, [arr1 + DynamicArray.size]
-xor r13, r13
-mov r12, rax
-.loop_1:
-cmp r12, 0
-je .loop_end1
-mov rcx, [i]
-
-mov rbx, [arr1 + DynamicArray.pointer]
-mov rax, [rbx + rcx*8]
-mov rdi, rax
-mov rsi, 0
-call print_number
-inc qword [i]
-inc r13
-dec r12
-jmp .loop_1
-.loop_end1:
+	push 5
+	push 10
+	push 15
+	call func1
+	add rsp, 24
+	mov rdi, rax 
+	mov rsi, 0
+    call print_number
 
 
+    ; --- Step 1: Populate array1 with 3 elements ---
+    mov rsi, 100
+    mov rdi, array1
+    call array_append
+
+    mov rsi, 101
+    mov rdi, array1
+    call array_append
+
+    mov rsi, 102
+    mov rdi, array1
+    call array_append
+
+    ; --- Step 2: Populate array2 with 2 elements ---
+    mov rsi, 999
+    mov rdi, array2
+    call array_append
+
+    mov rsi, 888
+    mov rdi, array2
+    call array_append
+
+    ; --- Step 3: Print the contents of array1 ---
+    mov rsi, msg1
+    mov rdx, msg1_len
+    call print_str
+
+    mov r13, [array1 + DynamicArray.size] ; **YOUR FIX: Use a callee-saved register for the loop counter**
+    xor r12, r12
+.print_loop1:
+    cmp r13, 0
+    je .print_loop1_end
+    mov rbx, [array1 + DynamicArray.pointer]
+    mov rdi, [rbx + r12 * 8]
+    mov rsi, 0
+    call print_number
+    inc r12
+    dec r13
+    jmp .print_loop1
+.print_loop1_end:
+
+    ; --- Step 3: Print the contents of array2 ---
+    mov rsi, msg2; mov rdx, msg2_len; call print_str
+
+    mov r13, [array2 + DynamicArray.size] ; **YOUR FIX: Use a callee-saved register**
+    xor r12, r12
+.print_loop2:
+    cmp r13, 0
+    je .print_loop2_end
+    mov rbx, [array2 + DynamicArray.pointer]
+    mov rdi, [rbx + r12 * 8]
+    mov rsi, 0
+    call print_number
+    inc r12
+    dec r13
+    jmp .print_loop2
+.print_loop2_end:
+
+    ; --- Step 5: Pop elements and prove independence ---
+    mov rsi, msg3
+    mov rdx, msg3_len
+    call print_str
+
+    mov rdi, array1
+    call array_pop          ; Pop 102 from array1. Result is in RAX.
+    mov rdi, rax            ; **THE FIX: Move the result from RAX to RDI.**
+    mov rsi, 0
+    call print_number
+
+    mov rdi, array2
+    call array_pop          ; Pop 888 from array2. Result is in RAX.
+    mov rdi, rax            ; **THE FIX: Move the result from RAX to RDI.**
+    mov rsi, 0
+    call print_number
+
+    mov rdi, array3
+    call array_pop          ; Pop from empty array3. Result (0) is in RAX.
+    mov rdi, rax            ; **THE FIX: Move the result from RAX to RDI.**
+    mov rsi, 0
+    call print_number
+
+
+
+    mov rdi, [someInt1]
+    add rdi, [someInt2] 
+    add [someIntOut], rdi        
+    inc qword [someIntOut]
+    mov rdi, [someIntOut]       
+    mov rsi, 0     
+    call print_number
+
+
+
+    mov rsi, 69
+    mov rdi, array69
+    call array_append
+
+    mov rsi, 691
+    mov rdi, array69
+    call array_append
+
+	mov r12, 0 ; its my index
+	mov rbx, [array69 + DynamicArray.pointer] ; RBX now holds the starting address of the data [69, 691].
+	mov rdi, [rbx + r12 * 8]
+    mov rsi, 0
+    call print_number
+
+	mov rdi, 11111111111 ; a sepertor to see better
+    mov rsi, 0
+    call print_number
+    
+	mov rdi, [array69 + DynamicArray.size] 
+    mov rsi, 0
+    call print_number
+
+        ; --- Now, pop an element from array69 ---
+    mov rdi, array69        ; Arg 1 for array_pop is the pointer to the struct.
+    call array_pop          ; Pop 691 from array69. The popped value is returned in RAX.
+
+
+	;mov rdi, array69
+	;call array_clear
+
+	mov rdi, [array69 + DynamicArray.size] 
+    mov rsi, 0
+    call print_number
+
+
+
+    ; --- Step 1: Print the prompt to the user ---
+    mov rsi, prompt
+    mov rdx, prompt_len
+    call print_str
+
+    ; --- Step 2: Call our input function ---
+    lea rdi, [userName]
+    lea rsi, [userName_len]
+    call input
+
+    ; --- Step 3: Print the greeting back ---
+    mov rsi, greeting
+    mov rdx, greeting_len
+    call print_str
+
+    mov rsi, userName
+    mov rdx, [userName_len]
+    call print_str
+
+    mov rsi, nl
+    mov rdx, 1
+    call print_str
+
+    ; --- Step 4: Print the len ---
+
+    mov rdi, [userName_len]
+    mov rsi, 0
+    call print_number
+
+
+    ; --- One-time setup: Store the runtime address in our named pointer variable ---
+    lea rax, [rel big_string]
+    mov [rel big_string_addr], rax
+    
+ 	mov rax, [rel big_string_addr]	
+    mov byte [rax + 0], 'H'
+    inc qword [big_string_size]
+ 	mov rax, [rel big_string_addr]
+    mov byte [rax + 1], 'e'
+    inc qword [big_string_size]
+    mov rax, [rel big_string_addr]
+    mov byte [rax + 2], 'l'
+    inc qword [big_string_size]
+	mov rax, [rel big_string_addr]
+    mov byte [rax + 3], 'l'
+    inc qword [big_string_size]
+    mov rax, [rel big_string_addr]
+    mov byte [rax + 4], 'o'
+    inc qword [big_string_size]
+    mov rax, [rel big_string_addr]
+    mov byte [rax + 5], 10
+    inc qword [big_string_size]
+    mov rax, [rel big_string_addr]
+
+
+	mov rdx, [big_string_size]
+	mov rsi, [rel big_string_addr]
+
+	call print_str
+
+	push 5
+	push 10
+	push 15
+	call func1
+	mov rdi, rax 
+    mov rsi, 0
+    call print_number
+	add rsp, 24
+
+	mov rdi, 999999 ; ---------- kinda like --------- im lazy
+    mov rsi, 0
+    call print_number	
+
+	; last learning the loop
+	; it must loop 10 times and print each index and break at index 5
+
+	xor r13, r13
+	mov r12, 10
+.myLoop:
+	cmp r12, 0
+	je .myLoop_end
+	; body
+	; r13 is the index
+	mov rdi, r13
+        mov rsi, 0
+	call print_number
+	cmp r13, 5
+	je .myLoop_end
+	; body
+	inc r13
+	dec r12
+	jmp .myLoop
+.myLoop_end:
+
+
+    ; 1. Load all 6 arguments and call the calculation function.
+    mov rdi, [dividend_int]
+    mov rsi, [dividend_dec]
+    mov rdx, [divisor_int]
+    mov rcx, [divisor_dec]
+    lea r8,  [result_digit]
+    lea r9,  [result_decimal]
+    call divide_and_store
+
+    ; 2. Load the results and call the print function.
+    mov rdi, [result_digit]
+    mov rsi, [result_decimal]
+    call print_div
+
+
+
+	sub qword [test_int_neg], 20
+	js .is_negative1     ; Jump if the Sign Flag is set
+	
+.is_positive1:
+    ; The number is positive or zero, just print it.
+    mov qword [test_int_neg_isNegative], 0
+    jmp .is_negative_done1       ; Skip the negative-handling code
+
+.is_negative1:
+    mov qword [test_int_neg_isNegative], 1
+
+    ; === THE FIX IS HERE ===
+    ; We must convert the negative bit pattern back to its positive magnitude.
+    mov rax, [test_int_neg]  ; Load the negative bit pattern (e.g., for -14)
+    neg rax                  ; Negate it. rax now holds the positive magnitude (14)
+    mov [test_int_neg], rax  ; Store the positive magnitude back into the variable.
+    
+
+.is_negative_done1:
+
+    mov rdi, [test_int_neg]
+    mov rsi, [test_int_neg_isNegative]	
+	call print_number
+	
     ; --- Exit cleanly ---
     mov rax, 60
     xor rdi, rdi
     syscall
+

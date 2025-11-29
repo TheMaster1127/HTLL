@@ -1,23 +1,29 @@
-func code() {
-    var1 := 5
-    Loop, i := 0, 0 {
-        var1--
-        if (var1 = 0) {
-            break
-        }
+str_0 := 72  ; H
+str_1 := 101 ; e
+str_2 := 108 ; l
+str_3 := 108 ; l
+str_4 := 111 ; o
+str_len := 5
+func printString() {
+    if (str_0 != 0) 
+    { 
+    prints(str_0) 
     }
-    if (var1 = 0) {
-        var1 := 5 ; Comment
-        print(var1); Comment
+    if (str_1 != 0)
+    {
+    prints(str_1)
     }
+    if (str_2 != 0) {
+    prints(str_2) 
+    }
+    if (str_3 != 0) {
+    prints(str_3) 
+    }
+    if (str_4 != 0) {
+    prints(str_4) 
+    }
+    ; ... and so on for max string length
 }
-code()
-Loop, i2 := 1, 7 {
-    print(i2)
-    if (i2 = 5) {
-        break
-    }
-    if (i2 != 5) {
-        code()
-    }
-}
+
+
+printString()

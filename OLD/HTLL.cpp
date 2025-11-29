@@ -1,10 +1,21 @@
+#if __has_include("srell.hpp")
+    #include "srell.hpp"
+    #define USE_POWERFUL_REGEX 1
+    #pragma message("SUCCESS: Compiling with powerful SRELL regex engine. Lookbehinds will work.")
+#else
+    #include <regex>
+    #define USE_POWERFUL_REGEX 0
+    #pragma message("WARNING: srell.hpp not found. Falling back to limited std::regex. Lookbehinds will NOT work.")
+#endif
+
 #include <algorithm>
+#include <any>
 #include <cctype>
-#include <cmath>
 #include <cstdint>
-#include <filesystem>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
@@ -40,30 +51,22 @@ std::vector<std::string> LoopParseFunc(const std::string& var, const std::string
     return items;
 }
 
-// Print function for const char* specifically
+// Print function for const char*
 void print(const char* value) {
-    std::cout << std::string(value) << std::endl;  // Convert const char* to std::string
+    std::cout << std::string(value) << std::endl;
 }
-// Print function that converts all types to string if needed
+// Handle signed 8-bit integers
+void print(int8_t value) {
+    std::cout << static_cast<int>(value) << std::endl;
+}
+// Handle unsigned 8-bit integers
+void print(uint8_t value) {
+    std::cout << static_cast<unsigned int>(value) << std::endl;
+}
+// Generic print function fallback
 template <typename T>
 void print(const T& value) {
-    if constexpr (std::is_same_v<T, std::string>) {
-        std::cout << value << std::endl;
-    } else if constexpr (std::is_same_v<T, char>) {
-        std::cout << value << std::endl;
-    } else if constexpr (std::is_same_v<T, int>) {
-        std::cout << std::to_string(value) << std::endl;
-    } else if constexpr (std::is_same_v<T, float>) {
-        std::cout << std::to_string(value) << std::endl;
-    } else if constexpr (std::is_same_v<T, double>) {
-        std::cout << std::to_string(value) << std::endl;
-    } else if constexpr (std::is_same_v<T, size_t>) {
-        std::cout << std::to_string(value) << std::endl;
-    } else if constexpr (std::is_same_v<T, bool>) {
-        std::cout << (value ? "1" : "0") << std::endl;
-    } else {
-        std::cout << "Unsupported type" << std::endl;
-    }
+    std::cout << value << std::endl;
 }
 
 // Convert std::string to int
@@ -94,6 +97,12 @@ std::string STR(size_t value) {
 std::string STR(bool value) {
     return value ? "1" : "0";
 }
+std::string STR(const char* value) {
+    return std::string(value);
+}
+std::string STR(const std::string& value) {
+    return value;
+}
 
 // Function to find the position of needle in haystack (std::string overload)
 int InStr(const std::string& haystack, const std::string& needle) {
@@ -102,21 +111,11 @@ int InStr(const std::string& haystack, const std::string& needle) {
 }
 
 std::string FileRead(const std::string& path) {
-    std::ifstream file;
-    std::filesystem::path full_path;
-    // Check if the file path is an absolute path
-    if (std::filesystem::path(path).is_absolute()) {
-        full_path = path;
-    } else {
-        // If it's not a full path, prepend the current working directory
-        full_path = std::filesystem::current_path() / path;
-    }
-    // Open the file
-    file.open(full_path);
+    // This function relies on <fstream>, which is already in your global includes.
+    std::ifstream file(path);
     if (!file.is_open()) {
-        throw std::runtime_error("Error: Could not open the file.");
+        throw std::runtime_error("Error: Could not open the file: " + path);
     }
-    // Read the file content into a string
     std::string content;
     std::string line;
     while (std::getline(file, line)) {
@@ -142,40 +141,27 @@ bool FileAppend(const std::string& content, const std::string& path) {
 }
 
 bool FileDelete(const std::string& path) {
-    std::filesystem::path file_path(path);
-    // Check if the file exists
-    if (!std::filesystem::exists(file_path)) {
-        return false;
-    }
-    // Attempt to remove the file
-    if (!std::filesystem::remove(file_path)) {
-        return false;
-    }
-    return true;
-}
-
-double Exp(double value) {
-    return std::exp(value);
+    return std::remove(path.c_str()) == 0;
 }
 
 std::string SubStr(const std::string& str, int startPos, int length = -1) {
     std::string result;
     size_t strLen = str.size();
-    // Handle negative starting positions
+    // Handle negative starting positions (counting from the end)
     if (startPos < 0) {
-        startPos += strLen;
-        if (startPos < 0) startPos = 0;
-    } else {
-        if (startPos > static_cast<int>(strLen)) return ""; // Starting position beyond string length
-        startPos -= 1; // Convert to 0-based index
+        startPos = strLen + startPos;
+        if (startPos < 0) startPos = 0;  // Ensure it doesn't go beyond the start of the string
+    }
+    else {
+        startPos -= 1; // Convert to 0-based index for internal operations
     }
     // Handle length
     if (length < 0) {
-        length = strLen - startPos; // Length to end of string
+        length = strLen - startPos; // Length to the end of the string
     } else if (startPos + length > static_cast<int>(strLen)) {
         length = strLen - startPos; // Adjust length to fit within the string
     }
-    // Extract substring
+    // Extract the substring
     result = str.substr(startPos, length);
     return result;
 }
@@ -242,13 +228,10 @@ std::string Chr(int number) {
     }
 #endif
 std::string GetParams() {
+    // [FIX] This function is now safe as it does not use std::filesystem.
     std::vector<std::string> params;
     for (int i = 1; i < ARGC; ++i) {
-        std::string arg = ARGV[i];
-        if (std::filesystem::exists(arg)) {
-            arg = std::filesystem::absolute(arg).string();
-        }
-        params.push_back(arg);
+        params.push_back(ARGV[i]);
     }
     std::string result;
     for (const auto& param : params) {
@@ -257,6 +240,47 @@ std::string GetParams() {
     return result;
 }
 
+void HTVM_Append(std::vector<std::string>& arr, const std::string& value) {
+    arr.push_back(value);
+}
+void HTVM_Append(std::vector<std::string>& arr, const char* value) {
+    arr.push_back(std::string(value));
+}
+void HTVM_Append(std::vector<int>& arr, int value) {
+    arr.push_back(value);
+}
+void HTVM_Append(std::vector<float>& arr, float value) {
+    arr.push_back(value);
+}
+void HTVM_Append(std::vector<bool>& arr, bool value) {
+    arr.push_back(value);
+}
+
+void HTVM_Pop(std::vector<std::string>& arr) {
+    if (!arr.empty()) arr.pop_back();
+}
+void HTVM_Pop(std::vector<int>& arr) {
+    if (!arr.empty()) arr.pop_back();
+}
+void HTVM_Pop(std::vector<float>& arr) {
+    if (!arr.empty()) arr.pop_back();
+}
+void HTVM_Pop(std::vector<bool>& arr) {
+    if (!arr.empty()) arr.pop_back();
+}
+
+size_t HTVM_Size(const std::vector<std::string>& arr) {
+    return arr.size();
+}
+size_t HTVM_Size(const std::vector<int>& arr) {
+    return arr.size();
+}
+size_t HTVM_Size(const std::vector<float>& arr) {
+    return arr.size();
+}
+size_t HTVM_Size(const std::vector<bool>& arr) {
+    return arr.size();
+}
 
 
 // global vars
@@ -268,12 +292,12 @@ bool isNum(std::string theString) {
     int countNums = 0;
     int countNums2 = 0;
     std::vector<std::string> items1 = LoopParseFunc(theString);
-    for (size_t A_Index1 = 0; A_Index1 < items1.size() + 0; A_Index1++) {
+    for (size_t A_Index1 = 0; A_Index1 < items1.size(); A_Index1++) {
         std::string A_LoopField1 = items1[A_Index1 - 0];
         countNums++;
     }
     std::vector<std::string> items2 = LoopParseFunc(theString);
-    for (size_t A_Index2 = 0; A_Index2 < items2.size() + 0; A_Index2++) {
+    for (size_t A_Index2 = 0; A_Index2 < items2.size(); A_Index2++) {
         std::string A_LoopField2 = items2[A_Index2 - 0];
         if (A_LoopField2 == "0" || A_LoopField2 == "1" || A_LoopField2 == "2" || A_LoopField2 == "3" || A_LoopField2 == "4" || A_LoopField2 == "5" || A_LoopField2 == "6" || A_LoopField2 == "7" || A_LoopField2 == "8" || A_LoopField2 == "9") {
             countNums2++;
@@ -285,7 +309,7 @@ bool isNum(std::string theString) {
     return isNum;
 }
 std::string getMemLocFromVarName(std::string varName) {
-    for (int A_Index3 = 0; A_Index3 < allVars.size() + 0; A_Index3++) {
+    for (int A_Index3 = 0; A_Index3 < HTVM_Size(allVars); A_Index3++) {
         if (Trim(allVars[A_Index3]) == Trim(varName)) {
             return STR(A_Index3 + 17);
         }
@@ -305,13 +329,13 @@ std::string expresionCompiler(std::string TheExpresion) {
     }
     std::vector<std::string> TheExpresionARR;
     std::vector<std::string> items4 = LoopParseFunc(TheExpresion, " ");
-    for (size_t A_Index4 = 0; A_Index4 < items4.size() + 0; A_Index4++) {
+    for (size_t A_Index4 = 0; A_Index4 < items4.size(); A_Index4++) {
         std::string A_LoopField4 = items4[A_Index4 - 0];
-        TheExpresionARR.push_back(A_LoopField4);
+        HTVM_Append(TheExpresionARR, A_LoopField4);
     }
     int onceFixLoopExpresion = 0;
     std::vector<std::string> items5 = LoopParseFunc(TheExpresion, " ");
-    for (size_t A_Index5 = 0; A_Index5 < items5.size() + 0; A_Index5++) {
+    for (size_t A_Index5 = 0; A_Index5 < items5.size(); A_Index5++) {
         std::string A_LoopField5 = items5[A_Index5 - 0];
         if (A_LoopField5 != "+" && A_LoopField5 != "-" && A_LoopField5 != "*") {
             onceFixLoopExpresion++;
@@ -355,6 +379,7 @@ void compiler() {
     std::string fileNameASM = "";
     fileNameASM = StringTrimRight(fileName, 4);
     fileNameASM = fileNameASM + "htasm";
+    FileDelete(Trim(fileNameASM));
     HTLLcode = StrReplace(HTLLcode, Chr(13), "");
     std::string str1 = "";
     std::string str2 = "";
@@ -371,7 +396,7 @@ void compiler() {
     std::vector<std::string> holdNextLines;
     std::string fixRemoveCommenst = "";
     std::vector<std::string> items6 = LoopParseFunc(HTLLcode, "\n", "\r");
-    for (size_t A_Index6 = 0; A_Index6 < items6.size() + 0; A_Index6++) {
+    for (size_t A_Index6 = 0; A_Index6 < items6.size(); A_Index6++) {
         std::string A_LoopField6 = items6[A_Index6 - 0];
         if (InStr(A_LoopField6, ";")) {
             fixRemoveCommenst += Trim(StrSplit(A_LoopField6, ";", 1)) + "\n";
@@ -381,10 +406,10 @@ void compiler() {
     }
     HTLLcode = StringTrimRight(fixRemoveCommenst, 1);
     std::string outCodeFixBraces = "";
-    for (int A_Index7 = 0; A_Index7 < 2 + 0; A_Index7++) {
+    for (int A_Index7 = 0; A_Index7 < 2; A_Index7++) {
         outCodeFixBraces = "";
         std::vector<std::string> items8 = LoopParseFunc(HTLLcode, "\n", "\r");
-        for (size_t A_Index8 = 0; A_Index8 < items8.size() + 0; A_Index8++) {
+        for (size_t A_Index8 = 0; A_Index8 < items8.size(); A_Index8++) {
             std::string A_LoopField8 = items8[A_Index8 - 0];
             if (InStr(Trim(A_LoopField8), "{") && Trim(A_LoopField8) != "{") {
                 outCodeFixBraces += Trim(StrReplace(Trim(A_LoopField8), "{", "")) + "\n{\n";
@@ -399,27 +424,27 @@ void compiler() {
     }
     print(HTLLcode);
     std::vector<std::string> items9 = LoopParseFunc(HTLLcode, "\n", "\r");
-    for (size_t A_Index9 = 0; A_Index9 < items9.size() + 0; A_Index9++) {
+    for (size_t A_Index9 = 0; A_Index9 < items9.size(); A_Index9++) {
         std::string A_LoopField9 = items9[A_Index9 - 0];
         HTLLoutFix += Trim(A_LoopField9) + "\n";
-        holdNextLines.push_back(Trim(A_LoopField9));
+        HTVM_Append(holdNextLines, Trim(A_LoopField9));
     }
     HTLLcode = StringTrimRight(HTLLoutFix, 1);
     std::string lastIfStatement = "";
     std::string lastIfStatementType = "";
     int curlyBracesDepth = 1;
     std::vector<std::string> curlyBracesHold;
-    curlyBracesHold.push_back("");
+    HTVM_Append(curlyBracesHold, "");
     std::vector<std::string> lastIfHold;
     std::vector<std::string> lastIfHoldType;
-    lastIfHold.push_back("");
-    lastIfHoldType.push_back("");
+    HTVM_Append(lastIfHold, "");
+    HTVM_Append(lastIfHoldType, "");
     int loopNum = 0;
     int funcNum = 0;
     std::vector<std::string> allFuncs;
     int funcCallNum = 0;
     std::vector<std::string> items10 = LoopParseFunc(HTLLcode, "\n", "\r");
-    for (size_t A_Index10 = 0; A_Index10 < items10.size() + 0; A_Index10++) {
+    for (size_t A_Index10 = 0; A_Index10 < items10.size(); A_Index10++) {
         std::string A_LoopField10 = items10[A_Index10 - 0];
         if (SubStr(A_LoopField10, 1, 6) == "print(") {
             str1 = StringTrimLeft(A_LoopField10, 6);
@@ -451,7 +476,7 @@ void compiler() {
             str1 = StrSplit(A_LoopField10, " := ", 1);
             if (getMemLocFromVarName(str1) == "0") {
                 varsDecNum++;
-                allVars.push_back(str1);
+                HTVM_Append(allVars, str1);
             }
             str2 = StrSplit(A_LoopField10, " := ", 2);
             if (expresionCompiler(str2) != "false") {
@@ -501,9 +526,9 @@ void compiler() {
                 str4 = "CMP l" + getMemLocFromVarName(str2) + ", l" + getMemLocFromVarName(str3) + "\nJNE " + STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_";
                 lastIfStatement = "CMP l" + getMemLocFromVarName(str2) + ", l" + getMemLocFromVarName(str3);
             }
-            lastIfHold.push_back(lastIfStatement);
-            lastIfHoldType.push_back(lastIfStatementType);
-            curlyBracesHold.push_back(STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_");
+            HTVM_Append(lastIfHold, lastIfStatement);
+            HTVM_Append(lastIfHoldType, lastIfStatementType);
+            HTVM_Append(curlyBracesHold, STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_");
             HTLLout += str4 + "\n";
         }
         else if (SubStr(A_LoopField10, 1, 3) == "if " && InStr(A_LoopField10, " != ")) {
@@ -521,9 +546,9 @@ void compiler() {
                 str4 = "CMP l" + getMemLocFromVarName(str2) + ", l" + getMemLocFromVarName(str3) + "\nJE " + STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_";
                 lastIfStatement = "CMP l" + getMemLocFromVarName(str2) + ", l" + getMemLocFromVarName(str3);
             }
-            lastIfHold.push_back(lastIfStatement);
-            lastIfHoldType.push_back(lastIfStatementType);
-            curlyBracesHold.push_back(STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_");
+            HTVM_Append(lastIfHold, lastIfStatement);
+            HTVM_Append(lastIfHoldType, lastIfStatementType);
+            HTVM_Append(curlyBracesHold, STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_");
             HTLLout += str4 + "\n";
         }
         else if (SubStr(A_LoopField10, 1, 3) == "if " && InStr(A_LoopField10, " > ")) {
@@ -541,9 +566,9 @@ void compiler() {
                 str4 = "CMP l" + getMemLocFromVarName(str2) + ", l" + getMemLocFromVarName(str3) + "\nJEL " + STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_";
                 lastIfStatement = "CMP l" + getMemLocFromVarName(str2) + ", l" + getMemLocFromVarName(str3);
             }
-            lastIfHold.push_back(lastIfStatement);
-            lastIfHoldType.push_back(lastIfStatementType);
-            curlyBracesHold.push_back(STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_");
+            HTVM_Append(lastIfHold, lastIfStatement);
+            HTVM_Append(lastIfHoldType, lastIfStatementType);
+            HTVM_Append(curlyBracesHold, STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_");
             HTLLout += str4 + "\n";
         }
         else if (SubStr(A_LoopField10, 1, 3) == "if " && InStr(A_LoopField10, " < ")) {
@@ -561,9 +586,9 @@ void compiler() {
                 str4 = "CMP l" + getMemLocFromVarName(str2) + ", l" + getMemLocFromVarName(str3) + "\nJEM " + STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_";
                 lastIfStatement = "CMP l" + getMemLocFromVarName(str2) + ", l" + getMemLocFromVarName(str3);
             }
-            lastIfHold.push_back(lastIfStatement);
-            lastIfHoldType.push_back(lastIfStatementType);
-            curlyBracesHold.push_back(STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_");
+            HTVM_Append(lastIfHold, lastIfStatement);
+            HTVM_Append(lastIfHoldType, lastIfStatementType);
+            HTVM_Append(curlyBracesHold, STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_");
             HTLLout += str4 + "\n";
         }
         else if (SubStr(A_LoopField10, 1, 3) == "if " && InStr(A_LoopField10, " <= ")) {
@@ -581,9 +606,9 @@ void compiler() {
                 str4 = "CMP l" + getMemLocFromVarName(str2) + ", l" + getMemLocFromVarName(str3) + "\nJM " + STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_";
                 lastIfStatement = "CMP l" + getMemLocFromVarName(str2) + ", l" + getMemLocFromVarName(str3);
             }
-            lastIfHold.push_back(lastIfStatement);
-            lastIfHoldType.push_back(lastIfStatementType);
-            curlyBracesHold.push_back(STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_");
+            HTVM_Append(lastIfHold, lastIfStatement);
+            HTVM_Append(lastIfHoldType, lastIfStatementType);
+            HTVM_Append(curlyBracesHold, STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_");
             HTLLout += str4 + "\n";
         }
         else if (SubStr(A_LoopField10, 1, 3) == "if " && InStr(A_LoopField10, " >= ")) {
@@ -601,15 +626,15 @@ void compiler() {
                 str4 = "CMP l" + getMemLocFromVarName(str2) + ", l" + getMemLocFromVarName(str3) + "\nJL " + STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_";
                 lastIfStatement = "CMP l" + getMemLocFromVarName(str2) + ", l" + getMemLocFromVarName(str3);
             }
-            lastIfHold.push_back(lastIfStatement);
-            lastIfHoldType.push_back(lastIfStatementType);
-            curlyBracesHold.push_back(STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_");
+            HTVM_Append(lastIfHold, lastIfStatement);
+            HTVM_Append(lastIfHoldType, lastIfStatementType);
+            HTVM_Append(curlyBracesHold, STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_");
             HTLLout += str4 + "\n";
         }
         else if (StrLower(Trim(A_LoopField10)) == "else") {
             curlyBracesDepth++;
-            str8 = lastIfHoldType[lastIfHoldType.size() - 1];
-            str9 = lastIfHold[lastIfHold.size() - 1];
+            str8 = lastIfHoldType[HTVM_Size(lastIfHoldType) - 1];
+            str9 = lastIfHold[HTVM_Size(lastIfHold) - 1];
             if (str8 == "=") {
                 HTLLout += str9 + "\nJE " + STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_\n";
             }
@@ -628,9 +653,9 @@ void compiler() {
             if (str8 == "<=") {
                 HTLLout += str9 + "\nJEL " + STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_\n";
             }
-            curlyBracesHold.push_back(STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_");
-            lastIfHoldType.pop_back();
-            lastIfHold.pop_back();
+            HTVM_Append(curlyBracesHold, STR(curlyBracesDepth - 1) + "_" + STR(labelNum) + "_");
+            HTVM_Pop(lastIfHoldType);
+            HTVM_Pop(lastIfHold);
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -643,11 +668,11 @@ void compiler() {
             str2 = Trim(StrSplit(str1, ",", 1));
             str6 = Trim(StrSplit(str1, ",", 1));
             str7 = Trim(StrSplit(str1, ",", 2));
-            lastIfHold.push_back("");
-            lastIfHoldType.push_back("");
+            HTVM_Append(lastIfHold, "");
+            HTVM_Append(lastIfHoldType, "");
             if (getMemLocFromVarName(StrSplit(str2, " := ", 1)) == "0") {
                 varsDecNum++;
-                allVars.push_back(StrSplit(str2, " := ", 1));
+                HTVM_Append(allVars, StrSplit(str2, " := ", 1));
             }
             str3 = StrSplit(str2, " := ", 2);
             if (expresionCompiler(str3) != "false") {
@@ -672,11 +697,11 @@ void compiler() {
             HTLLout += str4 + "\n";
             HTLLout += "LABEL loop_" + STR(loopNum) + "\n";
             // loopNum | count | indexNameVar
-            curlyBracesHold.push_back(STR(loopNum) + "|" + Trim(StrSplit(str6, " := ", 1)) + "|" + str7);
+            HTVM_Append(curlyBracesHold, STR(loopNum) + "|" + Trim(StrSplit(str6, " := ", 1)) + "|" + str7);
         }
         else if (Trim(A_LoopField10) == "break") {
             for (int A_Index11 = 0; ; A_Index11++) {
-                str8 = STR(curlyBracesHold.size());
+                str8 = STR(HTVM_Size(curlyBracesHold));
                 str9 = curlyBracesHold[INT(str8) - (A_Index11 + 1)];
                 if (InStr(str9, "|")) {
                     break;
@@ -687,11 +712,11 @@ void compiler() {
         else if (SubStr(StrLower(A_LoopField10), 1, 5) == "func ") {
             str1 = StringTrimLeft(A_LoopField10, 5);
             funcNum++;
-            allFuncs.push_back(str1 + "|" + STR(funcNum));
-            lastIfHold.push_back("");
-            lastIfHoldType.push_back("");
+            HTVM_Append(allFuncs, str1 + "|" + STR(funcNum));
+            HTVM_Append(lastIfHold, "");
+            HTVM_Append(lastIfHoldType, "");
             HTLLout += "JMP funcClose_" + STR(funcNum) + "\nLABEL funcUp_" + STR(funcNum) + "\n";
-            curlyBracesHold.push_back("~|" + STR(funcNum));
+            HTVM_Append(curlyBracesHold, "~|" + STR(funcNum));
         }
         else if (SubStr(StrLower(A_LoopField10), 1, 5) == "draw(") {
             str1 = StringTrimRight(A_LoopField10, 1);
@@ -745,7 +770,7 @@ void compiler() {
             JMP 2
             LABEL 11
             */
-            for (int A_Index12 = 0; A_Index12 < allFuncs.size() + 0; A_Index12++) {
+            for (int A_Index12 = 0; A_Index12 < HTVM_Size(allFuncs); A_Index12++) {
                 if (StrSplit(allFuncs[A_Index12], "|", 1) == str1) {
                     str3 = StrSplit(allFuncs[A_Index12], "|", 2);
                     break;
@@ -755,11 +780,16 @@ void compiler() {
             HTLLout += "MOV r10, funcBack_" + STR(funcCallNum) + "\nJMP funcUp_" + str3 + "\nLABEL funcBack_" + STR(funcCallNum) + "\n";
         }
         else if (A_LoopField10 == "}") {
-            if (holdNextLines[A_Index10 + 1] != "else") {
-                lastIfHoldType.pop_back();
-                lastIfHold.pop_back();
+            if (A_Index10 + 1 < HTVM_Size(holdNextLines)) {
+                if (holdNextLines[A_Index10 + 1] != "else") {
+                    HTVM_Pop(lastIfHoldType);
+                    HTVM_Pop(lastIfHold);
+                }
+            } else {
+                HTVM_Pop(lastIfHoldType);
+                HTVM_Pop(lastIfHold);
             }
-            str9 = curlyBracesHold[curlyBracesHold.size() - 1];
+            str9 = curlyBracesHold[HTVM_Size(curlyBracesHold) - 1];
             if (InStr(str9, "|") && !(InStr(str9, "~"))) {
                 // loopNum | count | indexNameVar
                 HTLLout += "INC l" + getMemLocFromVarName(Trim(StrSplit(str9, "|", 2))) + "\nMOV l" + getMemLocFromVarName(Trim(StrSplit(str9, "|", 2))) + ", r1\nCMP l" + getMemLocFromVarName(Trim(StrSplit(str9, "|", 2))) + ", " + Trim(StrSplit(str9, "|", 3)) + "\nJNE loop_" + StrSplit(str9, "|", 1) + "\nLABEL loopexit_" + StrSplit(str9, "|", 1) + "\n";
@@ -769,7 +799,7 @@ void compiler() {
             } else {
                 HTLLout += "LABEL _" + str9 + "\n";
             }
-            curlyBracesHold.pop_back();
+            HTVM_Pop(curlyBracesHold);
             curlyBracesDepth--;
             labelNum++;
         }
@@ -779,7 +809,7 @@ void compiler() {
     std::string fixLabels = "";
     print(HTLLout);
     std::vector<std::string> items13 = LoopParseFunc(HTLLout, "\n", "\r");
-    for (size_t A_Index13 = 0; A_Index13 < items13.size() + 0; A_Index13++) {
+    for (size_t A_Index13 = 0; A_Index13 < items13.size(); A_Index13++) {
         std::string A_LoopField13 = items13[A_Index13 - 0];
         if (SubStr(A_LoopField13, 1, 6) == "LABEL ") {
             if (SubStr(A_LoopField13, 1, 11) != "LABEL loop_") {
@@ -865,5 +895,6 @@ void compiler() {
 }
 int main(int argc, char* argv[]) {
     compiler();
+
     return 0;
 }

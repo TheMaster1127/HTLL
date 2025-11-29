@@ -1,0 +1,25 @@
+func func1(num1, num2)
+int outNum := 0
+outNum += num1
+outNum += num2
+return outNum
+funcend
+main
+
+func1(5, 10)
+print(rax)
+arr arr1
+arr1.add 5
+arr1.add 6
+arr1.add 10
+arr1.add 23
+arr1.add 3
+
+arr1.size
+int sizeArr := rax
+int i := 0
+Loop, sizeArr
+arr1.index i
+print(rax)
+i++
+loopend

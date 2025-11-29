@@ -1,0 +1,19 @@
+
+
+int COUNT := 5
+
+arr arr1
+int i := 0
+Loop, COUNT
+arr1.add i 
+i++
+loopend
+
+i := 0
+arr1.size
+Loop, rax
+arr1.index i
+print(rax)
+i++
+loopend
+

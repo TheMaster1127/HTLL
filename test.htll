@@ -1,3 +1,11 @@
+
+
+func nameFucn1(FUNCstr1)
+return FUNCstr1
+funcend
+
+main
+
 ; test commnets
 ;;;;;;;;;;;;;;;
 ; qwaesdfg
@@ -65,3 +73,14 @@ var100--
 var100++
 nint n1 -= 5
 print(n1)
+int i := 0
+Loop, 5
+print(i)
+i++
+if (i = 2)
+i := 9
+ifend
+loopend
+
+nameFucn1(5)
+print(rax)
