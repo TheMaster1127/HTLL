@@ -17,3 +17,30 @@ print(rax)
 i++
 loopend
 
+arr myString2
+arradd myString2    Hello   World
+myString2.add 10
+
+arr myString
+
+myString.copy myString2
+
+
+
+i := 0
+myString.size
+Loop, rax
+myString.index i
+print_rax_as_char
+i++
+loopend
+
+myString.clear
+
+i := 0
+myString.size
+Loop, rax
+myString.index i
+print_rax_as_char
+i++
+loopend

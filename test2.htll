@@ -16,7 +16,8 @@ arr1.add 23
 arr1.add 3
 
 arr1.size
-int sizeArr := rax
+int sizeArr := 0
+sizeArr := rax
 int i := 0
 Loop, sizeArr
 arr1.index i
