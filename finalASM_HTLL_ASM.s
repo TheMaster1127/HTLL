@@ -14,13 +14,16 @@ section .data
     nl:   db 10
 
 
-FILE_PATH_1: db "test_file.txt", 0
-FILE_PATH_2: db "test_file.txt", 0
-FILE_PATH_3: db "test_file.txt", 0
-FILE_PATH_4: db "test_file.txt", 0
+FILE_PATH_1: db "test_output.txt", 0
+FILE_PATH_2: db "test_output.txt", 0
+FILE_PATH_3: db "test_output.txt", 0
+FILE_PATH_4: db "test_output.txt", 0
 
 
 i: dq 0
+loop_counter: dq 0
+sum_result: dq 0
+local_sum: dq 0
 
 
 
@@ -30,9 +33,11 @@ file_read_buffer: resb 4096
 input_len:    resq 1   ; A variable to hold the length of the input
     print_buffer_n: resb 20
 
-string_to_write: resb DynamicArray_size
-string_to_append: resb DynamicArray_size
-file_contents: resb DynamicArray_size
+numbers_arr: resb DynamicArray_size
+temp_arr: resb DynamicArray_size
+message_arr: resb DynamicArray_size
+user_input_arr: resb DynamicArray_size
+prompt_arr: resb DynamicArray_size
 
 
 
@@ -906,160 +911,385 @@ file_delete:
 
 
 
+add_numbers:
+push rbp
+mov rbp, rsp
+sub rsp, 16
+mov rdi, [rbp + 16]
+add qword [local_sum], rdi
+mov rdi, [rbp + 24]
+add qword [local_sum], rdi
+mov rax, [local_sum]
+jmp .add_numbers_return
+.add_numbers_return:
+add rsp, 16
+pop rbp
+ret
 _start:
-mov rsi, 'H'
-mov rdi, string_to_write
-call array_append
-mov rsi, 'e'
-mov rdi, string_to_write
-call array_append
-mov rsi, 'l'
-mov rdi, string_to_write
-call array_append
-mov rsi, 'l'
-mov rdi, string_to_write
-call array_append
-mov rsi, 'o'
-mov rdi, string_to_write
-call array_append
-mov rsi, ' '
-mov rdi, string_to_write
-call array_append
-mov rsi, 'f'
-mov rdi, string_to_write
-call array_append
-mov rsi, 'r'
-mov rdi, string_to_write
-call array_append
-mov rsi, 'o'
-mov rdi, string_to_write
-call array_append
-mov rsi, 'm'
-mov rdi, string_to_write
-call array_append
-mov rsi, ' '
-mov rdi, string_to_write
-call array_append
-mov rsi, 'H'
-mov rdi, string_to_write
-call array_append
-mov rsi, 'T'
-mov rdi, string_to_write
-call array_append
-mov rsi, 'L'
-mov rdi, string_to_write
-call array_append
-mov rsi, 'L'
-mov rdi, string_to_write
-call array_append
-mov rsi, '!'
-mov rdi, string_to_write
-call array_append
-
-mov rsi, 10
-mov rdi, string_to_write
-
-call array_append
-mov rdi, FILE_PATH_1
-mov rsi, string_to_write
-call file_append
-mov rsi, 'T'
-mov rdi, string_to_append
-call array_append
-mov rsi, 'h'
-mov rdi, string_to_append
-call array_append
-mov rsi, 'i'
-mov rdi, string_to_append
-call array_append
-mov rsi, 's'
-mov rdi, string_to_append
-call array_append
-mov rsi, ' '
-mov rdi, string_to_append
-call array_append
-mov rsi, 'i'
-mov rdi, string_to_append
-call array_append
-mov rsi, 's'
-mov rdi, string_to_append
-call array_append
-mov rsi, ' '
-mov rdi, string_to_append
-call array_append
-mov rsi, 'a'
-mov rdi, string_to_append
-call array_append
-mov rsi, ' '
-mov rdi, string_to_append
-call array_append
-mov rsi, 's'
-mov rdi, string_to_append
-call array_append
-mov rsi, 'e'
-mov rdi, string_to_append
-call array_append
-mov rsi, 'c'
-mov rdi, string_to_append
-call array_append
-mov rsi, 'o'
-mov rdi, string_to_append
-call array_append
-mov rsi, 'n'
-mov rdi, string_to_append
-call array_append
-mov rsi, 'd'
-mov rdi, string_to_append
-call array_append
-mov rsi, ' '
-mov rdi, string_to_append
-call array_append
-mov rsi, 'l'
-mov rdi, string_to_append
-call array_append
-mov rsi, 'i'
-mov rdi, string_to_append
-call array_append
-mov rsi, 'n'
-mov rdi, string_to_append
-call array_append
-mov rsi, 'e'
-mov rdi, string_to_append
-call array_append
-mov rsi, '.'
-mov rdi, string_to_append
-call array_append
-
-mov rsi, 10
-mov rdi, string_to_append
-
-call array_append
-mov rdi, FILE_PATH_2
-mov rsi, string_to_append
-call file_append
-mov rdi, file_contents
-call array_clear
-mov rdi, file_contents
-mov rsi, FILE_PATH_3
-call file_read
+push 100
+push 200
+call add_numbers
+add rsp, 16
+mov rdi, rax
+mov [sum_result], rdi
+mov rdi, [sum_result]
+mov rsi, 0
+call print_number
 mov qword [i], 0
-mov rax, [file_contents + DynamicArray.size]
+mov qword [loop_counter], 5
 xor r13, r13
-mov r12, rax
+mov r12, [loop_counter]
 .loop_0:
 cmp r12, 0
 je .loop_end0
+mov rsi, [i]
+mov rdi, numbers_arr
+
+call array_append
+inc qword [i]
+inc r13
+dec r12
+jmp .loop_0
+.loop_end0:
+mov qword [i], 0
+mov rax, [numbers_arr + DynamicArray.size]
+xor r13, r13
+mov r12, rax
+.loop_1:
+cmp r12, 0
+je .loop_end1
 mov rcx, [i]
 
-mov rbx, [file_contents + DynamicArray.pointer]
+mov rbx, [numbers_arr + DynamicArray.pointer]
+mov rax, [rbx + rcx*8]
+mov rax, rax
+cmp rax, 1
+je .end_if_0
+mov rax, rax
+cmp rax, 3
+je .end_if_0
+mov rdi, rax
+mov rsi, 0
+call print_number
+.end_if_0:
+.end_if_1:
+inc qword [i]
+inc r13
+dec r12
+jmp .loop_1
+.loop_end1:
+mov rbx, [numbers_arr + DynamicArray.pointer]
+mov rcx, 3
+mov rsi, 99
+mov [rbx + rcx*8], rsi
+mov rdi, temp_arr
+mov rsi, numbers_arr
+call array_copy
+mov rdi, numbers_arr
+call array_clear
+mov qword [i], 0
+mov rax, [temp_arr + DynamicArray.size]
+xor r13, r13
+mov r12, rax
+.loop_2:
+cmp r12, 0
+je .loop_end2
+mov rcx, [i]
+
+mov rbx, [temp_arr + DynamicArray.pointer]
+mov rax, [rbx + rcx*8]
+mov rdi, rax
+mov rsi, 0
+call print_number
+inc qword [i]
+inc r13
+dec r12
+jmp .loop_2
+.loop_end2:
+mov rdi, prompt_arr
+call array_clear
+mov rsi, 'P'
+mov rdi, prompt_arr
+call array_append
+mov rsi, 'l'
+mov rdi, prompt_arr
+call array_append
+mov rsi, 'e'
+mov rdi, prompt_arr
+call array_append
+mov rsi, 'a'
+mov rdi, prompt_arr
+call array_append
+mov rsi, 's'
+mov rdi, prompt_arr
+call array_append
+mov rsi, 'e'
+mov rdi, prompt_arr
+call array_append
+mov rsi, ' '
+mov rdi, prompt_arr
+call array_append
+mov rsi, 'e'
+mov rdi, prompt_arr
+call array_append
+mov rsi, 'n'
+mov rdi, prompt_arr
+call array_append
+mov rsi, 't'
+mov rdi, prompt_arr
+call array_append
+mov rsi, 'e'
+mov rdi, prompt_arr
+call array_append
+mov rsi, 'r'
+mov rdi, prompt_arr
+call array_append
+mov rsi, ' '
+mov rdi, prompt_arr
+call array_append
+mov rsi, 'y'
+mov rdi, prompt_arr
+call array_append
+mov rsi, 'o'
+mov rdi, prompt_arr
+call array_append
+mov rsi, 'u'
+mov rdi, prompt_arr
+call array_append
+mov rsi, 'r'
+mov rdi, prompt_arr
+call array_append
+mov rsi, ' '
+mov rdi, prompt_arr
+call array_append
+mov rsi, 'n'
+mov rdi, prompt_arr
+call array_append
+mov rsi, 'a'
+mov rdi, prompt_arr
+call array_append
+mov rsi, 'm'
+mov rdi, prompt_arr
+call array_append
+mov rsi, 'e'
+mov rdi, prompt_arr
+call array_append
+mov rsi, ':'
+mov rdi, prompt_arr
+call array_append
+
+mov rsi, 32
+mov rdi, prompt_arr
+
+call array_append
+mov rdi, user_input_arr
+mov rsi, prompt_arr
+call get_user_input
+mov rdi, message_arr
+call array_clear
+mov rsi, 'Y'
+mov rdi, message_arr
+call array_append
+mov rsi, 'o'
+mov rdi, message_arr
+call array_append
+mov rsi, 'u'
+mov rdi, message_arr
+call array_append
+mov rsi, ' '
+mov rdi, message_arr
+call array_append
+mov rsi, 'e'
+mov rdi, message_arr
+call array_append
+mov rsi, 'n'
+mov rdi, message_arr
+call array_append
+mov rsi, 't'
+mov rdi, message_arr
+call array_append
+mov rsi, 'e'
+mov rdi, message_arr
+call array_append
+mov rsi, 'r'
+mov rdi, message_arr
+call array_append
+mov rsi, 'e'
+mov rdi, message_arr
+call array_append
+mov rsi, 'd'
+mov rdi, message_arr
+call array_append
+mov rsi, ':'
+mov rdi, message_arr
+call array_append
+
+mov rsi, 32
+mov rdi, message_arr
+
+call array_append
+mov qword [i], 0
+mov rax, [user_input_arr + DynamicArray.size]
+xor r13, r13
+mov r12, rax
+.loop_3:
+cmp r12, 0
+je .loop_end3
+mov rcx, [i]
+
+mov rbx, [user_input_arr + DynamicArray.pointer]
+mov rax, [rbx + rcx*8]
+mov rsi, rax
+mov rdi, message_arr
+
+call array_append
+inc qword [i]
+inc r13
+dec r12
+jmp .loop_3
+.loop_end3:
+mov rsi, 10
+mov rdi, message_arr
+
+call array_append
+mov rdi, temp_arr
+call array_clear
+mov rsi, 'T'
+mov rdi, temp_arr
+call array_append
+mov rsi, 'h'
+mov rdi, temp_arr
+call array_append
+mov rsi, 'i'
+mov rdi, temp_arr
+call array_append
+mov rsi, 's'
+mov rdi, temp_arr
+call array_append
+mov rsi, ' '
+mov rdi, temp_arr
+call array_append
+mov rsi, 'i'
+mov rdi, temp_arr
+call array_append
+mov rsi, 's'
+mov rdi, temp_arr
+call array_append
+mov rsi, ' '
+mov rdi, temp_arr
+call array_append
+mov rsi, 'a'
+mov rdi, temp_arr
+call array_append
+mov rsi, ' '
+mov rdi, temp_arr
+call array_append
+mov rsi, 't'
+mov rdi, temp_arr
+call array_append
+mov rsi, 'e'
+mov rdi, temp_arr
+call array_append
+mov rsi, 's'
+mov rdi, temp_arr
+call array_append
+mov rsi, 't'
+mov rdi, temp_arr
+call array_append
+mov rsi, ' '
+mov rdi, temp_arr
+call array_append
+mov rsi, 'o'
+mov rdi, temp_arr
+call array_append
+mov rsi, 'f'
+mov rdi, temp_arr
+call array_append
+mov rsi, ' '
+mov rdi, temp_arr
+call array_append
+mov rsi, 't'
+mov rdi, temp_arr
+call array_append
+mov rsi, 'h'
+mov rdi, temp_arr
+call array_append
+mov rsi, 'e'
+mov rdi, temp_arr
+call array_append
+mov rsi, ' '
+mov rdi, temp_arr
+call array_append
+mov rsi, 'f'
+mov rdi, temp_arr
+call array_append
+mov rsi, 'i'
+mov rdi, temp_arr
+call array_append
+mov rsi, 'l'
+mov rdi, temp_arr
+call array_append
+mov rsi, 'e'
+mov rdi, temp_arr
+call array_append
+mov rsi, ' '
+mov rdi, temp_arr
+call array_append
+mov rsi, 's'
+mov rdi, temp_arr
+call array_append
+mov rsi, 'y'
+mov rdi, temp_arr
+call array_append
+mov rsi, 's'
+mov rdi, temp_arr
+call array_append
+mov rsi, 't'
+mov rdi, temp_arr
+call array_append
+mov rsi, 'e'
+mov rdi, temp_arr
+call array_append
+mov rsi, 'm'
+mov rdi, temp_arr
+call array_append
+mov rsi, '.'
+mov rdi, temp_arr
+call array_append
+
+mov rsi, 10
+mov rdi, temp_arr
+
+call array_append
+mov rdi, FILE_PATH_1
+mov rsi, temp_arr
+call file_append
+mov rdi, FILE_PATH_2
+mov rsi, message_arr
+call file_append
+mov rdi, temp_arr
+call array_clear
+mov rdi, temp_arr
+mov rsi, FILE_PATH_3
+call file_read
+mov qword [i], 0
+mov rax, [temp_arr + DynamicArray.size]
+xor r13, r13
+mov r12, rax
+.loop_4:
+cmp r12, 0
+je .loop_end4
+mov rcx, [i]
+
+mov rbx, [temp_arr + DynamicArray.pointer]
 mov rax, [rbx + rcx*8]
 mov rdi, rax
 call print_char
 inc qword [i]
 inc r13
 dec r12
-jmp .loop_0
-.loop_end0:
+jmp .loop_4
+.loop_end4:
 mov rdi, FILE_PATH_4
 call file_delete
 

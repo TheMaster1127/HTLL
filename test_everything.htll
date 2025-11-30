@@ -1,0 +1,169 @@
+; =============================================================================
+; HTLL COMPREHENSIVE FEATURE TEST
+; This script will test every major feature of the language in one run.
+;
+; Features Tested:
+; - Variable declaration and assignment (int, :=, +=, ++, etc.)
+; - Functions (func, funcend, return, stack-based arguments)
+; - The 'rax' return value convention
+; - Printing numbers (print)
+; - Dynamic arrays (arr, .add, .size, .index, .set, .copy, .clear)
+; - Loops (Loop, loopend)
+; - Conditional logic (if, ifend)
+; - String-like operations (arradd, print_rax_as_char)
+; - File I/O (fileappend, fileread, filedelete)
+; - User Input (input)
+; =============================================================================
+
+
+; --- Global variable definitions ---
+arr numbers_arr
+arr temp_arr
+arr message_arr
+arr user_input_arr
+arr prompt_arr
+
+int i := 0
+int loop_counter := 0
+int sum_result := 0
+
+
+; --- Function definition ---
+func add_numbers(num1, num2)
+    int local_sum := 0
+    local_sum += num1
+    local_sum += num2
+    return local_sum
+funcend
+
+
+; =============================================================================
+; MAIN EXECUTION BLOCK
+; =============================================================================
+main
+
+; ==================================================================
+; TEST 1: Function call, 'rax' convention, and printing numbers
+; ==================================================================
+add_numbers(100, 200)
+sum_result := rax
+print(sum_result) ; Expected output: 300
+; ------------------------------------------------------------------
+
+
+; ==================================================================
+; TEST 2: Array population with .add and a Loop
+; ==================================================================
+i := 0
+loop_counter := 5
+Loop, loop_counter
+    numbers_arr.add i
+    i++
+loopend
+; numbers_arr now contains [0, 1, 2, 3, 4]
+; ------------------------------------------------------------------
+
+
+; ==================================================================
+; TEST 3: Reading from an array with .index and using if statements
+; ==================================================================
+i := 0
+numbers_arr.size
+Loop, rax
+    numbers_arr.index i
+    ; Print only the even numbers (0, 2, 4)
+    if (rax != 1)
+        if (rax != 3)
+            print(rax)
+        ifend
+    ifend
+    i++
+loopend
+; ------------------------------------------------------------------
+
+
+; ==================================================================
+; TEST 4: Modifying an array with .set
+; ==================================================================
+numbers_arr.set 3, 99
+; numbers_arr is now [0, 1, 2, 99, 4]
+; ------------------------------------------------------------------
+
+
+; ==================================================================
+; TEST 5: Array copying (.copy) and clearing (.clear)
+; ==================================================================
+temp_arr.copy numbers_arr
+numbers_arr.clear       ; Prove numbers_arr is now empty (size should be 0)
+
+; Print temp_arr to prove the copy was successful
+i := 0
+temp_arr.size
+Loop, rax
+    temp_arr.index i
+    print(rax) ; Expected output: 0, 1, 2, 99, 4
+    i++
+loopend
+; ------------------------------------------------------------------
+
+
+; ==================================================================
+; TEST 6: User input and string-like operations (arradd, print_rax_as_char)
+; ==================================================================
+; Create the prompt message using correct arradd syntax and explicit space
+prompt_arr.clear
+arradd prompt_arr Please enter your name:
+prompt_arr.add 32 ; Add the trailing space explicitly
+
+; Get input from the user. The response will be appended to user_input_arr
+input user_input_arr, prompt_arr
+
+; Build a final message using the user's input
+message_arr.clear
+arradd message_arr You entered:
+message_arr.add 32 ; Explicitly add a space
+
+; Manually append the user_input_arr to the message_arr
+i := 0
+user_input_arr.size
+Loop, rax
+    user_input_arr.index i
+    message_arr.add rax
+    i++
+loopend
+
+message_arr.add 10 ; Add a newline character
+; ------------------------------------------------------------------
+
+
+; ==================================================================
+; TEST 7: File I/O (fileappend, fileread, filedelete)
+; ==================================================================
+; We need a different message for the file, as we cannot print 'sum_result'
+; directly into the file. Let's create a specific file message.
+temp_arr.clear
+arradd temp_arr This is a test of the file system.
+temp_arr.add 10 ; Newline
+
+; Create and write to the file
+fileappend "test_output.txt", temp_arr
+
+; Append the user-input message we built earlier
+fileappend "test_output.txt", message_arr
+
+; Now, read the entire file back to verify its contents
+temp_arr.clear
+fileread temp_arr, "test_output.txt"
+
+; And print it to the console character by character
+i := 0
+temp_arr.size
+Loop, rax
+    temp_arr.index i
+    print_rax_as_char
+    i++
+loopend
+
+; Final cleanup
+filedelete "test_output.txt"
+; ------------------------------------------------------------------
