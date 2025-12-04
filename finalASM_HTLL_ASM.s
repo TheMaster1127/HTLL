@@ -14,16 +14,10 @@ section .data
     nl:   db 10
 
 
-FILE_PATH_1: db "test_output.txt", 0
-FILE_PATH_2: db "test_output.txt", 0
-FILE_PATH_3: db "test_output.txt", 0
-FILE_PATH_4: db "test_output.txt", 0
+FILE_PATH_1: db "my_program.htll", 0
+FILE_PATH_2: db "test_output.s", 0
 
 
-i: dq 0
-loop_counter: dq 0
-sum_result: dq 0
-local_sum: dq 0
 
 
 
@@ -31,13 +25,13 @@ section .bss
     input_buffer: resb 256 ; A buffer to temporarily hold user's raw input
 file_read_buffer: resb 4096
 input_len:    resq 1   ; A variable to hold the length of the input
+    source_ptr:      resq 1
+source_ptr_size: resq 1
+asm_code_ptr:    resq 1
     print_buffer_n: resb 20
 
-numbers_arr: resb DynamicArray_size
-temp_arr: resb DynamicArray_size
-message_arr: resb DynamicArray_size
-user_input_arr: resb DynamicArray_size
-prompt_arr: resb DynamicArray_size
+my_source_code: resb DynamicArray_size
+my_asm_output: resb DynamicArray_size
 
 
 
@@ -816,6 +810,7 @@ file_read:
     pop rbp
     ret
 
+
 ; =============================================================================
 ; file_append: Appends an array of character codes to a file. (Corrected)
 ; =============================================================================
@@ -831,65 +826,65 @@ file_append:
     mov r12, rdi             ; r12 = pointer to file path
     mov r13, rsi             ; r13 = pointer to array struct
 
-    ; --- Pack the array of QWORDs into a byte buffer on the stack ---
     mov rcx, [r13 + DynamicArray.size]
     cmp rcx, 0
-    je .append_cleanup       ; If there's nothing to write, just exit
+    je .append_epilogue      ; If there's nothing to write, just exit
 
-    ; ======================= THE FIX IS HERE =======================
-    mov r14, rcx             ; Save the ORIGINAL size in r14
-    add rcx, 15              ; Round up the size needed
-    and rcx, -16             ; Align to a 16-byte boundary
-    sub rsp, rcx             ; Allocate the ALIGNED amount of space
-    ; ===============================================================
-    
+    ; --- THE ROBUST FIX IS HERE ---
+    mov r14, rcx             ; Save original size in a safe register
+    mov rbx, rcx             ; Use RBX (a safe register) for the calculation
+    add rbx, 15              ; Round up
+    and rbx, -16             ; Align to a 16-byte boundary
+    sub rsp, rbx             ; Allocate space using the SAFE value from RBX
+    ; --- END FIX ---
+
     mov r15, rsp             ; r15 = pointer to our packed string buffer
 
-    mov rsi, [r13 + DynamicArray.pointer] ; Use rsi for src pointer temporarily
-    xor rbx, rbx
+    mov rsi, [r13 + DynamicArray.pointer]
+    xor rcx, rcx             ; Use rcx as the loop counter, it's fine for it to be clobbered
 .pack_loop:
-    cmp rbx, r14             ; Loop using the ORIGINAL size
+    cmp rcx, r14             ; Loop using the ORIGINAL size saved in r14
     jge .pack_done
-    mov al, [rsi + rbx*8]
-    mov [r15 + rbx], al
-    inc rbx
+    mov al, [rsi + rcx*8]
+    mov [r15 + rcx], al
+    inc rcx
     jmp .pack_loop
 .pack_done:
     ; --- Open the file ---
-    mov rax, 2               
+    mov rax, 2
     mov rdi, r12
     mov rsi, 1089            ; O_WRONLY | O_CREAT | O_APPEND
     mov rdx, 0o644
     syscall
     cmp rax, 0
     jl .append_error
-    mov r14, rax             ; Save FD in a safe register
+    mov r14, rax             ; Save FD in a safe register (r14 is now overwritten)
 
     ; --- Write the packed data ---
-    mov rax, 1               
+    mov rax, 1
     mov rdi, r14             ; Write to the file descriptor
     mov rsi, r15             ; Source is our packed buffer on the stack
-    mov rdx, [r13 + DynamicArray.size]
+    mov rdx, [r13 + DynamicArray.size] ; Use the original size for the write
     syscall
 
     ; --- Close the file ---
-    mov rax, 3               
+    mov rax, 3
     mov rdi, r14
     syscall
-    
-    xor rax, rax             
+
+    xor rax, rax
     jmp .append_cleanup
 
 .append_error:
+    ; Error occurred, set return code or handle appropriately if needed
+    
 .append_cleanup:
-    ; Deallocate the exact amount of stack space we allocated
-    mov rcx, [r13 + DynamicArray.size]
-    cmp rcx, 0
-    je .skip_dealloc
-    add rcx, 15
-    and rcx, -16
-    add rsp, rcx 
-.skip_dealloc:
+    ; --- THE SECOND PART OF THE ROBUST FIX ---
+    ; Deallocate the exact amount of stack space we allocated using the saved value in RBX.
+    add rsp, rbx
+    ; --- END FIX ---
+
+.append_epilogue:
     pop r15
     pop r14
     pop r13
@@ -912,413 +907,201 @@ file_delete:
 
 
 
-add_numbers:
-push rbp
-mov rbp, rsp
-sub rsp, 16
-mov rdi, [rbp + 16]
-add qword [local_sum], rdi
-mov rdi, [rbp + 24]
-add qword [local_sum], rdi
-mov rax, [local_sum]
-jmp .add_numbers_return
-.add_numbers_return:
-add rsp, 16
-pop rbp
-ret
+
+
+
+; --- Functions from your C++ .so file ---
+extern compiler_c, free_string_c
+
+; =============================================================================
+; ADAPTER FUNCTION 1: HTLL arr -> C-style string (char*)
+; =============================================================================
+; Takes an HTLL array and creates a C-style string from it.
+; [In]  rdi - Pointer to the source DynamicArray struct.
+; [Out] rax - Pointer to the new C-style string (or 0 on error).
+;==============================================================================
+; =============================================================================
+; ADAPTER FUNCTION 1: HTLL arr -> C-style string (char*) (Robust Version)
+; =============================================================================
+array_pack_to_bytes:
+    push rbp
+    mov rbp, rsp
+    push rbx
+    push r12
+    push r13
+    push r14
+
+    ; --- ROBUSTNESS CHECK 1 ---
+    ; Check if the struct pointer itself is null
+    cmp rdi, 0
+    je .pack_fail
+
+    mov r14, [rdi + DynamicArray.pointer] ; r14 is our source pointer (the qwords)
+    mov r12, [rdi + DynamicArray.size]    ; r12 = number of elements
+
+    ; --- ROBUSTNESS CHECK 2 ---
+    ; Check if the array's internal data pointer is null or if size is zero
+    cmp r14, 0
+    je .pack_fail
+    cmp r12, 0
+    je .pack_fail 
+
+    ; === Step A: Ask the kernel for memory ===
+    mov r13, r12
+    inc r13                             ; Space for all chars + one '0' byte
+    mov rax, 9                          ; sys_mmap
+    mov rdi, 0
+    mov rsi, r13
+    mov rdx, 3
+    mov r10, 34
+    mov r8, -1
+    mov r9, 0
+    syscall
+    
+    cmp rax, 0
+    jl .pack_fail
+
+    ; === Step B: Copy the bytes, one by one ===
+    mov r13, rax                        ; r13 is our destination pointer
+    xor rbx, rbx                        ; rbx is our loop counter, i=0
+
+.pack_loop:
+    cmp rbx, r12
+    jge .pack_add_null
+
+    mov rcx, [r14 + rbx*8]
+    mov [r13 + rbx], cl
+    
+    inc rbx
+    jmp .pack_loop
+
+.pack_add_null:
+    mov byte [r13 + rbx], 0
+    mov rax, r13
+    mov rdx, r12                        ; Get original size (number of chars)
+    inc rdx                             ; Add 1 for the null terminato
+    jmp .pack_done
+
+.pack_fail:
+    xor rax, rax
+
+.pack_done:
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    pop rbp
+    ret
+
+; =============================================================================
+; ADAPTER FUNCTION 2: C-style string (char*) -> HTLL arr
+; =============================================================================
+; Takes a C-style string and populates an HTLL DynamicArray with its characters.
+; [In]
+;   rdi - Pointer to the destination DynamicArray struct.
+;   rsi - Pointer to the source, null-terminated C-style string.
+;==============================================================================
+; =============================================================================
+; ADAPTER FUNCTION 2: C-style string (char*) -> HTLL arr (Robust Version)
+; =============================================================================
+array_unpack_from_bytes:
+    push rbp
+    mov rbp, rsp
+    push rbx
+    push r12
+    push r13
+
+    mov r12, rdi  ; r12 = pointer to destination array struct
+    mov r13, rsi  ; r13 = pointer to source C-string
+
+    ; --- THE FIX IS HERE ---
+    ; Before we do anything, check if the C-string pointer is NULL.
+    cmp r13, 0
+    je .unpack_done       ; If it's NULL, there's nothing to do. Exit safely.
+    ; --- END FIX ---
+
+    ; Clear the destination array to be safe.
+    mov rdi, r12
+    call array_clear
+
+.unpack_loop:
+    movzx rbx, byte [r13] ; Load ONE byte. This is now safe.
+    cmp rbx, 0            ; Is this the null terminator?
+    je .unpack_done       ; If yes, we are finished.
+
+    ; Append the character to the HTLL array.
+    mov rdi, r12
+    mov rsi, rbx
+    call array_append
+    
+    inc r13               ; Move to the next character in the C-string.
+    jmp .unpack_loop
+
+.unpack_done:
+    pop r13
+    pop r12
+    pop rbx
+    pop rbp
+    ret
+    
+    
+
+; =============================================================================
+; free_packed_string: Frees memory allocated by array_pack_to_bytes (mmap).
+; [In]
+;   rdi - Pointer to the memory block.
+;   rsi - The size of the memory block in bytes.
+; =============================================================================
+free_packed_string:
+    push rbp
+    mov rbp, rsp
+    
+    cmp rdi, 0          ; Don't try to free a null pointer
+    je .done
+
+    mov rax, 11         ; syscall for sys_munmap
+    ; rdi and rsi are already set by the caller
+    syscall
+
+.done:
+    pop rbp
+    ret
+
+
+
 ; =============================================================================
 ; MAIN PROGRAM ENTRY POINT
 ; =============================================================================
 _start:
-push 100
-push 200
-call add_numbers
-add rsp, 16
-mov rdi, rax
-mov [sum_result], rdi
-mov rdi, [sum_result]
-mov rsi, 0
-call print_number
-mov qword [i], 0
-mov qword [loop_counter], 5
-push r12
-push r13
-xor r13, r13
-mov r12, [loop_counter]
-.loop1_0:
-cmp r12, 0
-je .loop1_end0
-mov rsi, [i]
-mov rdi, numbers_arr
+push rbp
+mov rbp, rsp
+and rsp, -16 
 
-call array_append
-inc qword [i]
-inc r13
-dec r12
-jmp .loop1_0
-.loop1_end0:
-pop r13
-pop r12
-mov qword [i], 0
-mov rax, [numbers_arr + DynamicArray.size]
-push r12
-push r13
-xor r13, r13
-mov r12, rax
-.loop1_1:
-cmp r12, 0
-je .loop1_end1
-mov rcx, [i]
-
-mov rbx, [numbers_arr + DynamicArray.pointer]
-mov rax, [rbx + rcx*8]
-mov rax, rax
-cmp rax, 1
-je .end_if1_0
-mov rax, rax
-cmp rax, 3
-je .end_if1_0
-mov rdi, rax
-mov rsi, 0
-call print_number
-.end_if1_0:
-.end_if1_1:
-inc qword [i]
-inc r13
-dec r12
-jmp .loop1_1
-.loop1_end1:
-pop r13
-pop r12
-mov rbx, [numbers_arr + DynamicArray.pointer]
-mov rcx, 3
-mov rsi, 99
-mov [rbx + rcx*8], rsi
-mov rdi, temp_arr
-mov rsi, numbers_arr
-call array_copy
-mov rdi, numbers_arr
-call array_clear
-mov qword [i], 0
-mov rax, [temp_arr + DynamicArray.size]
-push r12
-push r13
-xor r13, r13
-mov r12, rax
-.loop1_2:
-cmp r12, 0
-je .loop1_end2
-mov rcx, [i]
-
-mov rbx, [temp_arr + DynamicArray.pointer]
-mov rax, [rbx + rcx*8]
-mov rdi, rax
-mov rsi, 0
-call print_number
-inc qword [i]
-inc r13
-dec r12
-jmp .loop1_2
-.loop1_end2:
-pop r13
-pop r12
-mov rdi, prompt_arr
-call array_clear
-mov rsi, 'P'
-mov rdi, prompt_arr
-call array_append
-mov rsi, 'l'
-mov rdi, prompt_arr
-call array_append
-mov rsi, 'e'
-mov rdi, prompt_arr
-call array_append
-mov rsi, 'a'
-mov rdi, prompt_arr
-call array_append
-mov rsi, 's'
-mov rdi, prompt_arr
-call array_append
-mov rsi, 'e'
-mov rdi, prompt_arr
-call array_append
-mov rsi, ' '
-mov rdi, prompt_arr
-call array_append
-mov rsi, 'e'
-mov rdi, prompt_arr
-call array_append
-mov rsi, 'n'
-mov rdi, prompt_arr
-call array_append
-mov rsi, 't'
-mov rdi, prompt_arr
-call array_append
-mov rsi, 'e'
-mov rdi, prompt_arr
-call array_append
-mov rsi, 'r'
-mov rdi, prompt_arr
-call array_append
-mov rsi, ' '
-mov rdi, prompt_arr
-call array_append
-mov rsi, 'y'
-mov rdi, prompt_arr
-call array_append
-mov rsi, 'o'
-mov rdi, prompt_arr
-call array_append
-mov rsi, 'u'
-mov rdi, prompt_arr
-call array_append
-mov rsi, 'r'
-mov rdi, prompt_arr
-call array_append
-mov rsi, ' '
-mov rdi, prompt_arr
-call array_append
-mov rsi, 'n'
-mov rdi, prompt_arr
-call array_append
-mov rsi, 'a'
-mov rdi, prompt_arr
-call array_append
-mov rsi, 'm'
-mov rdi, prompt_arr
-call array_append
-mov rsi, 'e'
-mov rdi, prompt_arr
-call array_append
-mov rsi, ':'
-mov rdi, prompt_arr
-call array_append
-
-mov rsi, 32
-mov rdi, prompt_arr
-
-call array_append
-mov rdi, user_input_arr
-mov rsi, prompt_arr
-call get_user_input
-mov rdi, message_arr
-call array_clear
-mov rsi, 'Y'
-mov rdi, message_arr
-call array_append
-mov rsi, 'o'
-mov rdi, message_arr
-call array_append
-mov rsi, 'u'
-mov rdi, message_arr
-call array_append
-mov rsi, ' '
-mov rdi, message_arr
-call array_append
-mov rsi, 'e'
-mov rdi, message_arr
-call array_append
-mov rsi, 'n'
-mov rdi, message_arr
-call array_append
-mov rsi, 't'
-mov rdi, message_arr
-call array_append
-mov rsi, 'e'
-mov rdi, message_arr
-call array_append
-mov rsi, 'r'
-mov rdi, message_arr
-call array_append
-mov rsi, 'e'
-mov rdi, message_arr
-call array_append
-mov rsi, 'd'
-mov rdi, message_arr
-call array_append
-mov rsi, ':'
-mov rdi, message_arr
-call array_append
-
-mov rsi, 32
-mov rdi, message_arr
-
-call array_append
-mov qword [i], 0
-mov rax, [user_input_arr + DynamicArray.size]
-push r12
-push r13
-xor r13, r13
-mov r12, rax
-.loop1_3:
-cmp r12, 0
-je .loop1_end3
-mov rcx, [i]
-
-mov rbx, [user_input_arr + DynamicArray.pointer]
-mov rax, [rbx + rcx*8]
-mov rsi, rax
-mov rdi, message_arr
-
-call array_append
-inc qword [i]
-inc r13
-dec r12
-jmp .loop1_3
-.loop1_end3:
-pop r13
-pop r12
-mov rsi, 10
-mov rdi, message_arr
-
-call array_append
-mov rdi, temp_arr
-call array_clear
-mov rsi, 'T'
-mov rdi, temp_arr
-call array_append
-mov rsi, 'h'
-mov rdi, temp_arr
-call array_append
-mov rsi, 'i'
-mov rdi, temp_arr
-call array_append
-mov rsi, 's'
-mov rdi, temp_arr
-call array_append
-mov rsi, ' '
-mov rdi, temp_arr
-call array_append
-mov rsi, 'i'
-mov rdi, temp_arr
-call array_append
-mov rsi, 's'
-mov rdi, temp_arr
-call array_append
-mov rsi, ' '
-mov rdi, temp_arr
-call array_append
-mov rsi, 'a'
-mov rdi, temp_arr
-call array_append
-mov rsi, ' '
-mov rdi, temp_arr
-call array_append
-mov rsi, 't'
-mov rdi, temp_arr
-call array_append
-mov rsi, 'e'
-mov rdi, temp_arr
-call array_append
-mov rsi, 's'
-mov rdi, temp_arr
-call array_append
-mov rsi, 't'
-mov rdi, temp_arr
-call array_append
-mov rsi, ' '
-mov rdi, temp_arr
-call array_append
-mov rsi, 'o'
-mov rdi, temp_arr
-call array_append
-mov rsi, 'f'
-mov rdi, temp_arr
-call array_append
-mov rsi, ' '
-mov rdi, temp_arr
-call array_append
-mov rsi, 't'
-mov rdi, temp_arr
-call array_append
-mov rsi, 'h'
-mov rdi, temp_arr
-call array_append
-mov rsi, 'e'
-mov rdi, temp_arr
-call array_append
-mov rsi, ' '
-mov rdi, temp_arr
-call array_append
-mov rsi, 'f'
-mov rdi, temp_arr
-call array_append
-mov rsi, 'i'
-mov rdi, temp_arr
-call array_append
-mov rsi, 'l'
-mov rdi, temp_arr
-call array_append
-mov rsi, 'e'
-mov rdi, temp_arr
-call array_append
-mov rsi, ' '
-mov rdi, temp_arr
-call array_append
-mov rsi, 's'
-mov rdi, temp_arr
-call array_append
-mov rsi, 'y'
-mov rdi, temp_arr
-call array_append
-mov rsi, 's'
-mov rdi, temp_arr
-call array_append
-mov rsi, 't'
-mov rdi, temp_arr
-call array_append
-mov rsi, 'e'
-mov rdi, temp_arr
-call array_append
-mov rsi, 'm'
-mov rdi, temp_arr
-call array_append
-mov rsi, '.'
-mov rdi, temp_arr
-call array_append
-
-mov rsi, 10
-mov rdi, temp_arr
-
-call array_append
-mov rdi, FILE_PATH_1
-mov rsi, temp_arr
-call file_append
-mov rdi, FILE_PATH_2
-mov rsi, message_arr
-call file_append
-mov rdi, temp_arr
-call array_clear
-mov rdi, temp_arr
-mov rsi, FILE_PATH_3
+mov rdi, my_source_code
+mov rsi, FILE_PATH_1
 call file_read
-mov qword [i], 0
-mov rax, [temp_arr + DynamicArray.size]
-push r12
-push r13
-xor r13, r13
-mov r12, rax
-.loop1_4:
-cmp r12, 0
-je .loop1_end4
-mov rcx, [i]
-
-mov rbx, [temp_arr + DynamicArray.pointer]
-mov rax, [rbx + rcx*8]
-mov rdi, rax
-call print_char
-inc qword [i]
-inc r13
-dec r12
-jmp .loop1_4
-.loop1_end4:
-pop r13
-pop r12
-mov rdi, FILE_PATH_4
-call file_delete
+mov rdi, my_source_code
+call array_pack_to_bytes
+mov [source_ptr], rax
+mov rdi, [source_ptr]
+call compiler_c
+mov [asm_code_ptr], rax
+mov rdi, my_asm_output
+mov rsi, [asm_code_ptr]
+call array_unpack_from_bytes
+mov rdi, [source_ptr]
+mov rsi, [source_ptr_size]
+call free_packed_string
+mov rdi, [asm_code_ptr]
+call free_string_c
+mov rdi, FILE_PATH_2
+mov rsi, my_asm_output
+call file_append
 
 
     ; --- Exit cleanly ---
+    mov rsp, rbp
+    pop rbp
     mov rax, 60
     xor rdi, rdi
     syscall

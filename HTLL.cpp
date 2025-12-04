@@ -359,7 +359,7 @@ std::string str17 = "";
 std::string str18 = "";
 std::string str19 = "";
 std::string str20 = "";
-std::string main_syntax = "" + Chr(10) + "; =============================================================================" + Chr(10) + "; MAIN PROGRAM ENTRY POINT" + Chr(10) + "; =============================================================================" + Chr(10) + "_start:" + Chr(10) + "";
+std::string main_syntax = "" + Chr(10) + "; =============================================================================" + Chr(10) + "; MAIN PROGRAM ENTRY POINT" + Chr(10) + "; =============================================================================" + Chr(10) + "_start:" + Chr(10) + "push rbp" + Chr(10) + "mov rbp, rsp" + Chr(10) + "and rsp, -16 " + Chr(10);
 std::string SubStrLastChars(std::string text, int numOfChars) {
     std::string LastOut = "";
     int NumOfChars = 0;
@@ -587,10 +587,7 @@ std::string compiler(std::string code) {
     std::vector<std::string> items15 = LoopParseFunc(code, "\n", "\r");
     for (size_t A_Index15 = 0; A_Index15 < items15.size(); A_Index15++) {
         std::string A_LoopField15 = items15[A_Index15 - 0];
-        if (Trim(A_LoopField15) == "_start:") {
-            out += A_LoopField15 + Chr(10);
-        }
-        else if (SubStr(A_LoopField15, 1, 7) == "arradd ") {
+        if (SubStr(A_LoopField15, 1, 7) == "arradd ") {
             str1 = Trim(StringTrimLeft(A_LoopField15, 7));
             str2 = StrSplit(str1, " ", 1);
             str3 = StringTrimLeft(str1, StrLen(str2) + 1);
@@ -1968,6 +1965,12 @@ std::string compiler(std::string code) {
             }
             out += str3 + Chr(10) + "mov rbx, [" + str1 + " + DynamicArray.pointer]" + Chr(10) + "mov rax, [rbx + rcx*8]" + Chr(10);
         }
+        else if (InStr(A_LoopField15, ".compile ")) {
+            // arrName.compile outArr
+            str1 = Trim(StrSplit(A_LoopField15, ".", 1));
+            str2 = Trim(StrSplit(A_LoopField15, ".compile", 2));
+            out += "mov rdi, " + str1 + Chr(10) + "call array_pack_to_bytes" + Chr(10) + "mov [source_ptr], rax" + Chr(10) + "mov rdi, [source_ptr]" + Chr(10) + "call compiler_c" + Chr(10) + "mov [asm_code_ptr], rax" + Chr(10) + "mov rdi, " + str2 + Chr(10) + "mov rsi, [asm_code_ptr]" + Chr(10) + "call array_unpack_from_bytes" + Chr(10) + "mov rdi, [source_ptr]" + Chr(10) + "mov rsi, [source_ptr_size]" + Chr(10) + "call free_packed_string" + Chr(10) + "mov rdi, [asm_code_ptr]" + Chr(10) + "call free_string_c" + Chr(10);
+        }
         else if (SubStr(StrLower(A_LoopField15), 1, 9) == "fileread ") {
             str1 = Trim(StringTrimLeft(A_LoopField15, 9));
             str2 = Trim(StrSplit(str1, ",", 1));
@@ -2055,8 +2058,8 @@ std::string compiler(std::string code) {
     dot_data += dot_data_print_temp_strings + Chr(10);
     dot_data += dot_data_ints + Chr(10);
     dot_bss += dot_bss_str + Chr(10);
-    std::string upCode = "; This defines a " + Chr(34) + "struct" + Chr(34) + " to make our code readable." + Chr(10) + "struc DynamicArray" + Chr(10) + "    .pointer:   resq 1  ; Offset 0: Holds the pointer to the heap memory" + Chr(10) + "    .size:      resq 1  ; Offset 8: Holds the current number of elements" + Chr(10) + "    .capacity:  resq 1  ; Offset 16: Holds how many elements the block can store" + Chr(10) + "endstruc" + Chr(10) + "" + Chr(10) + "section .data" + Chr(10) + "    SCALE_FACTOR:   dq 1000000" + Chr(10) + "    INITIAL_CAPACITY equ 2  ; Let's use a smaller capacity to test resizing sooner" + Chr(10) + "    print_buffer:   times 21 db 0" + Chr(10) + "    dot:            db '.'" + Chr(10) + "    minus_sign:     db '-'" + Chr(10) + "    nl:   db 10" + Chr(10) + dot_data + Chr(10) + "" + Chr(10) + "section .bss" + Chr(10) + "    input_buffer: resb 256 ; A buffer to temporarily hold user's raw input" + Chr(10) + "file_read_buffer: resb 4096" + Chr(10) + "input_len:    resq 1   ; A variable to hold the length of the input" + Chr(10) + "    print_buffer_n: resb 20" + Chr(10) + Chr(10) + arrBss + Chr(10) + dot_bss + "" + Chr(10) + "section .text" + Chr(10) + "global _start" + Chr(10) + "" + Chr(10) + "; =============================================================================" + Chr(10) + HTLL_Libs_x86 + Chr(10);
-    std::string downCode = "" + Chr(10) + "    ; --- Exit cleanly ---" + Chr(10) + "    mov rax, 60" + Chr(10) + "    xor rdi, rdi" + Chr(10) + "    syscall" + Chr(10) + "";
+    std::string upCode = "; This defines a " + Chr(34) + "struct" + Chr(34) + " to make our code readable." + Chr(10) + "struc DynamicArray" + Chr(10) + "    .pointer:   resq 1  ; Offset 0: Holds the pointer to the heap memory" + Chr(10) + "    .size:      resq 1  ; Offset 8: Holds the current number of elements" + Chr(10) + "    .capacity:  resq 1  ; Offset 16: Holds how many elements the block can store" + Chr(10) + "endstruc" + Chr(10) + "" + Chr(10) + "section .data" + Chr(10) + "    SCALE_FACTOR:   dq 1000000" + Chr(10) + "    INITIAL_CAPACITY equ 2  ; Let's use a smaller capacity to test resizing sooner" + Chr(10) + "    print_buffer:   times 21 db 0" + Chr(10) + "    dot:            db '.'" + Chr(10) + "    minus_sign:     db '-'" + Chr(10) + "    nl:   db 10" + Chr(10) + dot_data + Chr(10) + "" + Chr(10) + "section .bss" + Chr(10) + "    input_buffer: resb 256 ; A buffer to temporarily hold user's raw input" + Chr(10) + "file_read_buffer: resb 4096" + Chr(10) + "input_len:    resq 1   ; A variable to hold the length of the input" + Chr(10) + "    source_ptr:      resq 1" + Chr(10) + "source_ptr_size: resq 1" + Chr(10) + "asm_code_ptr:    resq 1" + Chr(10) + "    print_buffer_n: resb 20" + Chr(10) + Chr(10) + arrBss + Chr(10) + dot_bss + "" + Chr(10) + "section .text" + Chr(10) + "global _start" + Chr(10) + "" + Chr(10) + "; =============================================================================" + Chr(10) + HTLL_Libs_x86 + Chr(10);
+    std::string downCode = "" + Chr(10) + "    ; --- Exit cleanly ---" + Chr(10) + "    mov rsp, rbp" + Chr(10) + "    pop rbp" + Chr(10) + "    mov rax, 60" + Chr(10) + "    xor rdi, rdi" + Chr(10) + "    syscall" + Chr(10) + "";
     std::string codeOUT = "";
     if (seenMain == 0) {
         codeOUT = upCode + Chr(10) + main_syntax +  Chr(10) + out + Chr(10) + downCode;

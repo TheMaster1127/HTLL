@@ -19,7 +19,7 @@ str str17 := ""
 str str18 := ""
 str str19 := ""
 str str20 := ""
-str main_syntax := "" . Chr(10) . "; =============================================================================" . Chr(10) . "; MAIN PROGRAM ENTRY POINT" . Chr(10) . "; =============================================================================" . Chr(10) . "_start:" . Chr(10) . ""
+str main_syntax := "" . Chr(10) . "; =============================================================================" . Chr(10) . "; MAIN PROGRAM ENTRY POINT" . Chr(10) . "; =============================================================================" . Chr(10) . "_start:" . Chr(10) . "push rbp" . Chr(10) . "mov rbp, rsp" . Chr(10) . "and rsp, -16 " . Chr(10)
 
 
 func str SubStrLastChars(str text, int numOfChars) {
@@ -347,10 +347,7 @@ StringTrimRight, code, out, 1
 
 out := ""
 Loop, Parse, code, `n, `r {
-if (Trim(A_LoopField) = "_start:") {
-out .= A_LoopField . Chr(10)
-}
-else if (SubStr(A_LoopField, 1, 7) = "arradd ") {
+if (SubStr(A_LoopField, 1, 7) = "arradd ") {
 str1 := Trim(StringTrimLeft(A_LoopField, 7))
 str2 := StrSplit(str1, " ", 1)
 
@@ -1837,6 +1834,20 @@ str3 := "mov rcx, [" . str2 . "]" . Chr(10)
 
 out .= str3 . Chr(10) . "mov rbx, [" . str1 . " + DynamicArray.pointer]" . Chr(10) . "mov rax, [rbx + rcx*8]" . Chr(10)
 }
+else if (InStr(A_LoopField, ".compile ")) {
+
+; arrName.compile outArr
+
+str1 := Trim(StrSplit(A_LoopField, ".", 1)) ; arrName
+str2 := Trim(StrSplit(A_LoopField, ".compile", 2)) ; outArr
+
+
+
+
+
+out .= "mov rdi, " . str1 . Chr(10) . "call array_pack_to_bytes" . Chr(10) . "mov [source_ptr], rax" . Chr(10) . "mov rdi, [source_ptr]" . Chr(10) . "call compiler_c" . Chr(10) . "mov [asm_code_ptr], rax" . Chr(10) . "mov rdi, " . str2 . Chr(10) . "mov rsi, [asm_code_ptr]" . Chr(10) . "call array_unpack_from_bytes" . Chr(10) . "mov rdi, [source_ptr]" . Chr(10) . "mov rsi, [source_ptr_size]" . Chr(10) . "call free_packed_string" . Chr(10) . "mov rdi, [asm_code_ptr]" . Chr(10) . "call free_string_c" . Chr(10)
+
+}
 else if (SubStr(StrLower(A_LoopField), 1, 9) = "fileread ") {
     str1 := Trim(StringTrimLeft(A_LoopField, 9))  ; "dest_array, "path.txt""
     str2 := Trim(StrSplit(str1, ",", 1))          ; The destination array name
@@ -1945,8 +1956,8 @@ dot_data .= dot_data_ints . Chr(10)
 
 dot_bss .= dot_bss_str . Chr(10)
 
-str upCode := "; This defines a " . Chr(34) . "struct" . Chr(34) . " to make our code readable." . Chr(10) . "struc DynamicArray" . Chr(10) . "    .pointer:   resq 1  ; Offset 0: Holds the pointer to the heap memory" . Chr(10) . "    .size:      resq 1  ; Offset 8: Holds the current number of elements" . Chr(10) . "    .capacity:  resq 1  ; Offset 16: Holds how many elements the block can store" . Chr(10) . "endstruc" . Chr(10) . "" . Chr(10) . "section .data" . Chr(10) . "    SCALE_FACTOR:   dq 1000000" . Chr(10) . "    INITIAL_CAPACITY equ 2  ; Let's use a smaller capacity to test resizing sooner" . Chr(10) . "    print_buffer:   times 21 db 0" . Chr(10) . "    dot:            db '.'" . Chr(10) . "    minus_sign:     db '-'" . Chr(10) . "    nl:   db 10" . Chr(10) . dot_data . Chr(10) . "" . Chr(10) . "section .bss" . Chr(10) . "    input_buffer: resb 256 ; A buffer to temporarily hold user's raw input" . Chr(10) . "file_read_buffer: resb 4096" . Chr(10) . "input_len:    resq 1   ; A variable to hold the length of the input" . Chr(10) . "    print_buffer_n: resb 20" . Chr(10) . Chr(10) . arrBss . Chr(10) . dot_bss . "" . Chr(10) . "section .text" . Chr(10) . "global _start" . Chr(10) . "" . Chr(10) . "; =============================================================================" . Chr(10) . HTLL_Libs_x86 . Chr(10)
-str downCode := "" . Chr(10) . "    ; --- Exit cleanly ---" . Chr(10) . "    mov rax, 60" . Chr(10) . "    xor rdi, rdi" . Chr(10) . "    syscall" . Chr(10) . ""
+str upCode := "; This defines a " . Chr(34) . "struct" . Chr(34) . " to make our code readable." . Chr(10) . "struc DynamicArray" . Chr(10) . "    .pointer:   resq 1  ; Offset 0: Holds the pointer to the heap memory" . Chr(10) . "    .size:      resq 1  ; Offset 8: Holds the current number of elements" . Chr(10) . "    .capacity:  resq 1  ; Offset 16: Holds how many elements the block can store" . Chr(10) . "endstruc" . Chr(10) . "" . Chr(10) . "section .data" . Chr(10) . "    SCALE_FACTOR:   dq 1000000" . Chr(10) . "    INITIAL_CAPACITY equ 2  ; Let's use a smaller capacity to test resizing sooner" . Chr(10) . "    print_buffer:   times 21 db 0" . Chr(10) . "    dot:            db '.'" . Chr(10) . "    minus_sign:     db '-'" . Chr(10) . "    nl:   db 10" . Chr(10) . dot_data . Chr(10) . "" . Chr(10) . "section .bss" . Chr(10) . "    input_buffer: resb 256 ; A buffer to temporarily hold user's raw input" . Chr(10) . "file_read_buffer: resb 4096" . Chr(10) . "input_len:    resq 1   ; A variable to hold the length of the input" . Chr(10) . "    source_ptr:      resq 1" . Chr(10) . "source_ptr_size: resq 1" . Chr(10) . "asm_code_ptr:    resq 1" . Chr(10) . "    print_buffer_n: resb 20" . Chr(10) . Chr(10) . arrBss . Chr(10) . dot_bss . "" . Chr(10) . "section .text" . Chr(10) . "global _start" . Chr(10) . "" . Chr(10) . "; =============================================================================" . Chr(10) . HTLL_Libs_x86 . Chr(10)
+str downCode := "" . Chr(10) . "    ; --- Exit cleanly ---" . Chr(10) . "    mov rsp, rbp" . Chr(10) . "    pop rbp" . Chr(10) . "    mov rax, 60" . Chr(10) . "    xor rdi, rdi" . Chr(10) . "    syscall" . Chr(10) . ""
 
 
 str codeOUT := ""

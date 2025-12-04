@@ -1,3 +1,46 @@
+; This defines a "struct" to make our code readable.
+struc DynamicArray
+    .pointer:   resq 1  ; Offset 0: Holds the pointer to the heap memory
+    .size:      resq 1  ; Offset 8: Holds the current number of elements
+    .capacity:  resq 1  ; Offset 16: Holds how many elements the block can store
+endstruc
+
+section .data
+    SCALE_FACTOR:   dq 1000000
+    INITIAL_CAPACITY equ 2  ; Let's use a smaller capacity to test resizing sooner
+    print_buffer:   times 21 db 0
+    dot:            db '.'
+    minus_sign:     db '-'
+    nl:   db 10
+
+
+FILE_PATH_1: db "my_program.htll", 0
+FILE_PATH_2: db "test_output.s", 0
+FILE_PATH_3: db "test_output.s", 0
+
+
+
+
+
+section .bss
+    input_buffer: resb 256 ; A buffer to temporarily hold user's raw input
+file_read_buffer: resb 4096
+input_len:    resq 1   ; A variable to hold the length of the input
+    source_ptr:      resq 1
+asm_code_ptr:    resq 1
+    print_buffer_n: resb 20
+
+my_source_code: resb DynamicArray_size
+my_asm_output: resb DynamicArray_size
+
+
+
+
+
+section .text
+global _start
+
+; =============================================================================
 
 ; =============================================================================
 ; UTILITY FUNCTIONS (Correct and Properly Formatted)
@@ -1023,3 +1066,43 @@ free_packed_string:
 .done:
     pop rbp
     ret
+
+
+
+; =============================================================================
+; MAIN PROGRAM ENTRY POINT
+; =============================================================================
+_start:
+push rbp
+mov rbp, rsp
+and rsp, -16 
+
+mov rdi, my_source_code
+mov rsi, FILE_PATH_1
+call file_read
+mov rdi, my_source_code
+call array_pack_to_bytes
+mov [source_ptr], rax
+mov rdi, [source_ptr]
+call compiler_c
+mov [asm_code_ptr], rax
+mov rdi, my_asm_output
+mov rsi, [asm_code_ptr]
+call array_unpack_from_bytes
+mov rdi, [source_ptr]
+call free_string_c
+mov rdi, [asm_code_ptr]
+call free_string_c
+mov rdi, FILE_PATH_2
+call file_delete
+mov rdi, FILE_PATH_3
+mov rsi, my_asm_output
+call file_append
+
+
+    ; --- Exit cleanly ---
+    mov rsp, rbp
+    pop rbp
+    mov rax, 60
+    xor rdi, rdi
+    syscall

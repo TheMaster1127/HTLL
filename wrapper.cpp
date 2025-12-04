@@ -1,38 +1,71 @@
-#include <string>
-#include <vector>
-#include <cstdlib>
-#include <cstring>
+#include <string>   // Required for std::string
+#include <cstring>  // Required for memcpy
+#include <new>      // Required for std::nothrow
 
-// --- All Function Declarations from your original HTLL.cpp ---
-std::string StrReplace(const std::string&, const std::string&, const std::string&);
-std::string Trim(const std::string&);
-std::string SubStr(const std::string&, int, int);
-int InStr(const std::string&, const std::string&);
-std::string FileRead(const std::string&);
-bool FileAppend(const std::string&, const std::string&);
-bool FileDelete(const std::string&);
-size_t StrLen(const std::string&);
-std::string SubStrLastChars(std::string, int);
-std::string compiler(std::string);
+// ============================================================================
+// FORWARD DECLARATION
+// ============================================================================
+// This tells the compiler that a function named "compiler" exists somewhere
+// else in your project. This is necessary for the wrapper to work.
+std::string compiler(std::string source_code);
 
-// Helper function
+
+// ============================================================================
+// HELPER FUNCTION
+// ============================================================================
+// This is the new, robust helper that safely creates a C-style string
+// from a C++ std::string using the correct C++ memory operators.
 char* create_c_string_from_std_string(const std::string& s) {
-    char* c_str = (char*)malloc(s.length() + 1);
-    if (c_str) { strcpy(c_str, s.c_str()); }
+    // Use the C++ array allocation operator 'new[]'.
+    // std::nothrow ensures it returns nullptr on failure instead of crashing.
+    char* c_str = new (std::nothrow) char[s.length() + 1];
+
+    // If allocation was successful, copy the data.
+    if (c_str) {
+        // memcpy is a fast and safe way to copy the raw bytes.
+        memcpy(c_str, s.c_str(), s.length());
+        
+        // Manually add the final null terminator. This is critical.
+        c_str[s.length()] = '\0';
+    }
+    
     return c_str;
 }
 
-// extern "C" block
+
+// ============================================================================
+// C-STYLE WRAPPER INTERFACE
+// ============================================================================
+// The 'extern "C"' block prevents C++ name mangling, allowing your
+// assembly code to find these functions by their simple names.
 extern "C" {
-    char* StrReplace_c(const char* o, const char* f, const char* r) { return create_c_string_from_std_string(StrReplace(o, f, r)); }
-    char* Trim_c(const char* i) { return create_c_string_from_std_string(Trim(i)); }
-    char* SubStr_c(const char* i, int s, int l) { return create_c_string_from_std_string(SubStr(i, s, l)); }
-    char* FileRead_c(const char* p) { return create_c_string_from_std_string(FileRead(p)); }
-    char* SubStrLastChars_c(const char* t, int n) { return create_c_string_from_std_string(SubStrLastChars(t, n)); }
-    char* compiler_c(const char* c) { return create_c_string_from_std_string(compiler(c)); }
-    int InStr_c(const char* h, const char* n) { return InStr(h, n); }
-    bool FileAppend_c(const char* p, const char* c) { return FileAppend(c, p); }
-    bool FileDelete_c(const char* p) { return FileDelete(p); }
-    size_t StrLen_c(const char* s) { return StrLen(s); }
-    void free_string_c(void* p) { if (p) { free(p); } }
-}
+
+    /**
+     * @brief   Takes a C-string, passes it to the C++ compiler function,
+     *          and returns the result as a new C-string.
+     * @param c The input source code as a null-terminated C-string.
+     * @return  A pointer to a new C-string with the compiled code.
+     *          The caller is responsible for freeing this with free_string_c.
+     */
+    char* compiler_c(const char* c) {
+        // Make sure the input pointer is not null before using it.
+        if (!c) {
+            return nullptr;
+        }
+        return create_c_string_from_std_string(compiler(c));
+    }
+
+
+    /**
+     * @brief   Safely deallocates a C-string that was created by this library.
+     * @param p A pointer to the memory that should be freed.
+     */
+    void free_string_c(void* p) {
+        if (p) {
+            // Use 'delete[]' because the memory was allocated with 'new[]'.
+            // This is the C++ equivalent of free() and solves the crash.
+            delete[] static_cast<char*>(p);
+        }
+    }
+
+} // end extern "C"

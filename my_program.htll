@@ -1,0 +1,8 @@
+arr my_source_code
+arr my_asm_output
+
+fileread my_source_code, "my_program.htll"
+my_source_code.compile my_asm_output  ; BOOM. Done.
+
+filedelete "test_output.s"
+fileappend "test_output.s", my_asm_output
