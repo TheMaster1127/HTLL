@@ -11,7 +11,8 @@ arr1.set 1, 99
 ; arr1 is now [50, 99, 70]
 
 int i := 0
-Loop, 4
+arr1.size
+Loop, rax
 arr1.index i
 print(rax)
 i++

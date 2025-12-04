@@ -412,7 +412,25 @@ std::string compiler(std::string code) {
     int theIdNumOfThe34 = 0;
     int areWEinSome34sNum = 0;
     int loopCount = 0;
+    int loopCount1 = 0;
+    int loopCount2 = 0;
+    int loopCount3 = 0;
+    int loopCount4 = 0;
+    int loopCount5 = 0;
+    int loopCount6 = 0;
+    int loopCount7 = 0;
+    int loopCount8 = 0;
+    int loopCount9 = 0;
     int ifCount = 0;
+    int ifCount1 = 0;
+    int ifCount2 = 0;
+    int ifCount3 = 0;
+    int ifCount4 = 0;
+    int ifCount5 = 0;
+    int ifCount6 = 0;
+    int ifCount7 = 0;
+    int ifCount8 = 0;
+    int ifCount9 = 0;
     int funcCount = 0;
     int isNum = 0;
     int localVarNum = 1;
@@ -864,26 +882,119 @@ std::string compiler(std::string code) {
         else if (Trim(A_LoopField15) == "print_rax_as_char") {
             out += "mov rdi, rax" + Chr(10) + "call print_char" + Chr(10);
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 6) == "loop, ") {
+        else if (SubStr(StrLower(A_LoopField15), 1, 6) == "loop, " || SubStr(StrLower(A_LoopField15), 1, 7) == "loop1, ") {
             str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 6));
             if (RegExMatch(str1, "^\\d+$")) {
-                out += "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop_" + STR(loopCount) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop_end" + STR(loopCount) + Chr(10);
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop1_" + STR(loopCount1) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop1_end" + STR(loopCount1) + Chr(10);
             } else {
-                out += "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop_" + STR(loopCount) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop_end" + STR(loopCount) + Chr(10);
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop1_" + STR(loopCount1) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop1_end" + STR(loopCount1) + Chr(10);
             }
         }
-        else if (Trim(A_LoopField15) == "loopend") {
-            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop_" + STR(loopCount) + Chr(10) + ".loop_end" + STR(loopCount) + ":" + Chr(10);
-            loopCount++;
+        else if (Trim(A_LoopField15) == "loopend" || Trim(A_LoopField15) == "endloop" || Trim(A_LoopField15) == "loopend1" || Trim(A_LoopField15) == "endloop1") {
+            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop1_" + STR(loopCount1) + Chr(10) + ".loop1_end" + STR(loopCount1) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            loopCount1++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 3) == "if ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 3));
+        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop2, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+            if (RegExMatch(str1, "^\\d+$")) {
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop2_" + STR(loopCount2) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop2_end" + STR(loopCount2) + Chr(10);
+            } else {
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop2_" + STR(loopCount2) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop2_end" + STR(loopCount2) + Chr(10);
+            }
+        }
+        else if (Trim(A_LoopField15) == "loopend2" || Trim(A_LoopField15) == "endloop2") {
+            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop2_" + STR(loopCount2) + Chr(10) + ".loop2_end" + STR(loopCount2) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            loopCount2++;
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop3, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+            if (RegExMatch(str1, "^\\d+$")) {
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop3_" + STR(loopCount3) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop3_end" + STR(loopCount3) + Chr(10);
+            } else {
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop3_" + STR(loopCount3) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop3_end" + STR(loopCount3) + Chr(10);
+            }
+        }
+        else if (Trim(A_LoopField15) == "loopend3" || Trim(A_LoopField15) == "endloop3") {
+            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop3_" + STR(loopCount3) + Chr(10) + ".loop3_end" + STR(loopCount3) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            loopCount3++;
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop4, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+            if (RegExMatch(str1, "^\\d+$")) {
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop4_" + STR(loopCount4) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop4_end" + STR(loopCount4) + Chr(10);
+            } else {
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop4_" + STR(loopCount4) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop4_end" + STR(loopCount4) + Chr(10);
+            }
+        }
+        else if (Trim(A_LoopField15) == "loopend4" || Trim(A_LoopField15) == "endloop4") {
+            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop4_" + STR(loopCount4) + Chr(10) + ".loop4_end" + STR(loopCount4) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            loopCount4++;
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop5, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+            if (RegExMatch(str1, "^\\d+$")) {
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop5_" + STR(loopCount5) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop5_end" + STR(loopCount5) + Chr(10);
+            } else {
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop5_" + STR(loopCount5) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop5_end" + STR(loopCount5) + Chr(10);
+            }
+        }
+        else if (Trim(A_LoopField15) == "loopend5" || Trim(A_LoopField15) == "endloop5") {
+            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop5_" + STR(loopCount5) + Chr(10) + ".loop5_end" + STR(loopCount5) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            loopCount5++;
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop6, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+            if (RegExMatch(str1, "^\\d+$")) {
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop6_" + STR(loopCount6) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop6_end" + STR(loopCount6) + Chr(10);
+            } else {
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop6_" + STR(loopCount6) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop6_end" + STR(loopCount6) + Chr(10);
+            }
+        }
+        else if (Trim(A_LoopField15) == "loopend6" || Trim(A_LoopField15) == "endloop6") {
+            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop6_" + STR(loopCount6) + Chr(10) + ".loop6_end" + STR(loopCount6) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            loopCount6++;
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop7, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+            if (RegExMatch(str1, "^\\d+$")) {
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop7_" + STR(loopCount7) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop7_end" + STR(loopCount7) + Chr(10);
+            } else {
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop7_" + STR(loopCount7) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop7_end" + STR(loopCount7) + Chr(10);
+            }
+        }
+        else if (Trim(A_LoopField15) == "loopend7" || Trim(A_LoopField15) == "endloop7") {
+            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop7_" + STR(loopCount7) + Chr(10) + ".loop7_end" + STR(loopCount7) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            loopCount7++;
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop8, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+            if (RegExMatch(str1, "^\\d+$")) {
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop8_" + STR(loopCount8) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop8_end" + STR(loopCount8) + Chr(10);
+            } else {
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop8_" + STR(loopCount8) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop8_end" + STR(loopCount8) + Chr(10);
+            }
+        }
+        else if (Trim(A_LoopField15) == "loopend8" || Trim(A_LoopField15) == "endloop8") {
+            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop8_" + STR(loopCount8) + Chr(10) + ".loop8_end" + STR(loopCount8) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            loopCount8++;
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop9, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+            if (RegExMatch(str1, "^\\d+$")) {
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop9_" + STR(loopCount9) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop9_end" + STR(loopCount9) + Chr(10);
+            } else {
+                out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop9_" + STR(loopCount9) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop9_end" + STR(loopCount9) + Chr(10);
+            }
+        }
+        else if (Trim(A_LoopField15) == "loopend9" || Trim(A_LoopField15) == "endloop9") {
+            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop9_" + STR(loopCount9) + Chr(10) + ".loop9_end" + STR(loopCount9) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            loopCount9++;
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 3) == "if " || SubStr(StrLower(A_LoopField15), 1, 4) == "if1 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField15, 3));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             isNum = 0;
-            //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-            //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-            //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             if (InStr(str1, " = ")) {
                 str2 = Trim(StrSplit(str1, " = ", 1));
                 str3 = Trim(StrSplit(str1, " = ", 2));
@@ -891,9 +1002,9 @@ std::string compiler(std::string code) {
                     isNum = 1;
                 }
                 if (isNum == 1) {
-                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jne .end_if_" + STR(ifCount) + Chr(10);
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jne .end_if1_" + STR(ifCount1) + Chr(10);
                 } else {
-                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jne .end_if_" + STR(ifCount) + Chr(10);
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jne .end_if1_" + STR(ifCount1) + Chr(10);
                 }
             }
             else if (InStr(str1, " != ")) {
@@ -903,18 +1014,858 @@ std::string compiler(std::string code) {
                     isNum = 1;
                 }
                 if (isNum == 1) {
-                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "je .end_if_" + STR(ifCount) + Chr(10);
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "je .end_if1_" + STR(ifCount1) + Chr(10);
                 } else {
-                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "je .end_if_" + STR(ifCount) + Chr(10);
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "je .end_if1_" + STR(ifCount1) + Chr(10);
                 }
             }
-            //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-            //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-            //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jle .end_if1_" + STR(ifCount1) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jle .end_if1_" + STR(ifCount1) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jge .end_if1_" + STR(ifCount1) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jge .end_if1_" + STR(ifCount1) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jl .end_if1_" + STR(ifCount1) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jl .end_if1_" + STR(ifCount1) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jg .end_if1_" + STR(ifCount1) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jg .end_if1_" + STR(ifCount1) + Chr(10);
+                }
+            }
         }
-        else if (Trim(A_LoopField15) == "ifend") {
-            out += ".end_if_" + STR(ifCount) + ":" + Chr(10);
-            ifCount++;
+        else if (Trim(A_LoopField15) == "ifend" || Trim(A_LoopField15) == "endif" || Trim(A_LoopField15) == "ifend1" || Trim(A_LoopField15) == "endif1") {
+            out += ".end_if1_" + STR(ifCount1) + ":" + Chr(10);
+            ifCount1++;
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "if2 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+            str1 = StringTrimLeft(str1, 1);
+            str1 = StringTrimRight(str1, 1);
+            if (InStr(str1, " = ")) {
+                str2 = Trim(StrSplit(str1, " = ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jne .end_if2_" + STR(ifCount2) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jne .end_if2_" + STR(ifCount2) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " != ")) {
+                str2 = Trim(StrSplit(str1, " != ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "je .end_if2_" + STR(ifCount2) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "je .end_if2_" + STR(ifCount2) + Chr(10);
+                }
+            }
+            // --- IF2 ---
+            if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jle .end_if2_" + STR(ifCount2) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jle .end_if2_" + STR(ifCount2) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jge .end_if2_" + STR(ifCount2) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jge .end_if2_" + STR(ifCount2) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jl .end_if2_" + STR(ifCount2) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jl .end_if2_" + STR(ifCount2) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jg .end_if2_" + STR(ifCount2) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jg .end_if2_" + STR(ifCount2) + Chr(10);
+                }
+            }
+        }
+        else if (Trim(A_LoopField15) == "ifend2" || Trim(A_LoopField15) == "endif2") {
+            out += ".end_if2_" + STR(ifCount2) + ":" + Chr(10);
+            ifCount2++;
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "if3 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+            str1 = StringTrimLeft(str1, 1);
+            str1 = StringTrimRight(str1, 1);
+            if (InStr(str1, " = ")) {
+                str2 = Trim(StrSplit(str1, " = ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jne .end_if3_" + STR(ifCount3) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jne .end_if3_" + STR(ifCount3) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " != ")) {
+                str2 = Trim(StrSplit(str1, " != ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "je .end_if3_" + STR(ifCount3) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "je .end_if3_" + STR(ifCount3) + Chr(10);
+                }
+            }
+            // --- IF3 ---
+            if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jle .end_if3_" + STR(ifCount3) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jle .end_if3_" + STR(ifCount3) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jge .end_if3_" + STR(ifCount3) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jge .end_if3_" + STR(ifCount3) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jl .end_if3_" + STR(ifCount3) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jl .end_if3_" + STR(ifCount3) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jg .end_if3_" + STR(ifCount3) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jg .end_if3_" + STR(ifCount3) + Chr(10);
+                }
+            }
+        }
+        else if (Trim(A_LoopField15) == "ifend3" || Trim(A_LoopField15) == "endif3") {
+            out += ".end_if3_" + STR(ifCount3) + ":" + Chr(10);
+            ifCount3++;
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "if4 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+            str1 = StringTrimLeft(str1, 1);
+            str1 = StringTrimRight(str1, 1);
+            if (InStr(str1, " = ")) {
+                str2 = Trim(StrSplit(str1, " = ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jne .end_if4_" + STR(ifCount4) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jne .end_if4_" + STR(ifCount4) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " != ")) {
+                str2 = Trim(StrSplit(str1, " != ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "je .end_if4_" + STR(ifCount4) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "je .end_if4_" + STR(ifCount4) + Chr(10);
+                }
+            }
+            // --- IF4 ---
+            if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jle .end_if4_" + STR(ifCount4) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jle .end_if4_" + STR(ifCount4) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jge .end_if4_" + STR(ifCount4) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jge .end_if4_" + STR(ifCount4) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jl .end_if4_" + STR(ifCount4) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jl .end_if4_" + STR(ifCount4) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jg .end_if4_" + STR(ifCount4) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jg .end_if4_" + STR(ifCount4) + Chr(10);
+                }
+            }
+        }
+        else if (Trim(A_LoopField15) == "ifend4" || Trim(A_LoopField15) == "endif4") {
+            out += ".end_if4_" + STR(ifCount4) + ":" + Chr(10);
+            ifCount4++;
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "if5 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+            str1 = StringTrimLeft(str1, 1);
+            str1 = StringTrimRight(str1, 1);
+            if (InStr(str1, " = ")) {
+                str2 = Trim(StrSplit(str1, " = ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jne .end_if5_" + STR(ifCount5) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jne .end_if5_" + STR(ifCount5) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " != ")) {
+                str2 = Trim(StrSplit(str1, " != ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "je .end_if5_" + STR(ifCount5) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "je .end_if5_" + STR(ifCount5) + Chr(10);
+                }
+            }
+            // --- IF5 ---
+            if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jle .end_if5_" + STR(ifCount5) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jle .end_if5_" + STR(ifCount5) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jge .end_if5_" + STR(ifCount5) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jge .end_if5_" + STR(ifCount5) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jl .end_if5_" + STR(ifCount5) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jl .end_if5_" + STR(ifCount5) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jg .end_if5_" + STR(ifCount5) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jg .end_if5_" + STR(ifCount5) + Chr(10);
+                }
+            }
+        }
+        else if (Trim(A_LoopField15) == "ifend5" || Trim(A_LoopField15) == "endif5") {
+            out += ".end_if5_" + STR(ifCount5) + ":" + Chr(10);
+            ifCount5++;
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "if6 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+            str1 = StringTrimLeft(str1, 1);
+            str1 = StringTrimRight(str1, 1);
+            if (InStr(str1, " = ")) {
+                str2 = Trim(StrSplit(str1, " = ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jne .end_if6_" + STR(ifCount6) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jne .end_if6_" + STR(ifCount6) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " != ")) {
+                str2 = Trim(StrSplit(str1, " != ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "je .end_if6_" + STR(ifCount6) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "je .end_if6_" + STR(ifCount6) + Chr(10);
+                }
+            }
+            // --- IF6 ---
+            if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jle .end_if6_" + STR(ifCount6) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jle .end_if6_" + STR(ifCount6) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jge .end_if6_" + STR(ifCount6) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jge .end_if6_" + STR(ifCount6) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jl .end_if6_" + STR(ifCount6) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jl .end_if6_" + STR(ifCount6) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jg .end_if6_" + STR(ifCount6) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jg .end_if6_" + STR(ifCount6) + Chr(10);
+                }
+            }
+        }
+        else if (Trim(A_LoopField15) == "ifend6" || Trim(A_LoopField15) == "endif6") {
+            out += ".end_if6_" + STR(ifCount6) + ":" + Chr(10);
+            ifCount6++;
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "if7 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+            str1 = StringTrimLeft(str1, 1);
+            str1 = StringTrimRight(str1, 1);
+            if (InStr(str1, " = ")) {
+                str2 = Trim(StrSplit(str1, " = ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jne .end_if7_" + STR(ifCount7) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jne .end_if7_" + STR(ifCount7) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " != ")) {
+                str2 = Trim(StrSplit(str1, " != ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "je .end_if7_" + STR(ifCount7) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "je .end_if7_" + STR(ifCount7) + Chr(10);
+                }
+            }
+            // --- IF7 ---
+            if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jle .end_if7_" + STR(ifCount7) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jle .end_if7_" + STR(ifCount7) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jge .end_if7_" + STR(ifCount7) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jge .end_if7_" + STR(ifCount7) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jl .end_if7_" + STR(ifCount7) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jl .end_if7_" + STR(ifCount7) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jg .end_if7_" + STR(ifCount7) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jg .end_if7_" + STR(ifCount7) + Chr(10);
+                }
+            }
+        }
+        else if (Trim(A_LoopField15) == "ifend7" || Trim(A_LoopField15) == "endif7") {
+            out += ".end_if7_" + STR(ifCount7) + ":" + Chr(10);
+            ifCount7++;
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "if8 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+            str1 = StringTrimLeft(str1, 1);
+            str1 = StringTrimRight(str1, 1);
+            if (InStr(str1, " = ")) {
+                str2 = Trim(StrSplit(str1, " = ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jne .end_if8_" + STR(ifCount8) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jne .end_if8_" + STR(ifCount8) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " != ")) {
+                str2 = Trim(StrSplit(str1, " != ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "je .end_if8_" + STR(ifCount8) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "je .end_if8_" + STR(ifCount8) + Chr(10);
+                }
+            }
+            // --- IF8 ---
+            if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jle .end_if8_" + STR(ifCount8) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jle .end_if8_" + STR(ifCount8) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jge .end_if8_" + STR(ifCount8) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jge .end_if8_" + STR(ifCount8) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jl .end_if8_" + STR(ifCount8) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jl .end_if8_" + STR(ifCount8) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
+                isNum = 0;
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, " + str3 + Chr(10);
+                    out += "jg .end_if8_" + STR(ifCount8) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10);
+                    out += "cmp rax, [" + str3 + "]" + Chr(10);
+                    out += "jg .end_if8_" + STR(ifCount8) + Chr(10);
+                }
+            }
+        }
+        else if (Trim(A_LoopField15) == "ifend8" || Trim(A_LoopField15) == "endif8") {
+            out += ".end_if8_" + STR(ifCount8) + ":" + Chr(10);
+            ifCount8++;
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "if9 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+            str1 = StringTrimLeft(str1, 1);
+            str1 = StringTrimRight(str1, 1);
+            if (InStr(str1, " = ")) {
+                str2 = Trim(StrSplit(str1, " = ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jne .end_if9_" + STR(ifCount9) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jne .end_if9_" + STR(ifCount9) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " != ")) {
+                str2 = Trim(StrSplit(str1, " != ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "je .end_if9_" + STR(ifCount9) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "je .end_if9_" + STR(ifCount9) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jle .end_if9_" + STR(ifCount9) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jle .end_if9_" + STR(ifCount9) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jge .end_if9_" + STR(ifCount9) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jge .end_if9_" + STR(ifCount9) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jl .end_if9_" + STR(ifCount9) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jl .end_if9_" + STR(ifCount9) + Chr(10);
+                }
+            }
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                if (RegExMatch(str3, "^\\d+$")) {
+                    isNum = 1;
+                }
+                if (isNum == 1) {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jg .end_if9_" + STR(ifCount9) + Chr(10);
+                } else {
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jg .end_if9_" + STR(ifCount9) + Chr(10);
+                }
+            }
+        }
+        else if (Trim(A_LoopField15) == "ifend9" || Trim(A_LoopField15) == "endif9") {
+            out += ".end_if9_" + STR(ifCount9) + ":" + Chr(10);
+            ifCount9++;
         }
         else if (SubStr(StrLower(A_LoopField15), 1, 5) == "func ") {
             str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 5));
@@ -1090,6 +2041,8 @@ std::string compiler(std::string code) {
                 int5++;
             }
             out += str4 + "call " + str2 + Chr(10) + "add rsp, " + STR(8 * int5) + Chr(10);
+        } else {
+            out += A_LoopField15 + Chr(10);
         }
         for (int A_Index21 = 0; A_Index21 < HTVM_Size(funcArgsArr); A_Index21++) {
             out = RegExReplace(out, "\\b" + Trim(funcArgsArr[A_Index21]) + "\\b", "rbp + " + STR(8 + ((A_Index21 + 1) * 8)));

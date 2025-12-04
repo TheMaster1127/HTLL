@@ -911,6 +911,7 @@ file_delete:
 
 
 
+
 add_numbers:
 push rbp
 mov rbp, rsp
@@ -925,6 +926,9 @@ jmp .add_numbers_return
 add rsp, 16
 pop rbp
 ret
+; =============================================================================
+; MAIN PROGRAM ENTRY POINT
+; =============================================================================
 _start:
 push 100
 push 200
@@ -937,11 +941,13 @@ mov rsi, 0
 call print_number
 mov qword [i], 0
 mov qword [loop_counter], 5
+push r12
+push r13
 xor r13, r13
 mov r12, [loop_counter]
-.loop_0:
+.loop1_0:
 cmp r12, 0
-je .loop_end0
+je .loop1_end0
 mov rsi, [i]
 mov rdi, numbers_arr
 
@@ -949,35 +955,41 @@ call array_append
 inc qword [i]
 inc r13
 dec r12
-jmp .loop_0
-.loop_end0:
+jmp .loop1_0
+.loop1_end0:
+pop r13
+pop r12
 mov qword [i], 0
 mov rax, [numbers_arr + DynamicArray.size]
+push r12
+push r13
 xor r13, r13
 mov r12, rax
-.loop_1:
+.loop1_1:
 cmp r12, 0
-je .loop_end1
+je .loop1_end1
 mov rcx, [i]
 
 mov rbx, [numbers_arr + DynamicArray.pointer]
 mov rax, [rbx + rcx*8]
 mov rax, rax
 cmp rax, 1
-je .end_if_0
+je .end_if1_0
 mov rax, rax
 cmp rax, 3
-je .end_if_0
+je .end_if1_0
 mov rdi, rax
 mov rsi, 0
 call print_number
-.end_if_0:
-.end_if_1:
+.end_if1_0:
+.end_if1_1:
 inc qword [i]
 inc r13
 dec r12
-jmp .loop_1
-.loop_end1:
+jmp .loop1_1
+.loop1_end1:
+pop r13
+pop r12
 mov rbx, [numbers_arr + DynamicArray.pointer]
 mov rcx, 3
 mov rsi, 99
@@ -989,11 +1001,13 @@ mov rdi, numbers_arr
 call array_clear
 mov qword [i], 0
 mov rax, [temp_arr + DynamicArray.size]
+push r12
+push r13
 xor r13, r13
 mov r12, rax
-.loop_2:
+.loop1_2:
 cmp r12, 0
-je .loop_end2
+je .loop1_end2
 mov rcx, [i]
 
 mov rbx, [temp_arr + DynamicArray.pointer]
@@ -1004,8 +1018,10 @@ call print_number
 inc qword [i]
 inc r13
 dec r12
-jmp .loop_2
-.loop_end2:
+jmp .loop1_2
+.loop1_end2:
+pop r13
+pop r12
 mov rdi, prompt_arr
 call array_clear
 mov rsi, 'P'
@@ -1130,11 +1146,13 @@ mov rdi, message_arr
 call array_append
 mov qword [i], 0
 mov rax, [user_input_arr + DynamicArray.size]
+push r12
+push r13
 xor r13, r13
 mov r12, rax
-.loop_3:
+.loop1_3:
 cmp r12, 0
-je .loop_end3
+je .loop1_end3
 mov rcx, [i]
 
 mov rbx, [user_input_arr + DynamicArray.pointer]
@@ -1146,8 +1164,10 @@ call array_append
 inc qword [i]
 inc r13
 dec r12
-jmp .loop_3
-.loop_end3:
+jmp .loop1_3
+.loop1_end3:
+pop r13
+pop r12
 mov rsi, 10
 mov rdi, message_arr
 
@@ -1274,11 +1294,13 @@ mov rsi, FILE_PATH_3
 call file_read
 mov qword [i], 0
 mov rax, [temp_arr + DynamicArray.size]
+push r12
+push r13
 xor r13, r13
 mov r12, rax
-.loop_4:
+.loop1_4:
 cmp r12, 0
-je .loop_end4
+je .loop1_end4
 mov rcx, [i]
 
 mov rbx, [temp_arr + DynamicArray.pointer]
@@ -1288,8 +1310,10 @@ call print_char
 inc qword [i]
 inc r13
 dec r12
-jmp .loop_4
-.loop_end4:
+jmp .loop1_4
+.loop1_end4:
+pop r13
+pop r12
 mov rdi, FILE_PATH_4
 call file_delete
 
