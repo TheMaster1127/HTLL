@@ -167,3 +167,16 @@ loopend
 ; Final cleanup
 filedelete "test_output.txt"
 ; ------------------------------------------------------------------
+
+; tets more
+
+print("Hello")
+
+nint var1234 := 5
+var1234 += 5
+var1234 -= 5
+var1234 *= 5
+var1234++
+var1234++
+var1234--
+var1234++

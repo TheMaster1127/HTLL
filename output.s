@@ -14,9 +14,6 @@ section .data
     nl:   db 10
 
 
-FILE_PATH_1: db "my_program.htll", 0
-FILE_PATH_2: db "test_output.s", 0
-FILE_PATH_3: db "test_output.s", 0
 
 
 
@@ -27,12 +24,11 @@ section .bss
 file_read_buffer: resb 4096
 input_len:    resq 1   ; A variable to hold the length of the input
     source_ptr:      resq 1
+    filename_ptr:      resq 1
 source_ptr_size: resq 1
 asm_code_ptr:    resq 1
     print_buffer_n: resb 20
 
-my_source_code: resb DynamicArray_size
-my_asm_output: resb DynamicArray_size
 
 
 
@@ -1078,28 +1074,28 @@ push rbp
 mov rbp, rsp
 and rsp, -16 
 
-mov rdi, my_source_code
-mov rsi, FILE_PATH_1
-call file_read
-mov rdi, my_source_code
-call array_pack_to_bytes
-mov [source_ptr], rax
-mov rdi, [source_ptr]
-call compiler_c
-mov [asm_code_ptr], rax
-mov rdi, my_asm_output
-mov rsi, [asm_code_ptr]
-call array_unpack_from_bytes
-mov rdi, [source_ptr]
-mov rsi, [source_ptr_size]
-call free_packed_string
-mov rdi, [asm_code_ptr]
-call free_string_c
-mov rdi, FILE_PATH_2
-call file_delete
-mov rdi, FILE_PATH_3
-mov rsi, my_asm_output
-call file_append
+push r12
+push r13
+xor r13, r13
+mov r12, 10
+.loop1_0:
+cmp r12, 0
+je .loop1_end0
+mov rdi, r13
+mov rsi, 0
+call print_number
+mov rax, r13
+cmp rax, 3
+jne .end_if1_0
+jmp .loop1_end0
+.end_if1_0:
+.cloop1_end0:
+inc r13
+dec r12
+jmp .loop1_0
+.loop1_end0:
+pop r13
+pop r12
 
 
     ; --- Exit cleanly ---

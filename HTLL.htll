@@ -1,0 +1,102 @@
+; --- GLOBAL VARIABLES, DEFINED AT THE TOP ---
+arr debug_buffer  ; The global buffer for our debug function.
+int i := 0             ; The global loop counter for our debug function.
+
+; =========================================================================
+; THE DEBUG FUNCTION: Built according to your rules.
+; It operates on the global 'debug_buffer' array.
+; =========================================================================
+func debug_print_array()
+    print("DEBUG: Array size is...")
+    debug_buffer.size
+    print(rax)
+    
+    print("DEBUG: Array content is...")
+    Loop, rax
+        ; Use the correct A_Index syntax for loops.
+        debug_buffer.index A_Index
+        print_rax_as_char
+    loopend
+    print("--------------------")
+funcend
+
+; =========================================================================
+; MAIN EXECUTION BLOCK
+; =========================================================================
+main
+    arr my_source_code
+    arr my_asm_output
+
+    ; --- STAGE 1: Check the initial state of args_array ---
+    print(">>>> STAGE 1: Initial state of args_array <<<<")
+    ; Copy args_array to the global buffer, THEN call the function.
+    debug_buffer.clear
+    debug_buffer.copy args_array
+    debug_print_array()
+
+    ; --- Read the file using the args_array ---
+        args_array.pop ; pop \n
+    fileread_arr my_source_code, args_array
+    
+    
+    
+    ;print("1DDDDDD1")    
+    ;my_source_code.size
+    ;print("1DDDDDD2")
+    ;print(rax)
+    ;print("1DDDDDD3")
+    ;if (rax != 0)
+    ;print("1DDDDDD4")
+    ;Loop, rax
+    ;print("1DDDDDD5")
+    ;my_source_code.index A_Index    
+    ;print("1DDDDDD6")
+    ;print_rax_as_char
+    ;print("1DDDDDD7")
+    ;loopend
+    ;print("1DDDDDD8")
+    ;endif
+    ;print("1DDDDDD9")
+    
+    
+    my_source_code.compile my_asm_output
+    ;print("DDDDDD1")    
+    ;my_asm_output.size
+    ;print("DDDDDD2")
+    ;print(rax)
+    ;print("DDDDDD3")
+    ;if (rax != 0)
+    ;print("DDDDDD4")
+    ;Loop, rax
+    ;print("DDDDDD5")
+    ;my_asm_output.index A_Index    
+    ;print("DDDDDD6")
+    ;print_rax_as_char
+    ;print("DDDDDD7")
+    ;loopend
+    ;print("DDDDDD8")
+    ;endif
+    ;print("DDDDDD9")
+
+    ; --- STAGE 2: Pop the extension ---
+    args_array.pop ; pop l
+    args_array.pop ; pop l
+    args_array.pop ; pop t
+    args_array.pop ; pop h
+    print(">>>> STAGE 2: State after 4 pops <<<<")
+    ; Copy the modified args_array to the buffer to inspect it.
+    debug_buffer.clear
+    debug_buffer.copy args_array
+    debug_print_array()
+
+    ; --- STAGE 3: Add the new extension character ---
+    args_array.add 's'
+    print(">>>> STAGE 3: State after adding 's' <<<<")
+    ; Copy the final version of args_array to the buffer.
+    debug_buffer.clear
+    debug_buffer.copy args_array
+    debug_print_array()
+    
+    ; --- Now, use the modified array to save the output ---
+    filedelete_arr args_array
+    fileappend_arr args_array, my_asm_output

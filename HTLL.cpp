@@ -359,7 +359,7 @@ std::string str17 = "";
 std::string str18 = "";
 std::string str19 = "";
 std::string str20 = "";
-std::string main_syntax = "" + Chr(10) + "; =============================================================================" + Chr(10) + "; MAIN PROGRAM ENTRY POINT" + Chr(10) + "; =============================================================================" + Chr(10) + "_start:" + Chr(10) + "push rbp" + Chr(10) + "mov rbp, rsp" + Chr(10) + "and rsp, -16 " + Chr(10);
+std::string main_syntax = "" + Chr(10) + "; =============================================================================" + Chr(10) + "; MAIN PROGRAM ENTRY POINT" + Chr(10) + "; =============================================================================" + Chr(10) + "_start:" + Chr(10) + "push rbp" + Chr(10) + "mov rbp, rsp" + Chr(10) + "and rsp, -16 " + Chr(10) + "mov rdi, args_array" + Chr(10) + "call array_clear" + Chr(10) + "mov r12, [rbp+8]" + Chr(10) + "lea r13, [rbp+16]" + Chr(10) + "mov r14, 1" + Chr(10) + ".arg_loop:" + Chr(10) + "cmp r14, r12" + Chr(10) + "jge .args_done" + Chr(10) + "mov rsi, [r13 + r14*8]" + Chr(10) + "mov rdi, args_array" + Chr(10) + "call array_unpack_from_bytes" + Chr(10) + "mov rdi, args_array" + Chr(10) + "mov rsi, 10" + Chr(10) + "call array_append" + Chr(10) + "inc r14" + Chr(10) + "jmp .arg_loop" + Chr(10) + ".args_done:" + Chr(10) + Chr(10);
 std::string SubStrLastChars(std::string text, int numOfChars) {
     std::string LastOut = "";
     int NumOfChars = 0;
@@ -392,6 +392,7 @@ bool isNint(std::string name) {
 std::string compiler(std::string code) {
     std::string out = "";
     std::string HTLL_Libs_x86 = FileRead("HTLL_Libs_x86.txt");
+    int isDotCompile = 0;
     std::string dot_data = Chr(10);
     std::string dot_data_print_temp_strings = Chr(10);
     int dot_data_print_temp_strings_count = 0;
@@ -605,31 +606,31 @@ std::string compiler(std::string code) {
                 str2 = Trim(StrSplit(str1, ":=", 1));
                 str3 = Trim(StrSplit(str1, ":=", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
-                    dot_data_ints += str2 + ": dq " + str3 + Chr(10);
+                    dot_data_ints += str2 + " dq " + str3 + Chr(10);
                 } else {
-                    dot_data_ints += str2 + ": dq 0" + Chr(10);
+                    dot_data_ints += str2 + " dq 0" + Chr(10);
                     out += "mov rdi, [" + str3 + "]" + Chr(10);
                     out += "mov [" + str2 + "], rdi" + Chr(10);
                 }
             } else {
                 if (InStr(str1, ":=") == false && InStr(str1, "+=") == false && InStr(str1, "-=") == false && InStr(str1, "*=") == false) {
-                    dot_data_ints += Trim(str1) + ": dq 0" + Chr(10);
+                    dot_data_ints += Trim(str1) + " dq 0" + Chr(10);
                 }
             }
             if (InStr(str1, "*=")) {
                 str2 = Trim(StrSplit(str1, "*=", 1));
                 str3 = Trim(StrSplit(str1, "*=", 2));
-                dot_data_ints += str2 + ": dq 0" + Chr(10);
+                dot_data_ints += str2 + " dq 0" + Chr(10);
             }
             else if (InStr(str1, "+=")) {
                 str2 = Trim(StrSplit(str1, "+=", 1));
                 str3 = Trim(StrSplit(str1, "+=", 2));
-                dot_data_ints += str2 + ": dq 0" + Chr(10);
+                dot_data_ints += str2 + " dq 0" + Chr(10);
             }
             else if (InStr(str1, "-=")) {
                 str2 = Trim(StrSplit(str1, "-=", 1));
                 str3 = Trim(StrSplit(str1, "-=", 2));
-                dot_data_ints += str2 + ": dq 0" + Chr(10);
+                dot_data_ints += str2 + " dq 0" + Chr(10);
             }
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -682,36 +683,36 @@ std::string compiler(std::string code) {
                 str2 = Trim(StrSplit(str1, ":=", 1));
                 str3 = Trim(StrSplit(str1, ":=", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
-                    dot_data_ints += str2 + ": dq " + str3 + Chr(10);
+                    dot_data_ints += str2 + " dq " + str3 + Chr(10);
                     dot_data_ints += str2 + "_is_negative: dq 0" + Chr(10);
                 } else {
-                    dot_data_ints += str2 + ": dq 0" + Chr(10);
+                    dot_data_ints += str2 + " dq 0" + Chr(10);
                     dot_data_ints += str2 + "_is_negative: dq 0" + Chr(10);
                     out += "mov rdi, [" + str3 + "]" + Chr(10);
                     out += "mov [" + str2 + "], rdi" + Chr(10);
                 }
             } else {
                 if (InStr(str1, ":=") == false && InStr(str1, "+=") == false && InStr(str1, "-=") == false && InStr(str1, "*=") == false) {
-                    dot_data_ints += Trim(str1) + ": dq 0" + Chr(10);
+                    dot_data_ints += Trim(str1) + " dq 0" + Chr(10);
                     dot_data_ints += Trim(str1) + "_is_negative: dq 0" + Chr(10);
                 }
             }
             if (InStr(str1, "*=")) {
                 str2 = Trim(StrSplit(str1, "*=", 1));
                 str3 = Trim(StrSplit(str1, "*=", 2));
-                dot_data_ints += str2 + ": dq 0" + Chr(10);
+                dot_data_ints += str2 + " dq 0" + Chr(10);
                 dot_data_ints += str2 + "_is_negative: dq 0" + Chr(10);
             }
             else if (InStr(str1, "+=")) {
                 str2 = Trim(StrSplit(str1, "+=", 1));
                 str3 = Trim(StrSplit(str1, "+=", 2));
-                dot_data_ints += str2 + ": dq 0" + Chr(10);
+                dot_data_ints += str2 + " dq 0" + Chr(10);
                 dot_data_ints += str2 + "_is_negative: dq 0" + Chr(10);
             }
             else if (InStr(str1, "-=")) {
                 str2 = Trim(StrSplit(str1, "-=", 1));
                 str3 = Trim(StrSplit(str1, "-=", 2));
-                dot_data_ints += str2 + ": dq 0" + Chr(10);
+                dot_data_ints += str2 + " dq 0" + Chr(10);
                 dot_data_ints += str2 + "_is_negative: dq 0" + Chr(10);
             }
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -765,7 +766,7 @@ std::string compiler(std::string code) {
             str2 = Trim(StrSplit(str1, "[", 2));
             str2 = Trim(StrSplit(str2, "]", 1));
             str1 = Trim(StrSplit(str1, "[", 1));
-            dot_bss_str += str1 + ": resb " + str2 + Chr(10);
+            dot_bss_str += str1 + " rb " + str2 + Chr(10);
         }
         else if (InStr(A_LoopField15, " := ") || InStr(A_LoopField15, " += ") || InStr(A_LoopField15, " -= ") || InStr(A_LoopField15, " *= ")) {
             if (InStr(A_LoopField15, " := ")) {
@@ -866,7 +867,7 @@ std::string compiler(std::string code) {
             }
             else if (InStr(str1, "VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFC")) {
                 dot_data_print_temp_strings_count++;
-                dot_data_print_temp_strings += "ASM_STR_TEMP_PRINT_" + STR(dot_data_print_temp_strings_count) + ": db " + Trim(str1) + ", 10" + Chr(10) + "ASM_STR_TEMP_PRINT_" + STR(dot_data_print_temp_strings_count) + "_len: equ $-" + "ASM_STR_TEMP_PRINT_" + STR(dot_data_print_temp_strings_count) + Chr(10);
+                dot_data_print_temp_strings += "ASM_STR_TEMP_PRINT_" + STR(dot_data_print_temp_strings_count) + " db " + Trim(str1) + ", 10" + Chr(10) + "ASM_STR_TEMP_PRINT_" + STR(dot_data_print_temp_strings_count) + "_len = $-" + "ASM_STR_TEMP_PRINT_" + STR(dot_data_print_temp_strings_count) + Chr(10);
                 out += "mov rsi, ASM_STR_TEMP_PRINT_" + STR(dot_data_print_temp_strings_count) + Chr(10) + "mov rdx, " + "ASM_STR_TEMP_PRINT_" + STR(dot_data_print_temp_strings_count) + "_len" + Chr(10) + "call print_str" + Chr(10);
             } else {
                 if (isNint(str1)) {
@@ -877,7 +878,61 @@ std::string compiler(std::string code) {
             }
         }
         else if (Trim(A_LoopField15) == "print_rax_as_char") {
-            out += "mov rdi, rax" + Chr(10) + "call print_char" + Chr(10);
+            out += "mov rdi, rax" + Chr(10) + "push rcx" + Chr(10) + "call print_char" + Chr(10) + "pop rcx" + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "continue" || StrLower(Trim(A_LoopField15)) == "continue1") {
+            out += "jmp .cloop1_end" + STR(loopCount1) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "continue2") {
+            out += "jmp .cloop2_end" + STR(loopCount2) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "continue3") {
+            out += "jmp .cloop3_end" + STR(loopCount3) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "continue4") {
+            out += "jmp .cloop4_end" + STR(loopCount4) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "continue5") {
+            out += "jmp .cloop5_end" + STR(loopCount5) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "continue6") {
+            out += "jmp .cloop6_end" + STR(loopCount6) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "continue7") {
+            out += "jmp .cloop7_end" + STR(loopCount7) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "continue8") {
+            out += "jmp .cloop8_end" + STR(loopCount8) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "continue9") {
+            out += "jmp .cloop9_end" + STR(loopCount9) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "break" || StrLower(Trim(A_LoopField15)) == "break1") {
+            out += "jmp .loop1_end" + STR(loopCount1) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "break2") {
+            out += "jmp .loop2_end" + STR(loopCount2) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "break3") {
+            out += "jmp .loop3_end" + STR(loopCount3) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "break4") {
+            out += "jmp .loop4_end" + STR(loopCount4) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "break5") {
+            out += "jmp .loop5_end" + STR(loopCount5) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "break6") {
+            out += "jmp .loop6_end" + STR(loopCount6) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "break7") {
+            out += "jmp .loop7_end" + STR(loopCount7) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "break8") {
+            out += "jmp .loop8_end" + STR(loopCount8) + Chr(10);
+        }
+        else if (StrLower(Trim(A_LoopField15)) == "break9") {
+            out += "jmp .loop9_end" + STR(loopCount9) + Chr(10);
         }
         else if (SubStr(StrLower(A_LoopField15), 1, 6) == "loop, " || SubStr(StrLower(A_LoopField15), 1, 7) == "loop1, ") {
             str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 6));
@@ -888,7 +943,7 @@ std::string compiler(std::string code) {
             }
         }
         else if (Trim(A_LoopField15) == "loopend" || Trim(A_LoopField15) == "endloop" || Trim(A_LoopField15) == "loopend1" || Trim(A_LoopField15) == "endloop1") {
-            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop1_" + STR(loopCount1) + Chr(10) + ".loop1_end" + STR(loopCount1) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            out += ".cloop1_end" + STR(loopCount1) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop1_" + STR(loopCount1) + Chr(10) + ".loop1_end" + STR(loopCount1) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount1++;
         }
         else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop2, ") {
@@ -900,7 +955,7 @@ std::string compiler(std::string code) {
             }
         }
         else if (Trim(A_LoopField15) == "loopend2" || Trim(A_LoopField15) == "endloop2") {
-            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop2_" + STR(loopCount2) + Chr(10) + ".loop2_end" + STR(loopCount2) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            out += ".cloop2_end" + STR(loopCount2) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop2_" + STR(loopCount2) + Chr(10) + ".loop2_end" + STR(loopCount2) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount2++;
         }
         else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop3, ") {
@@ -912,7 +967,7 @@ std::string compiler(std::string code) {
             }
         }
         else if (Trim(A_LoopField15) == "loopend3" || Trim(A_LoopField15) == "endloop3") {
-            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop3_" + STR(loopCount3) + Chr(10) + ".loop3_end" + STR(loopCount3) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            out += ".cloop3_end" + STR(loopCount3) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop3_" + STR(loopCount3) + Chr(10) + ".loop3_end" + STR(loopCount3) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount3++;
         }
         else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop4, ") {
@@ -924,7 +979,7 @@ std::string compiler(std::string code) {
             }
         }
         else if (Trim(A_LoopField15) == "loopend4" || Trim(A_LoopField15) == "endloop4") {
-            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop4_" + STR(loopCount4) + Chr(10) + ".loop4_end" + STR(loopCount4) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            out += ".cloop4_end" + STR(loopCount4) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop4_" + STR(loopCount4) + Chr(10) + ".loop4_end" + STR(loopCount4) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount4++;
         }
         else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop5, ") {
@@ -936,7 +991,7 @@ std::string compiler(std::string code) {
             }
         }
         else if (Trim(A_LoopField15) == "loopend5" || Trim(A_LoopField15) == "endloop5") {
-            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop5_" + STR(loopCount5) + Chr(10) + ".loop5_end" + STR(loopCount5) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            out += ".cloop5_end" + STR(loopCount5) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop5_" + STR(loopCount5) + Chr(10) + ".loop5_end" + STR(loopCount5) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount5++;
         }
         else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop6, ") {
@@ -948,7 +1003,7 @@ std::string compiler(std::string code) {
             }
         }
         else if (Trim(A_LoopField15) == "loopend6" || Trim(A_LoopField15) == "endloop6") {
-            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop6_" + STR(loopCount6) + Chr(10) + ".loop6_end" + STR(loopCount6) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            out += ".cloop6_end" + STR(loopCount6) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop6_" + STR(loopCount6) + Chr(10) + ".loop6_end" + STR(loopCount6) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount6++;
         }
         else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop7, ") {
@@ -960,7 +1015,7 @@ std::string compiler(std::string code) {
             }
         }
         else if (Trim(A_LoopField15) == "loopend7" || Trim(A_LoopField15) == "endloop7") {
-            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop7_" + STR(loopCount7) + Chr(10) + ".loop7_end" + STR(loopCount7) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            out += ".cloop7_end" + STR(loopCount7) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop7_" + STR(loopCount7) + Chr(10) + ".loop7_end" + STR(loopCount7) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount7++;
         }
         else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop8, ") {
@@ -972,7 +1027,7 @@ std::string compiler(std::string code) {
             }
         }
         else if (Trim(A_LoopField15) == "loopend8" || Trim(A_LoopField15) == "endloop8") {
-            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop8_" + STR(loopCount8) + Chr(10) + ".loop8_end" + STR(loopCount8) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            out += ".cloop8_end" + STR(loopCount8) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop8_" + STR(loopCount8) + Chr(10) + ".loop8_end" + STR(loopCount8) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount8++;
         }
         else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop9, ") {
@@ -984,7 +1039,7 @@ std::string compiler(std::string code) {
             }
         }
         else if (Trim(A_LoopField15) == "loopend9" || Trim(A_LoopField15) == "endloop9") {
-            out += "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop9_" + STR(loopCount9) + Chr(10) + ".loop9_end" + STR(loopCount9) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
+            out += ".cloop9_end" + STR(loopCount9) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop9_" + STR(loopCount9) + Chr(10) + ".loop9_end" + STR(loopCount9) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount9++;
         }
         else if (SubStr(StrLower(A_LoopField15), 1, 3) == "if " || SubStr(StrLower(A_LoopField15), 1, 4) == "if1 ") {
@@ -1924,7 +1979,7 @@ std::string compiler(std::string code) {
         }
         else if (SubStr(StrLower(A_LoopField15), 1, 4) == "arr ") {
             str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 4));
-            arrBss += Trim(str1) + ": resb DynamicArray_size" + Chr(10);
+            arrBss += "    " + Trim(str1) + " rq 3" + Chr(10);
         }
         else if (InStr(A_LoopField15, ".add ")) {
             str1 = Trim(StrSplit(A_LoopField15, ".", 1));
@@ -1969,7 +2024,76 @@ std::string compiler(std::string code) {
             // arrName.compile outArr
             str1 = Trim(StrSplit(A_LoopField15, ".", 1));
             str2 = Trim(StrSplit(A_LoopField15, ".compile", 2));
+            isDotCompile = 1;
             out += "mov rdi, " + str1 + Chr(10) + "call array_pack_to_bytes" + Chr(10) + "mov [source_ptr], rax" + Chr(10) + "mov rdi, [source_ptr]" + Chr(10) + "call compiler_c" + Chr(10) + "mov [asm_code_ptr], rax" + Chr(10) + "mov rdi, " + str2 + Chr(10) + "mov rsi, [asm_code_ptr]" + Chr(10) + "call array_unpack_from_bytes" + Chr(10) + "mov rdi, [source_ptr]" + Chr(10) + "mov rsi, [source_ptr_size]" + Chr(10) + "call free_packed_string" + Chr(10) + "mov rdi, [asm_code_ptr]" + Chr(10) + "call free_string_c" + Chr(10);
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 5) == "goto ") {
+            str1 = Trim(StringTrimLeft(A_LoopField15, 5));
+            out += "jmp .__HTLL_HTLL_" + str1 + Chr(10);
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 5) == "togo ") {
+            str1 = Trim(StringTrimLeft(A_LoopField15, 5));
+            out += ".__HTLL_HTLL_" + str1 + ":" + Chr(10);
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 13) == "fileread_arr ") {
+            str1 = Trim(StringTrimLeft(A_LoopField15, 13));
+            str2 = Trim(StrSplit(str1, ",", 1));
+            str3 = Trim(StrSplit(str1, ",", 2));
+            // --- THE PURE ASSEMBLY GENERATION ---
+            // Pack the FILENAME array (str3) into a C-string.
+            out += "mov rdi, " + str3 + Chr(10);
+            out += "call array_pack_to_bytes" + Chr(10);
+            // -- THE FIX IS HERE --
+            out += "mov [filename_ptr], rax" + Chr(10);
+            out += "mov [filename_ptr_size], rdx" + Chr(10);
+            // Call fileread_from_ptr with the DESTINATION array (str2) and the new pointer.
+            out += "mov rdi, " + str2 + Chr(10);
+            out += "mov rsi, [filename_ptr]" + Chr(10);
+            out += "call fileread_from_ptr" + Chr(10);
+            // Clean up the temporary C-string pointer using YOUR PURE FUNCTION.
+            // -- THE FIX IS HERE --
+            out += "mov rdi, [filename_ptr]" + Chr(10);
+            out += "mov rsi, [filename_ptr_size]" + Chr(10);
+            out += "call free_packed_string" + Chr(10);
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 15) == "fileappend_arr ") {
+            str1 = Trim(StringTrimLeft(A_LoopField15, 15));
+            str2 = Trim(StrSplit(str1, ",", 1));
+            str3 = Trim(StrSplit(str1, ",", 2));
+            // --- THE PURE ASSEMBLY GENERATION ---
+            // Pack the FILENAME array (str2) into a C-string.
+            out += "mov rdi, " + str2 + Chr(10);
+            out += "call array_pack_to_bytes" + Chr(10);
+            // -- THE FIX IS HERE --
+            out += "mov [filename_ptr], rax" + Chr(10);
+            out += "mov [filename_ptr_size], rdx" + Chr(10);
+            // Call fileappend_from_ptr with the new pointer and the CONTENT array (str3).
+            out += "mov rdi, [filename_ptr]" + Chr(10);
+            out += "mov rsi, " + str3 + Chr(10);
+            out += "call fileappend_from_ptr" + Chr(10);
+            // Clean up the temporary C-string pointer using YOUR PURE FUNCTION.
+            // -- THE FIX IS HERE --
+            out += "mov rdi, [filename_ptr]" + Chr(10);
+            out += "mov rsi, [filename_ptr_size]" + Chr(10);
+            out += "call free_packed_string" + Chr(10);
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 15) == "filedelete_arr ") {
+            str1 = Trim(StringTrimLeft(A_LoopField15, 15));
+            // --- THE PURE ASSEMBLY GENERATION ---
+            // Pack the FILENAME array (str1) into a C-string.
+            out += "mov rdi, " + str1 + Chr(10);
+            out += "call array_pack_to_bytes" + Chr(10);
+            // -- THE FIX IS HERE --
+            out += "mov [filename_ptr], rax" + Chr(10);
+            out += "mov [filename_ptr_size], rdx" + Chr(10);
+            // Call filedelete_from_ptr with the new pointer.
+            out += "mov rdi, [filename_ptr]" + Chr(10);
+            out += "call filedelete_from_ptr" + Chr(10);
+            // Clean up the temporary C-string pointer using YOUR PURE FUNCTION.
+            // -- THE FIX IS HERE --
+            out += "mov rdi, [filename_ptr]" + Chr(10);
+            out += "mov rsi, [filename_ptr_size]" + Chr(10);
+            out += "call free_packed_string" + Chr(10);
         }
         else if (SubStr(StrLower(A_LoopField15), 1, 9) == "fileread ") {
             str1 = Trim(StringTrimLeft(A_LoopField15, 9));
@@ -1977,7 +2101,7 @@ std::string compiler(std::string code) {
             str3 = Trim(StrSplit(str1, ",", 2));
             dot_data_print_temp_strings_count++;
             path_label = "FILE_PATH_" + STR(dot_data_print_temp_strings_count);
-            dot_data_print_temp_strings += path_label + ": db " + str3 + ", 0" + Chr(10);
+            dot_data_print_temp_strings += path_label + " db " + str3 + ", 0" + Chr(10);
             out += "mov rdi, " + str2 + Chr(10) + "mov rsi, " + path_label + Chr(10) + "call file_read" + Chr(10);
         }
         else if (SubStr(StrLower(A_LoopField15), 1, 11) == "fileappend ") {
@@ -1986,14 +2110,14 @@ std::string compiler(std::string code) {
             str3 = Trim(StrSplit(str1, ",", 2));
             dot_data_print_temp_strings_count++;
             path_label = "FILE_PATH_" + STR(dot_data_print_temp_strings_count);
-            dot_data_print_temp_strings += path_label + ": db " + str2 + ", 0" + Chr(10);
+            dot_data_print_temp_strings += path_label + " db " + str2 + ", 0" + Chr(10);
             out += "mov rdi, " + path_label + Chr(10) + "mov rsi, " + str3 + Chr(10) + "call file_append" + Chr(10);
         }
         else if (SubStr(StrLower(A_LoopField15), 1, 11) == "filedelete ") {
             str1 = Trim(StringTrimLeft(A_LoopField15, 11));
             dot_data_print_temp_strings_count++;
             path_label = "FILE_PATH_" + STR(dot_data_print_temp_strings_count);
-            dot_data_print_temp_strings += path_label + ": db " + str1 + ", 0" + Chr(10);
+            dot_data_print_temp_strings += path_label + " db " + str1 + ", 0" + Chr(10);
             out += "mov rdi, " + path_label + Chr(10) + "call file_delete" + Chr(10);
         }
         else if (SubStr(A_LoopField15, 1, 6) == "input ") {
@@ -2033,6 +2157,10 @@ std::string compiler(std::string code) {
             str3 = StrSplit(str1, "(", 2);
             str4 = "";
             int5 = 0;
+            int1 = 0;
+            if (Trim(str3) == "") {
+                int1 = 1;
+            }
             std::vector<std::string> items20 = LoopParseFunc(str3, ", ");
             for (size_t A_Index20 = 0; A_Index20 < items20.size(); A_Index20++) {
                 std::string A_LoopField20 = items20[A_Index20 - 0];
@@ -2043,34 +2171,151 @@ std::string compiler(std::string code) {
                 }
                 int5++;
             }
-            out += str4 + "call " + str2 + Chr(10) + "add rsp, " + STR(8 * int5) + Chr(10);
+            if (int1 == 0) {
+                out += str4 + "call " + str2 + Chr(10) + "add rsp, " + STR(8 * int5) + Chr(10);
+            } else {
+                out += str4 + "call " + str2 + Chr(10);
+            }
         } else {
             out += A_LoopField15 + Chr(10);
         }
         for (int A_Index21 = 0; A_Index21 < HTVM_Size(funcArgsArr); A_Index21++) {
-            out = RegExReplace(out, "\\b" + Trim(funcArgsArr[A_Index21]) + "\\b", "rbp + " + STR(8 + ((A_Index21 + 1) * 8)));
+            out = RegExReplace(out, "\\b" + Trim(funcArgsArr[A_Index21]) + "\\b", "rbp + " + STR(8 + ( (HTVM_Size(funcArgsArr) - A_Index21) * 8 )));
         }
         out = StrReplace(out, "']", "'");
         out = StrReplace(out, "['", "'");
         out = StrReplace(out, "push qword []", "");
+        out = StrReplace(out, "[A_Index]", "r13");
     }
     code = StringTrimRight(out, 1);
+    std::vector<std::string> allFuncCALLS;
+    std::vector<std::string> allFuncCALLS_alredy;
+    std::vector<std::string> items22 = LoopParseFunc(code, "\n", "\r");
+    for (size_t A_Index22 = 0; A_Index22 < items22.size(); A_Index22++) {
+        std::string A_LoopField22 = items22[A_Index22 - 0];
+        if (SubStr(Trim(A_LoopField22), 1, 5) == "call ") {
+            HTVM_Append(allFuncCALLS, Trim(StringTrimLeft(Trim(A_LoopField22), 5)));
+        }
+    }
+    std::string HTLL_Libs_x86_new = Chr(10);
+    std::string temp_funcName = "";
+    int temp_in_funcName = 0;
+    int canWeGetFunc = 0;
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    std::vector<std::string> items23 = LoopParseFunc(HTLL_Libs_x86, "\n", "\r");
+    for (size_t A_Index23 = 0; A_Index23 < items23.size(); A_Index23++) {
+        std::string A_LoopField23 = items23[A_Index23 - 0];
+        if (InStr(A_LoopField23, "$$$$") == false && InStr(A_LoopField23, "%%%%") == false && temp_in_funcName == 1 && canWeGetFunc == 1) {
+            HTLL_Libs_x86_new += A_LoopField23 + Chr(10);
+        }
+        if (InStr(A_LoopField23, "$$$$")) {
+            temp_funcName = StringTrimLeft(StringTrimRight(Trim(A_LoopField23), 4), 4);
+            temp_in_funcName = 1;
+            canWeGetFunc = 0;
+            for (int A_Index24 = 0; A_Index24 < HTVM_Size(allFuncCALLS); A_Index24++) {
+                if (temp_funcName == allFuncCALLS[A_Index24]) {
+                    canWeGetFunc = 1;
+                    HTVM_Append(allFuncCALLS_alredy, temp_funcName);
+                    break;
+                }
+            }
+        }
+        else if (InStr(A_LoopField23, "%%%%")) {
+            temp_in_funcName = 0;
+        }
+    }
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    allFuncCALLS = {};
+    int anotherVar_INT_HELP_BUILD_IN_FUNCS_INT = 0;
+    std::string ALoopField = "";
+    std::vector<std::string> items25 = LoopParseFunc(HTLL_Libs_x86, "\n", "\r");
+    for (size_t A_Index25 = 0; A_Index25 < items25.size(); A_Index25++) {
+        std::string A_LoopField25 = items25[A_Index25 - 0];
+        ALoopField = A_LoopField25;
+        if (SubStr(Trim(A_LoopField25), 1, 5) == "call " || SubStr(Trim(A_LoopField25), 1, 4) == "jmp ") {
+            anotherVar_INT_HELP_BUILD_IN_FUNCS_INT = 1;
+            for (int A_Index26 = 0; A_Index26 < HTVM_Size(allFuncCALLS_alredy); A_Index26++) {
+                if (allFuncCALLS_alredy[A_Index26] == Trim(StringTrimLeft(Trim(ALoopField), 4))) {
+                    anotherVar_INT_HELP_BUILD_IN_FUNCS_INT = 0;
+                }
+            }
+            if (anotherVar_INT_HELP_BUILD_IN_FUNCS_INT == 1) {
+                HTVM_Append(allFuncCALLS, Trim(StringTrimLeft(Trim(ALoopField), 4)));
+            }
+        }
+    }
+    temp_funcName = "";
+    temp_in_funcName = 0;
+    canWeGetFunc = 0;
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    std::vector<std::string> items27 = LoopParseFunc(HTLL_Libs_x86, "\n", "\r");
+    for (size_t A_Index27 = 0; A_Index27 < items27.size(); A_Index27++) {
+        std::string A_LoopField27 = items27[A_Index27 - 0];
+        if (InStr(A_LoopField27, "$$$$") == false && InStr(A_LoopField27, "%%%%") == false && temp_in_funcName == 1 && canWeGetFunc == 1) {
+            HTLL_Libs_x86_new += A_LoopField27 + Chr(10);
+        }
+        if (InStr(A_LoopField27, "$$$$")) {
+            temp_funcName = StringTrimLeft(StringTrimRight(Trim(A_LoopField27), 4), 4);
+            temp_in_funcName = 1;
+            canWeGetFunc = 0;
+            for (int A_Index28 = 0; A_Index28 < HTVM_Size(allFuncCALLS); A_Index28++) {
+                if (temp_funcName == allFuncCALLS[A_Index28]) {
+                    canWeGetFunc = 1;
+                    break;
+                }
+            }
+        }
+        else if (InStr(A_LoopField27, "%%%%")) {
+            temp_in_funcName = 0;
+        }
+    }
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    // =========================================================================
+    // FINAL FASM OBJECT FILE ASSEMBLY - THE TRUE BLUEPRINT
+    // =========================================================================
     dot_data += dot_data_print_temp_strings + Chr(10);
     dot_data += dot_data_ints + Chr(10);
     dot_bss += dot_bss_str + Chr(10);
-    std::string upCode = "; This defines a " + Chr(34) + "struct" + Chr(34) + " to make our code readable." + Chr(10) + "struc DynamicArray" + Chr(10) + "    .pointer:   resq 1  ; Offset 0: Holds the pointer to the heap memory" + Chr(10) + "    .size:      resq 1  ; Offset 8: Holds the current number of elements" + Chr(10) + "    .capacity:  resq 1  ; Offset 16: Holds how many elements the block can store" + Chr(10) + "endstruc" + Chr(10) + "" + Chr(10) + "section .data" + Chr(10) + "    SCALE_FACTOR:   dq 1000000" + Chr(10) + "    INITIAL_CAPACITY equ 2  ; Let's use a smaller capacity to test resizing sooner" + Chr(10) + "    print_buffer:   times 21 db 0" + Chr(10) + "    dot:            db '.'" + Chr(10) + "    minus_sign:     db '-'" + Chr(10) + "    nl:   db 10" + Chr(10) + dot_data + Chr(10) + "" + Chr(10) + "section .bss" + Chr(10) + "    input_buffer: resb 256 ; A buffer to temporarily hold user's raw input" + Chr(10) + "file_read_buffer: resb 4096" + Chr(10) + "input_len:    resq 1   ; A variable to hold the length of the input" + Chr(10) + "    source_ptr:      resq 1" + Chr(10) + "source_ptr_size: resq 1" + Chr(10) + "asm_code_ptr:    resq 1" + Chr(10) + "    print_buffer_n: resb 20" + Chr(10) + Chr(10) + arrBss + Chr(10) + dot_bss + "" + Chr(10) + "section .text" + Chr(10) + "global _start" + Chr(10) + "" + Chr(10) + "; =============================================================================" + Chr(10) + HTLL_Libs_x86 + Chr(10);
-    std::string downCode = "" + Chr(10) + "    ; --- Exit cleanly ---" + Chr(10) + "    mov rsp, rbp" + Chr(10) + "    pop rbp" + Chr(10) + "    mov rax, 60" + Chr(10) + "    xor rdi, rdi" + Chr(10) + "    syscall" + Chr(10) + "";
+    // --- FASM OBJECT FILE HEADER & LINKER DIRECTIVES ---
+    std::string fasm_header = "format ELF64" + Chr(10);
+    fasm_header += "public _start" + Chr(10);
+    if (isDotCompile == 1) {
+        fasm_header += "extrn compiler_c" + Chr(10);
+        fasm_header += "extrn free_string_c" + Chr(10);
+    }
+    fasm_header += Chr(10);
+    // --- FASM STRUCTURE DEFINITION ---
+    fasm_header += "    DynamicArray.pointer  = 0" + Chr(10) + "    DynamicArray.size     = 8" + Chr(10) + "    DynamicArray.capacity = 16" + Chr(10) + "    sizeof.DynamicArray   = 24" + Chr(10) + Chr(10);
+    // #################### THE FINAL TRUTH ####################
+    // Use simple section names WITH the correct ELF flags for object files.
+    // #########################################################
+    // --- FASM BODY ---
+    std::string upCode = "section '.data' writeable" + Chr(10) + "    SCALE_FACTOR   dq 1000000" + Chr(10) + "    INITIAL_CAPACITY = 2" + Chr(10) + "    print_buffer   rb 21" + Chr(10) + "    dot            db '.'" + Chr(10) + "    minus_sign     db '-'" + Chr(10) + "    nl   db 10" + Chr(10) + dot_data;
+    upCode += "section '.bss' writeable" + Chr(10) + "    input_buffer rb 256" + Chr(10) + "    file_read_buffer rb 4096" + Chr(10) + "    input_len    rq 1" + Chr(10) + "    filename_ptr_size  rq 1" + Chr(10) + "    source_ptr      rq 1" + Chr(10) + "    source_ptr_size rq 1" + Chr(10) + "    args_array rq 3" + Chr(10) + "    filename_ptr      rq 1" + Chr(10) + "    asm_code_ptr    rq 1" + Chr(10) + "    print_buffer_n rb 20" + Chr(10) + arrBss + dot_bss;
+    upCode += "section '.text' executable" + Chr(10) + HTLL_Libs_x86_new + Chr(10);
+    // --- FASM FOOTER ---
+    std::string downCode = Chr(10) + "    ; --- Exit cleanly ---" + Chr(10) + "    mov rsp, rbp" + Chr(10) + "    pop rbp" + Chr(10) + "    mov rax, 60" + Chr(10) + "    xor rdi, rdi" + Chr(10) + "    syscall" + Chr(10) + "";
+    // --- ASSEMBLE THE FINAL STRING ---
     std::string codeOUT = "";
     if (seenMain == 0) {
-        codeOUT = upCode + Chr(10) + main_syntax +  Chr(10) + out + Chr(10) + downCode;
+        codeOUT = fasm_header + upCode + main_syntax + out + downCode;
     } else {
-        codeOUT = upCode + Chr(10) + out + Chr(10) + downCode;
+        codeOUT = fasm_header + upCode + out + downCode;
     }
-    for (int A_Index22 = 0; A_Index22 < theIdNumOfThe34; A_Index22++) {
-        if (theIdNumOfThe34 == A_Index22 + 1) {
-            codeOUT = StrReplace(codeOUT, "VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFC" + Chr(65) + Chr(65) + STR(A_Index22 + 1) + Chr(65) + Chr(65), StrReplace(theIdNumOfThe34theVar[A_Index22 + 1], keyWordEscpaeChar, "\\") + Chr(34));
+    //;;;;;;;;;;;;;;;;;;;;;;;;;
+    for (int A_Index29 = 0; A_Index29 < theIdNumOfThe34; A_Index29++) {
+        if (theIdNumOfThe34 == A_Index29 + 1) {
+            codeOUT = StrReplace(codeOUT, "VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFC" + Chr(65) + Chr(65) + STR(A_Index29 + 1) + Chr(65) + Chr(65), StrReplace(theIdNumOfThe34theVar[A_Index29 + 1], keyWordEscpaeChar, "\\") + Chr(34));
         } else {
-            codeOUT = StrReplace(codeOUT, "VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFC" + Chr(65) + Chr(65) + STR(A_Index22 + 1) + Chr(65) + Chr(65), StrReplace(theIdNumOfThe34theVar[A_Index22 + 1], keyWordEscpaeChar, "\\"));
+            codeOUT = StrReplace(codeOUT, "VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFC" + Chr(65) + Chr(65) + STR(A_Index29 + 1) + Chr(65) + Chr(65), StrReplace(theIdNumOfThe34theVar[A_Index29 + 1], keyWordEscpaeChar, "\\"));
         }
     }
     codeOUT = StrReplace(codeOUT, " [rax]", " rax");
@@ -2082,11 +2327,11 @@ int main(int argc, char* argv[]) {
     if (params == "") {
         print("Usage:" + Chr(10) + "./HTLL your_file.htll");
     } else {
-        std::vector<std::string> items23 = LoopParseFunc(params, "\n", "\r");
-        for (size_t A_Index23 = 0; A_Index23 < items23.size(); A_Index23++) {
-            std::string A_LoopField23 = items23[A_Index23 - 0];
-            paramsTemp = Trim(A_LoopField23);
-            if (A_Index23 == 0) {
+        std::vector<std::string> items30 = LoopParseFunc(params, "\n", "\r");
+        for (size_t A_Index30 = 0; A_Index30 < items30.size(); A_Index30++) {
+            std::string A_LoopField30 = items30[A_Index30 - 0];
+            paramsTemp = Trim(A_LoopField30);
+            if (A_Index30 == 0) {
                 FileDelete("finalASM_HTLL_ASM.s");
                 FileAppend(compiler(FileRead(paramsTemp)), "finalASM_HTLL_ASM.s");
                 print("Compilation finished: finalASM_HTLL_ASM.s generated.");

@@ -1,51 +1,16 @@
-; ============================================================
-; USER INPUT TEST SCRIPT
-; ============================================================
 
-main
+arr myArr
+arradd myArr hello world
 
-; --- Define variables and arrays ---
-arr user_name
-arr prompt
-arr string_to_write
-int i := 0
-
-; ============================================================
-; TEST: Get user's name and greet them
-; ============================================================
-
-; 1. Create the prompt string
-arradd prompt Please enter your name:
-prompt.add 32
-
-; 2. Call the input function. It will print the prompt
-;    and read the user's response into the 'user_name' array.
-input user_name, prompt
-
-; 3. Build the greeting message
-prompt.clear
-arradd prompt Hello,
-prompt.add 32
-fileappend "greeting.txt", prompt ; Write "Hello, " to a file
-
-fileappend "greeting.txt", user_name ; Append the user's name
-
-prompt.clear
-arradd prompt ! ; Overwrite prompt again
-string_to_write.add 10
-fileappend "greeting.txt", prompt ; Append "!" and a newline
-
-; 4. Read the final greeting back and print it
-arr file_contents
-fileread file_contents, "greeting.txt"
-
-i := 0
-file_contents.size
+myArr.size
 Loop, rax
-    file_contents.index i
+    myArr.index A_Index    
     print_rax_as_char
-    i++
-loopend
 
-; 5. Clean up
-filedelete "greeting.txt"
+endloop
+    rax := 10
+    print_rax_as_char
+    
+; or i can also do
+    
+print("hello world")

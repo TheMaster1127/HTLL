@@ -1,4 +1,4 @@
-
+$$$$is_nint_negative$$$$
 ; =============================================================================
 ; UTILITY FUNCTIONS (Correct and Properly Formatted)
 ; =============================================================================
@@ -51,8 +51,8 @@ is_nint_negative:
     pop rax
     pop rbp
     ret
-
-
+%%%%is_nint_negative%%%%
+$$$$divide_and_store$$$$
 ; divide_and_store: Performs fixed-point division and stores results in memory.
 ; [In] rdi: dividend_int, rsi: dividend_dec
 ;      rdx: divisor_int,  rcx: divisor_dec
@@ -108,7 +108,8 @@ divide_and_store:
     pop r12
     pop rbx
     ret
-
+%%%%divide_and_store%%%%
+$$$$print_div$$$$
 ;-----------------------------------------------------------------------------
 ; print_div: (Unchanged logic, but now properly formatted)
 ; [In] rdi: integer part, rsi: decimal part
@@ -184,8 +185,8 @@ print_div:
     pop rbx
     pop rbp
     ret
-
-
+%%%%print_div%%%%
+$$$$print_number$$$$
 ;-----------------------------------------------------------------------------
 ; print_number: Prints a number, prepending a '-' sign if requested.
 ;
@@ -251,7 +252,8 @@ print_number:
     pop rbx
     pop rbp
     ret
-
+%%%%print_number%%%%
+$$$$print_str$$$$
 print_str:
     push rbp
     mov rbp, rsp
@@ -261,7 +263,8 @@ print_str:
     syscall
     pop rbp
     ret
-
+%%%%print_str%%%%
+$$$$input$$$$
 ;-----------------------------------------------------------------------------
 ; input: Reads a line from stdin, handles empty input, removes the trailing
 ;        newline, and stores the raw string and its length.
@@ -312,8 +315,8 @@ input:
     pop r12
     pop rbp
     ret
-
-
+%%%%input%%%%
+$$$$array_copy$$$$
 ; =============================================================================
 ; DYNAMIC ARRAY LIBRARY FUNCTIONS (Final, Corrected Version)
 ; =============================================================================
@@ -327,6 +330,9 @@ input:
 ;   rdi - Pointer to the destination DynamicArray struct.
 ;   rsi - Pointer to the source DynamicArray struct.
 ; =============================================================================
+; =============================================================================
+; TRULY BULLETPROOF array_copy
+; =============================================================================
 array_copy:
     push rbp
     mov rbp, rsp
@@ -334,77 +340,73 @@ array_copy:
     push r12
     push r13
     push r14
+    push r15
 
     mov r12, rdi             ; r12 = pointer to destination struct
     mov r13, rsi             ; r13 = pointer to source struct
 
-    ; --- Step 1: Check if the destination has enough capacity ---
-    mov rbx, [r13 + DynamicArray.size] ; Get the number of elements we need to copy
-    cmp [r12 + DynamicArray.capacity], rbx
-    jge .copy_has_capacity   ; Jump if Greater or Equal, skip resize
-
-.copy_resize_needed:
-    ; Free the old memory block to prevent leaks, if it exists
+    ; --- Step 1: Free the destination's old memory block ---
     mov rdi, [r12 + DynamicArray.pointer]
     cmp rdi, 0
-    je .copy_skip_munmap     ; If pointer is null, nothing to free
+    je .copy_skip_munmap_fix 
     mov rsi, [r12 + DynamicArray.capacity]
-    imul rsi, 8              ; Calculate old block size in bytes
-    mov rax, 11              ; munmap syscall number
+    imul rsi, 8
+    mov rax, 11
     syscall
 
-.copy_skip_munmap:
-    ; The required new size is already in rbx from the check above
-    mov [r12 + DynamicArray.capacity], rbx ; Set new capacity
+.copy_skip_munmap_fix:
+    ; --- Step 2: Set new size and capacity ---
+    mov rbx, [r13 + DynamicArray.size] 
+    mov [r12 + DynamicArray.size], rbx
+    mov [r12 + DynamicArray.capacity], rbx 
 
-    push r12 ; Save registers before mmap syscall
+    ; --- Step 3: Allocate new memory ---
+    cmp rbx, 0
+    je .copy_epilogue_fix      
+    
+    mov r14, rbx             ; Save the size in a safe register
+    imul r14, 8              ; r14 holds bytes needed
+
+    ; ======================= THE CRITICAL FIX IS HERE =========================
+    ; Syscalls clobber registers. We need r12 and r13 after. Save them.
+    push r12
     push r13
-
-    mov r14, rbx
-    imul r14, 8              ; Calculate bytes needed for new block
-
-    ; mmap syscall to get new memory
-    mov rax, 9
+    
+    mov rax, 9               ; mmap syscall
     mov rdi, 0
-    mov rsi, r14
+    mov rsi, r14             ; Use the size from our safe register
     mov rdx, 3
     mov r10, 34
     mov r8, -1
     mov r9, 0
     syscall
-    ; rax now holds the new pointer
-
-    pop r13 ; Restore registers
+    
+    ; Restore our precious struct pointers immediately after the syscall.
+    pop r13
     pop r12
-
+    ; ========================================================================
+    
     cmp rax, 0
-    jl .copy_epilogue        ; If mmap failed, exit function
+    jl .copy_epilogue_fix    
 
-    mov [r12 + DynamicArray.pointer], rax ; Update destination to use the new memory
+    mov [r12 + DynamicArray.pointer], rax ; Update destination pointer
 
-.copy_has_capacity:
-    ; --- Step 2: Copy the data ---
-    mov rcx, [r13 + DynamicArray.size] ; Number of qwords to copy
-    cmp rcx, 0
-    je .copy_update_size     ; If source is empty, just update size and finish
+    ; --- Step 4: Copy the data ---
+    mov rcx, [r13 + DynamicArray.size] 
+    mov rdi, [r12 + DynamicArray.pointer] 
+    mov rsi, [r13 + DynamicArray.pointer] 
+    rep movsq                
 
-    mov rdi, [r12 + DynamicArray.pointer] ; Destination address
-    mov rsi, [r13 + DynamicArray.pointer] ; Source address
-    rep movsq                ; THE MAGIC: Copy RCX qwords from [RSI] to [RDI]
-
-.copy_update_size:
-    ; --- Step 3: Update destination's size ---
-    mov rbx, [r13 + DynamicArray.size]
-    mov [r12 + DynamicArray.size], rbx
-
-.copy_epilogue:
+.copy_epilogue_fix:
+    pop r15
     pop r14
     pop r13
     pop r12
     pop rbx
     pop rbp
     ret
-
+%%%%array_copy%%%%
+$$$$array_clear$$$$
 ; [In] rdi: Pointer to the DynamicArray struct.
 ;-----------------------------------------------------------------------------
 array_clear:
@@ -414,7 +416,8 @@ array_clear:
     mov qword [rdi + DynamicArray.size], 0
     pop rbp
     ret
-
+%%%%array_clear%%%%
+$$$$array_append$$$$
 ; =============================================================================
 ; array_append: (Final, Robust Version with Error Checking)
 ; Appends a qword value to a dynamic array, resizing if necessary.
@@ -527,8 +530,8 @@ array_append:
     pop rbx
     pop rbp
     ret
-
-
+%%%%array_append%%%%
+$$$$array_pop$$$$
 array_pop:
     push rbp
     mov rbp, rsp
@@ -556,9 +559,9 @@ array_pop:
     pop rbx
     pop rbp
     ret
-
+%%%%array_pop%%%%
+$$$$print_char$$$$
 ;-----------------------------------------------------------------------------
-
 print_char:
     push rbp
     mov rbp, rsp
@@ -580,7 +583,8 @@ print_char:
 
     pop rbp
     ret
-
+%%%%print_char%%%%
+$$$$sys_read_line$$$$
 ; =============================================================================
 ; sys_read_line: A low-level wrapper around the sys_read syscall for stdin.
 ; [In]
@@ -603,9 +607,8 @@ sys_read_line:
 
     pop rbp
     ret
-
-
-
+%%%%sys_read_line%%%%
+$$$$get_user_input$$$$
 ; =============================================================================
 ; get_user_input: (Final, Clean, Production Version)
 ; Correctly prompts, reads, and appends user input.
@@ -698,12 +701,22 @@ get_user_input:
     pop rbx
     pop rbp
     ret
+%%%%get_user_input%%%%
+$$$$fileread_from_ptr$$$$
+; =============================================================================
+; =============================================================================
+; HTLL DYNAMIC FILE I/O LIBRARY - POINTER-BASED VERSIONS
+; These functions are the key to building a truly dynamic compiler.
+; =============================================================================
+; =============================================================================
 
-    
 ; =============================================================================
-; file_read: Appends a file's contents to a dynamic array.
+; file_read_from_ptr: Appends a file's contents to a dynamic array.
+; [In]
+;   rdi - Pointer to the destination DynamicArray struct.
+;   rsi - A POINTER to a null-terminated string containing the file path.
 ; =============================================================================
-file_read:
+fileread_from_ptr:
     push rbp
     mov rbp, rsp
     push rbx
@@ -713,30 +726,35 @@ file_read:
     push r15
 
     mov r12, rdi             ; r12 = pointer to dest array
-    mov r13, rsi             ; r13 = pointer to file path
+    mov r13, rsi             ; r13 = A POINTER to the file path
 
+    ; --- Open the file ---
     mov rax, 2               ; sys_open
     mov rdi, r13
     xor rsi, rsi             ; O_RDONLY
     syscall
+    
+    ; ======================= THE ARMOR PLATE =========================
+    ; A valid file descriptor is a small positive number. Errors are negative.
     cmp rax, 0
-    jl .read_error           
+    jl .read_error_ptr       ; If rax is Less than 0, ABORT.
+    ; ===================================================================
     mov r14, rax             ; r14 = file descriptor
 
-.read_loop:
+.read_loop_ptr:
     mov rax, 0               ; sys_read
     mov rdi, r14
     mov rsi, file_read_buffer
     mov rdx, 4096
     syscall
     cmp rax, 0
-    jle .close_and_exit      
+    jle .close_and_exit_ptr      
 
-    mov r15, rax             ; Use safe r15 for the byte counter
+    mov r15, rax             
     mov rsi, file_read_buffer
-.append_byte_loop:
+.append_byte_loop_ptr:
     cmp r15, 0
-    je .read_loop            
+    je .read_loop_ptr            
 
     movzx rbx, byte [rsi]    
     
@@ -748,17 +766,18 @@ file_read:
 
     inc rsi                  
     dec r15                  
-    jmp .append_byte_loop
+    jmp .append_byte_loop_ptr
 
-.close_and_exit:
+.close_and_exit_ptr:
     mov rax, 3               ; sys_close
     mov rdi, r14             
     syscall
-    xor rax, rax             
-    jmp .read_done
+    jmp .read_done_ptr
 
-.read_error:
-.read_done:
+.read_error_ptr:
+    ; The open failed. We do nothing. The destination array remains empty.
+    ; A real-world version would print an error to stderr.
+.read_done_ptr:
     pop r15
     pop r14
     pop r13
@@ -766,12 +785,15 @@ file_read:
     pop rbx
     pop rbp
     ret
-
-
+%%%%fileread_from_ptr%%%%
+$$$$fileappend_from_ptr$$$$
 ; =============================================================================
-; file_append: Appends an array of character codes to a file. (Corrected)
+; file_append_from_ptr: Appends an array of character codes to a file.
+; [In]
+;   rdi - A POINTER to a null-terminated string containing the file path.
+;   rsi - Pointer to the source DynamicArray struct.
 ; =============================================================================
-file_append:
+fileappend_from_ptr:
     push rbp
     mov rbp, rsp
     push rbx
@@ -780,48 +802,50 @@ file_append:
     push r14
     push r15
 
-    mov r12, rdi             ; r12 = pointer to file path
+    mov r12, rdi             ; r12 = A POINTER to the file path
     mov r13, rsi             ; r13 = pointer to array struct
 
     mov rcx, [r13 + DynamicArray.size]
     cmp rcx, 0
-    je .append_epilogue      ; If there's nothing to write, just exit
+    je .append_epilogue_ptr  ; If there's nothing to write, just exit
 
-    ; --- THE ROBUST FIX IS HERE ---
-    mov r14, rcx             ; Save original size in a safe register
-    mov rbx, rcx             ; Use RBX (a safe register) for the calculation
-    add rbx, 15              ; Round up
-    and rbx, -16             ; Align to a 16-byte boundary
-    sub rsp, rbx             ; Allocate space using the SAFE value from RBX
-    ; --- END FIX ---
-
-    mov r15, rsp             ; r15 = pointer to our packed string buffer
-
+    ; --- Pack the array into a byte buffer on the stack ---
+    mov r14, rcx
+    mov rbx, rcx
+    add rbx, 15
+    and rbx, -16
+    sub rsp, rbx
+    
+    mov r15, rsp
     mov rsi, [r13 + DynamicArray.pointer]
-    xor rcx, rcx             ; Use rcx as the loop counter, it's fine for it to be clobbered
-.pack_loop:
-    cmp rcx, r14             ; Loop using the ORIGINAL size saved in r14
-    jge .pack_done
+    xor rcx, rcx
+.pack_loop_ptr:
+    cmp rcx, r14
+    jge .pack_done_ptr
     mov al, [rsi + rcx*8]
     mov [r15 + rcx], al
     inc rcx
-    jmp .pack_loop
-.pack_done:
+    jmp .pack_loop_ptr
+.pack_done_ptr:
+
     ; --- Open the file ---
     mov rax, 2
     mov rdi, r12
     mov rsi, 1089            ; O_WRONLY | O_CREAT | O_APPEND
-    mov rdx, 0o644
+    mov rdx, 0x644
     syscall
+
+    ; ======================= THE ARMOR PLATE =========================
     cmp rax, 0
-    jl .append_error
-    mov r14, rax             ; Save FD in a safe register (r14 is now overwritten)
+    jl .append_error_ptr     ; If open failed, jump to cleanup.
+    ; ===================================================================
+    mov r14, rax             ; Save FD
 
     ; --- Write the packed data ---
     mov rax, 1
-    mov rdi, r14             ; Write to the file descriptor
-    mov rsi, r15             ; Source is our packed buffer on the stack
-    mov rdx, [r13 + DynamicArray.size] ; Use the original size for the write
+    mov rdi, r14
+    mov rsi, r15
+    mov rdx, [r13 + DynamicArray.size]
     syscall
 
     ; --- Close the file ---
@@ -829,19 +853,12 @@ file_append:
     mov rdi, r14
     syscall
 
-    xor rax, rax
-    jmp .append_cleanup
+.append_error_ptr:
+    ; This label is jumped to if open fails. We just clean up the stack.
+.append_cleanup_ptr:
+    add rsp, rbx ; Deallocate stack space
 
-.append_error:
-    ; Error occurred, set return code or handle appropriately if needed
-    
-.append_cleanup:
-    ; --- THE SECOND PART OF THE ROBUST FIX ---
-    ; Deallocate the exact amount of stack space we allocated using the saved value in RBX.
-    add rsp, rbx
-    ; --- END FIX ---
-
-.append_epilogue:
+.append_epilogue_ptr:
     pop r15
     pop r14
     pop r13
@@ -849,26 +866,58 @@ file_append:
     pop rbx
     pop rbp
     ret
+%%%%fileappend_from_ptr%%%%
+$$$$filedelete_from_ptr$$$$
+; =============================================================================
+; file_delete_from_ptr: Deletes a file from the filesystem.
+; [In]
+;   rdi - A POINTER to a null-terminated string containing the file path.
+; =============================================================================
+filedelete_from_ptr:
+    push rbp
+    mov rbp, rsp
+    
+    mov rax, 87              ; syscall for sys_unlink
+    syscall
+    ; For robustness, you could check if rax is 0 (success) or -1 (failure)
+    
+    pop rbp
+    ret
+%%%%filedelete_from_ptr%%%%
+$$$$file_read$$$$
+; =============================================================================
+; =============================================================================
+; ORIGINAL STATIC (LABEL-BASED) FUNCTIONS
+; Kept for compatibility and for handling hardcoded file paths.
+; =============================================================================
+; =============================================================================
 
+; =============================================================================
+; file_read: Appends a file's contents to a dynamic array.
+; =============================================================================
+file_read:
+    ; This function's logic is already pointer-based, so it works as is.
+    ; We can simply call the new, more clearly named function.
+    jmp fileread_from_ptr
+%%%%file_read%%%%
+$$$$file_append$$$$
+; =============================================================================
+; file_append: Appends an array of character codes to a file.
+; =============================================================================
+file_append:
+    ; This function's logic is also already pointer-based.
+    jmp fileappend_from_ptr
+%%%%file_append%%%%
+$$$$file_delete$$$$
 ; =============================================================================
 ; file_delete: Deletes a file from the filesystem.
 ; =============================================================================
 file_delete:
-    push rbp
-    mov rbp, rsp
-    mov rax, 87              ; syscall for sys_unlink
-    syscall
-    pop rbp
-    ret
+    ; This function's logic is also already pointer-based.
+    jmp filedelete_from_ptr
+%%%%file_delete%%%%
+$$$$array_pack_to_bytes$$$$
 
-
-
-
-
-
-
-; --- Functions from your C++ .so file ---
-extern compiler_c, free_string_c
 
 ; =============================================================================
 ; ADAPTER FUNCTION 1: HTLL arr -> C-style string (char*)
@@ -949,7 +998,8 @@ array_pack_to_bytes:
     pop rbx
     pop rbp
     ret
-
+%%%%array_pack_to_bytes%%%%
+$$$$array_unpack_from_bytes$$$$
 ; =============================================================================
 ; ADAPTER FUNCTION 2: C-style string (char*) -> HTLL arr
 ; =============================================================================
@@ -1000,11 +1050,10 @@ array_unpack_from_bytes:
     pop rbx
     pop rbp
     ret
-    
-    
-
+%%%%array_unpack_from_bytes%%%%
+$$$$free_packed_string$$$$
 ; =============================================================================
-; free_packed_string: Frees memory allocated by array_pack_to_bytes (mmap).
+; free_packed_string: Frees memory allocated by sys_mmap.
 ; [In]
 ;   rdi - Pointer to the memory block.
 ;   rsi - The size of the memory block in bytes.
@@ -1013,13 +1062,15 @@ free_packed_string:
     push rbp
     mov rbp, rsp
     
-    cmp rdi, 0          ; Don't try to free a null pointer
-    je .done
+    ; Robustness check: Don't try to free a null pointer.
+    cmp rdi, 0
+    je .free_done
 
     mov rax, 11         ; syscall for sys_munmap
-    ; rdi and rsi are already set by the caller
+    ; rdi (pointer) and rsi (size) are already set by the caller.
     syscall
 
-.done:
+.free_done:
     pop rbp
     ret
+%%%%free_packed_string%%%%
