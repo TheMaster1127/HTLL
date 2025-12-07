@@ -62,37 +62,63 @@ HTLL is a low-level language written in HTVM that compiles directly to x86-64 Li
 
 ## How to Use
 
-1. **Compile the HTLL library** (required for built-in functions):
+### 1. Compiling the Compiler (Bootstrap)
 
-```bash
-g++ -shared -fPIC HTLL.cpp wrapper.cpp -o libHTLL-lib.so
-```
+To build the `HTLL` compiler from source, follow these exact steps:
 
-2. **Compile HTLL source to assembly (`.s`)**:
+1. **Compile the temporary bootstrap compiler:**
+   ```bash
+   g++ HTLL.cpp -o HTLL
+   ```
 
-```bash
-./HTLL my_program.htll && chmod 644 my_program.s
-```
+2. **Run it to generate the initial assembly:**
+   ```bash
+   ./HTLL HTLL.htll
+   ```
 
-3. **Assemble the `.s` file into an object file**:
+3. **Rename the output file:**
+   ```bash
+   mv finalASM_HTLL_ASM.s HTLL.s
+   ```
 
-```bash
-fasm my_program.s my_program.o
-```
+4. **Compile the C++ Backend Library:**
+   ```bash
+   g++ -shared -fPIC HTLL.cpp wrapper.cpp -o libHTLL-lib.so
+   ```
 
-4. **Link the object file to a statically linked executable**:
+5. **Regenerate the assembly and fix permissions:**
+   ```bash
+   ./HTLL HTLL.htll && chmod 644 HTLL.s
+   ```
 
-```bash
-ld my_program.o -o my_program
-```
+6. **Assemble the Compiler:**
+   ```bash
+   fasm HTLL.s HTLL.o
+   ```
 
-5. **Run your program**:
+7. **Link the Compiler:**
+   ```bash
+   ld -o HTLL HTLL.o -L. -lHTLL-lib --dynamic-linker /lib64/ld-linux-x86-64.so.2 -rpath '$ORIGIN'
+   ```
 
-```bash
-./my_program
-```
+### 2. Running HTLL Programs
 
-> Make sure all binaries (`HTLL`, `my_program`, `.o` and `.s` files) are kept in your working directory.
+Once the compiler is built, use these steps to run your own programs (e.g., `my_program.htll`):
+
+1. **Compile Source to Assembly:**
+   ```bash
+   ./HTLL my_program.htll && chmod 644 my_program.s
+   ```
+
+2. **Assemble to Executable:**
+   ```bash
+   fasm my_program.s
+   ```
+
+3. **Run:**
+   ```bash
+   ./my_program
+   ```
 
 ---
 
@@ -310,35 +336,11 @@ print("Test Done")
 
 ## Compilation Workflow
 
-1. Compile HTLL compiler:
+*Refer to the [How to Use](#how-to-use) section above for the detailed command-line steps.*
 
-```bash
-g++ -shared -fPIC HTLL.cpp wrapper.cpp -o libHTLL-lib.so
-```
-
-2. Compile HTLL source to `.s`:
-
-```bash
-./HTLL my_program.htll && chmod 644 my_program.s
-```
-
-3. Assemble `.s` file:
-
-```bash
-fasm my_program.s my_program.o
-```
-
-4. Link object to executable:
-
-```bash
-ld my_program.o -o my_program
-```
-
-5. Run executable:
-
-```bash
-./my_program
-```
+1. **Bootstrap Compiler:** Build `HTLL` and `libHTLL-lib.so`.
+2. **Compile to Assembly:** Use `./HTLL` to generate `.s` files.
+3. **Assemble:** Use `fasm` to generate the final executable (static linking for user programs, dynamic linking for the compiler itself).
 
 ---
 

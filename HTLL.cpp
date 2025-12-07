@@ -2285,9 +2285,15 @@ std::string compiler(std::string code) {
     dot_data += dot_data_print_temp_strings + Chr(10);
     dot_data += dot_data_ints + Chr(10);
     dot_bss += dot_bss_str + Chr(10);
+    std::string fasm_header = "";
     // --- FASM OBJECT FILE HEADER & LINKER DIRECTIVES ---
-    std::string fasm_header = "format ELF64" + Chr(10);
-    fasm_header += "public _start" + Chr(10);
+    if (isDotCompile == 1) {
+        fasm_header = "format ELF64" + Chr(10);
+        fasm_header += "public _start" + Chr(10);
+    } else {
+        fasm_header = "format ELF64 executable 3" + Chr(10);
+        fasm_header += "entry _start" + Chr(10);
+    }
     if (isDotCompile == 1) {
         fasm_header += "extrn compiler_c" + Chr(10);
         fasm_header += "extrn free_string_c" + Chr(10);
@@ -2298,10 +2304,17 @@ std::string compiler(std::string code) {
     // #################### THE FINAL TRUTH ####################
     // Use simple section names WITH the correct ELF flags for object files.
     // #########################################################
+    std::string upCode = "";
     // --- FASM BODY ---
-    std::string upCode = "section '.data' writeable" + Chr(10) + "    SCALE_FACTOR   dq 1000000" + Chr(10) + "    INITIAL_CAPACITY = 2" + Chr(10) + "    print_buffer   rb 21" + Chr(10) + "    dot            db '.'" + Chr(10) + "    minus_sign     db '-'" + Chr(10) + "    nl   db 10" + Chr(10) + dot_data;
-    upCode += "section '.bss' writeable" + Chr(10) + "    input_buffer rb 256" + Chr(10) + "    file_read_buffer rb 4096" + Chr(10) + "    input_len    rq 1" + Chr(10) + "    filename_ptr_size  rq 1" + Chr(10) + "    source_ptr      rq 1" + Chr(10) + "    source_ptr_size rq 1" + Chr(10) + "    args_array rq 3" + Chr(10) + "    filename_ptr      rq 1" + Chr(10) + "    asm_code_ptr    rq 1" + Chr(10) + "    print_buffer_n rb 20" + Chr(10) + arrBss + dot_bss;
-    upCode += "section '.text' executable" + Chr(10) + HTLL_Libs_x86_new + Chr(10);
+    if (isDotCompile == 1) {
+        upCode = "section '.data' writeable" + Chr(10) + "    SCALE_FACTOR   dq 1000000" + Chr(10) + "    INITIAL_CAPACITY = 2" + Chr(10) + "    print_buffer   rb 21" + Chr(10) + "    dot            db " + Chr(39) + "." + Chr(39) + Chr(10) + "    minus_sign     db " + Chr(39) + "-" + Chr(39) + " " + Chr(10) + "    nl   db 10" + Chr(10) + dot_data + Chr(10);
+        upCode += "section '.bss' writeable" + Chr(10) + "    input_buffer rb 256" + Chr(10) + "    file_read_buffer rb 4096" + Chr(10) + "    input_len    rq 1" + Chr(10) + "    filename_ptr_size  rq 1" + Chr(10) + "    source_ptr      rq 1" + Chr(10) + "    source_ptr_size rq 1" + Chr(10) + "    args_array rq 3" + Chr(10) + "    filename_ptr      rq 1" + Chr(10) + "    asm_code_ptr    rq 1" + Chr(10) + "    print_buffer_n rb 20" + Chr(10) + arrBss + dot_bss;
+        upCode += "section '.text' executable" + Chr(10) + HTLL_Libs_x86_new + Chr(10);
+    } else {
+        upCode = "segment readable writeable" + Chr(10) + "    SCALE_FACTOR   dq 1000000" + Chr(10) + "    INITIAL_CAPACITY = 2" + Chr(10) + "    print_buffer   rb 21" + Chr(10) + "    dot            db " + Chr(39) + "." + Chr(39) + "" + Chr(10) + "    minus_sign     db " + Chr(39) + "-" + Chr(39) + "" + Chr(10) + "    nl   db 10" + Chr(10) + dot_data + Chr(10);
+        upCode += Chr(10) + Chr(10) + "    input_buffer rb 256" + Chr(10) + "    file_read_buffer rb 4096" + Chr(10) + "    input_len    rq 1" + Chr(10) + "    filename_ptr_size  rq 1" + Chr(10) + "    source_ptr      rq 1" + Chr(10) + "    source_ptr_size rq 1" + Chr(10) + "    args_array rq 3" + Chr(10) + "    filename_ptr      rq 1" + Chr(10) + "    asm_code_ptr    rq 1" + Chr(10) + "    print_buffer_n rb 20" + Chr(10) + arrBss + dot_bss;
+        upCode += "segment readable executable" + Chr(10) + HTLL_Libs_x86_new + Chr(10);
+    }
     // --- FASM FOOTER ---
     std::string downCode = Chr(10) + "    ; --- Exit cleanly ---" + Chr(10) + "    mov rsp, rbp" + Chr(10) + "    pop rbp" + Chr(10) + "    mov rax, 60" + Chr(10) + "    xor rdi, rdi" + Chr(10) + "    syscall" + Chr(10) + "";
     // --- ASSEMBLE THE FINAL STRING ---
