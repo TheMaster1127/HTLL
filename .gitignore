@@ -14,3 +14,8 @@ output.s
 
 # Notes
 *.txt
+
+# Hardcoded HTLL files to ignore
+fileFuncsTest.htll
+input.htll
+trim.htll
