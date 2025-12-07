@@ -1,15 +1,17 @@
 # HTLL
 
-HTLL is a low-level language written in HTVM that compiles directly to x86-64 Linux  assembly via FASM. It allows creating statically linked binaries and provides a set of built-in features including arrays, loops, functions, I/O, and string manipulation.
+HTLL is a low-level language written in HTVM that compiles directly to x86-64 Linux assembly via FASM. It allows creating statically linked binaries and provides a set of built-in features including arrays, loops, functions, I/O, and string manipulation.
 
 ---
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [File Types](#file-types)
-3. [Example Program](#example-program)
-4. [Features](#features)
+1. [Requirements](#requirements)
+2. [How to Use](#how-to-use)
+3. [Overview](#overview)
+4. [File Types](#file-types)
+5. [Example Program](#example-program)
+6. [Features](#features)
 
    * Variables
    * Functions
@@ -19,16 +21,84 @@ HTLL is a low-level language written in HTVM that compiles directly to x86-64 Li
    * String-like Operations
    * File I/O
    * User Input
-5. [Comprehensive Feature Test](#comprehensive-feature-test)
-6. [Debugging](#debugging)
-7. [Compilation Workflow](#compilation-workflow)
-8. [Bootstrapping Notes](#bootstrapping-notes)
+7. [Comprehensive Feature Test](#comprehensive-feature-test)
+8. [Debugging](#debugging)
+9. [Compilation Workflow](#compilation-workflow)
+10. [Bootstrapping Notes](#bootstrapping-notes)
+
+---
+
+## Requirements
+
+* **Architecture:** x86-64
+* **Operating System:** 64-bit Linux
+* **Compiler:** `g++` (for compiling the HTLL library and compiler)
+* **Assembler:** `fasm` (flat assembler)
+
+**Installing FASM:**
+
+* **Arch Linux / Manjaro:**
+
+  ```bash
+  sudo pacman -S fasm
+  ```
+* **Debian / Ubuntu:**
+
+  ```bash
+  sudo apt install fasm
+  ```
+* **Fedora:**
+
+  ```bash
+  sudo dnf install fasm
+  ```
+* **OpenSUSE:**
+
+  ```bash
+  sudo zypper install fasm
+  ```
+
+---
+
+## How to Use
+
+1. **Compile the HTLL library** (required for built-in functions):
+
+```bash
+g++ -shared -fPIC HTLL.cpp wrapper.cpp -o libHTLL-lib.so
+```
+
+2. **Compile HTLL source to assembly (`.s`)**:
+
+```bash
+./HTLL my_program.htll && chmod 644 my_program.s
+```
+
+3. **Assemble the `.s` file into an object file**:
+
+```bash
+fasm my_program.s my_program.o
+```
+
+4. **Link the object file to a statically linked executable**:
+
+```bash
+ld my_program.o -o my_program
+```
+
+5. **Run your program**:
+
+```bash
+./my_program
+```
+
+> Make sure all binaries (`HTLL`, `my_program`, `.o` and `.s` files) are kept in your working directory.
 
 ---
 
 ## Overview
 
-HTLL compiles high-level instructions directly to assembly using FASM. Programs are typically statically linked, lightweight, and fully independent. The compiler itself is currently dynamically linked but will eventually become fully bootstrapped.
+HTLL compiles high-level instructions directly to assembly using FASM. Programs are typically **statically linked**, lightweight, and fully independent. The compiler itself is currently **dynamically linked** but will eventually become fully bootstrapped.
 
 ---
 
@@ -53,7 +123,7 @@ Loop, 5
 endloop
 ```
 
-**Output when compiled and run:**
+**Output:**
 
 ```
 Hello HTLL
@@ -70,7 +140,6 @@ Hello HTLL
 ### Variables
 
 * Supports integer declaration (`int x := 0`) and arithmetic (`+=`, `-=`, `*=`, `++`, `--`).
-* Example:
 
 ```htll
 nint var1234 := 5
@@ -82,7 +151,6 @@ var1234--
 
 * Define with `func name(args) ... funcend`.
 * Return values via `rax`.
-* Example:
 
 ```htll
 func add_numbers(num1, num2)
@@ -113,7 +181,6 @@ funcend
   * `.set` – set element value
   * `.copy` – copy array
   * `.clear` – clear array
-* Example:
 
 ```htll
 numbers_arr.add i
@@ -142,7 +209,7 @@ numbers_arr.set 3, 99
 
 ## Comprehensive Feature Test
 
-The following script tests all major HTLL features in one run. It covers arrays, loops, functions, conditionals, I/O, and more:
+This script tests all major HTLL features in one run: arrays, loops, functions, conditionals, I/O, and more:
 
 ```htll
 ; Global variable definitions
@@ -170,9 +237,9 @@ main
 ; Function call & printing
 add_numbers(100, 200)
 sum_result := rax
-print(sum_result) ; Expected output: 300
+print(sum_result)
 
-; Populate array with loop
+; Populate array
 i := 0
 loop_counter := 5
 Loop, loop_counter
@@ -180,7 +247,7 @@ Loop, loop_counter
     i++
 loopend
 
-; Array reading & conditionals
+; Conditional printing of array
 numbers_arr.size
 Loop, rax
     numbers_arr.index A_Index
@@ -191,10 +258,8 @@ Loop, rax
     ifend
 loopend
 
-; Modify array
+; Modify, copy, clear
 numbers_arr.set 3, 99
-
-; Copy & clear arrays
 temp_arr.copy numbers_arr
 numbers_arr.clear
 
