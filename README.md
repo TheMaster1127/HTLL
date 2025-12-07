@@ -1,87 +1,286 @@
-# HTLL - The Compiler for Escaping Programming
+# HTLL
 
-### Compiler targeting **x86-64 assembly — 64-bit, Linux**
-
-[![Language](https://img.shields.io/badge/language-HTLL-orange?style=for-the-badge)](https://github.com/TheMaster1127/HTLL)
-[![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=for-the-badge)](https://github.com/TheMaster1127/HTLL/blob/main/LICENCE)
-[![Status](https://img.shields.io/badge/status-Escaped-brightgreen?style=for-the-badge)](https://github.com/TheMaster1127/HTLL)
-
-**HTLL is not just a language; it is the engine of my escape from programming.** It is a custom-built compiler that translates its own powerful, high-level syntax into pure, dependency-free x86-64 assembly for 64-bit Linux systems.
-
-This project is a mission to reject the authority of external compilers and build a development ecosystem where I, the programmer, have absolute control.
+HTLL is a low-level language written in HTVM that compiles directly to x86-64 Linux  assembly via FASM. It allows creating statically linked binaries and provides a set of built-in features including arrays, loops, functions, I/O, and string manipulation.
 
 ---
 
-## 💀 The "Escape Programming" Philosophy
+## Table of Contents
 
-For me, programming isn't a tool to solve problems—**programming itself is the problem I am solving.**
+1. [Overview](#overview)
+2. [File Types](#file-types)
+3. [Example Program](#example-program)
+4. [Features](#features)
 
--   **Definition:** "Escaping Programming" means **rejecting the authority** of external compilers and interpreters (G++, Python, JavaScript, GCC, etc.) that impose their own rules, syntax, and constraints. It's about seizing absolute control over the entire software creation process.
--   **The Ultimate Goal:** A fully self-hosting development environment where I only code in my own syntax. The final compiler will be a single, statically linked binary that produces code with **zero** dependencies (no `libc`), speaking directly to the kernel via syscalls.
--   **The Enemy:** Restriction and Bloat. `G++` is a dictator. `libc` is a dependency chain. I reject any tool that forces me to think within its predefined box.
+   * Variables
+   * Functions
+   * Loops
+   * Conditionals
+   * Arrays
+   * String-like Operations
+   * File I/O
+   * User Input
+5. [Comprehensive Feature Test](#comprehensive-feature-test)
+6. [Debugging](#debugging)
+7. [Compilation Workflow](#compilation-workflow)
+8. [Bootstrapping Notes](#bootstrapping-notes)
 
-## 🚧 The Escape is Complete: Welcome to the New World
+---
 
-**I have escaped programming.** The "Half-Bootstrap" architecture is now the foundation of my development reality. I no longer need to write a single line of code in any language but my own to build my software.
+## Overview
 
-### The Architecture of Freedom
+HTLL compiles high-level instructions directly to assembly using FASM. Programs are typically statically linked, lightweight, and fully independent. The compiler itself is currently dynamically linked but will eventually become fully bootstrapped.
 
-My sovereign development ecosystem is built upon two pillars I forged:
+---
 
-1.  **The Transpilation Core (`libHTLL-lib.so`):** The core logic of my original compiler, written in C++/HTVM, has been forged into a powerful shared object (`.so`). This isn't a generic library; it is the **compilation engine itself**. It serves as the bridge, processing my HTLL syntax and converting it to assembly.
-2.  **The HTLL Compiler Front-End (`my_program`):** This is my new engine of creation. It's a lightweight binary written in HTLL that links against the Transpilation Core. Its job is to read HTLL source code, use the Core to generate pure x86-64 assembly, and write it to a file.
+## File Types
 
-### The Workflow of a Free Programmer
+| File         | Description                                                     |
+| ------------ | --------------------------------------------------------------- |
+| `HTLL`       | Compiler executable (dynamically linked, ELF 64-bit).           |
+| `my_program` | Example compiled program (statically linked, ELF 64-bit).       |
+| `fasm`       | Assembler used for compilation (statically linked, ELF 64-bit). |
+| `ld`         | GNU linker (dynamically linked, ELF 64-bit PIE).                |
 
-My entire workflow now exists outside the authority of other languages. My toolkit consists only of:
+---
 
--   My **HTLL Compiler Front-End**
--   My **Transpilation Core (`.so`)**
--   **NASM** (an assembler, not a language)
--   **LD** (a linker, not a language)
+## Example Program
 
-This toolchain produces the ultimate artifact: **statically linked x86-64 executables with zero dependencies.**
+**Source (`my_program.htll`):**
 
-## The New Frontier: Annihilating "Dynamically Linked Hell"
+```htll
+Loop, 5
+    print("Hello HTLL")
+endloop
+```
 
-With the escape secured, the final campaign begins: **the Full Bootstrap.**
+**Output when compiled and run:**
 
--   **The Mission:** To use my new freedom to achieve ultimate purity. I will now re-implement the entire transpilation engine—every function and piece of logic currently in the Transpilation Core—in pure HTLL from the ground up, living entirely within my new ecosystem.
--   **The Endgame:** I will use the self-hosted HTLL compiler to compile itself, this time without linking to *any* shared object. This will result in the birth of **"Mr. Statically Linked Binary"**—a single, monolithic executable with zero dependencies. The final chain will be broken, and "Dynamically Linked Hell" will be left behind forever.
+```
+Hello HTLL
+Hello HTLL
+Hello HTLL
+Hello HTLL
+Hello HTLL
+```
 
-## How to Build & Use
+---
 
-> ⚠️ **Warning:** This is a raw, powerful, and unconventional system built for a specific philosophy. It is not intended for general use. Proceed with curiosity.
+## Features
 
-The system is built in two stages:
+### Variables
 
-**1. Forge the Transpilation Core:**
-This requires `g++` one last time to build the bridge from the old world.
+* Supports integer declaration (`int x := 0`) and arithmetic (`+=`, `-=`, `*=`, `++`, `--`).
+* Example:
+
+```htll
+nint var1234 := 5
+var1234 += 5
+var1234--
+```
+
+### Functions
+
+* Define with `func name(args) ... funcend`.
+* Return values via `rax`.
+* Example:
+
+```htll
+func add_numbers(num1, num2)
+    int local_sum := 0
+    local_sum += num1
+    local_sum += num2
+    return local_sum
+funcend
+```
+
+### Loops
+
+* `Loop, n ... endloop` syntax.
+* Supports dynamic iteration based on variables or array sizes.
+
+### Conditional Logic
+
+* `if(condition) ... ifend` for branching logic.
+
+### Arrays
+
+* Declare with `arr name`.
+* Methods:
+
+  * `.add` – append an element
+  * `.size` – get array size
+  * `.index` – get element by index
+  * `.set` – set element value
+  * `.copy` – copy array
+  * `.clear` – clear array
+* Example:
+
+```htll
+numbers_arr.add i
+numbers_arr.set 3, 99
+```
+
+### String-like Operations
+
+* Use arrays to store character data.
+* Methods:
+
+  * `arradd` – append text
+  * `print_rax_as_char` – print array element as character
+
+### File I/O
+
+* `fileappend` – append data to a file
+* `fileread` – read file contents into array
+* `filedelete` – delete file
+
+### User Input
+
+* `input array_name, prompt_array` reads input into an array.
+
+---
+
+## Comprehensive Feature Test
+
+The following script tests all major HTLL features in one run. It covers arrays, loops, functions, conditionals, I/O, and more:
+
+```htll
+; Global variable definitions
+arr numbers_arr
+arr temp_arr
+arr message_arr
+arr user_input_arr
+arr prompt_arr
+
+int i := 0
+int loop_counter := 0
+int sum_result := 0
+
+; Function example
+func add_numbers(num1, num2)
+    int local_sum := 0
+    local_sum += num1
+    local_sum += num2
+    return local_sum
+funcend
+
+; MAIN EXECUTION
+main
+
+; Function call & printing
+add_numbers(100, 200)
+sum_result := rax
+print(sum_result) ; Expected output: 300
+
+; Populate array with loop
+i := 0
+loop_counter := 5
+Loop, loop_counter
+    numbers_arr.add i
+    i++
+loopend
+
+; Array reading & conditionals
+numbers_arr.size
+Loop, rax
+    numbers_arr.index A_Index
+    if (rax != 1)
+        if2 (rax != 3)
+            print(rax)
+        ifend2
+    ifend
+loopend
+
+; Modify array
+numbers_arr.set 3, 99
+
+; Copy & clear arrays
+temp_arr.copy numbers_arr
+numbers_arr.clear
+
+; User input & string operations
+prompt_arr.clear
+arradd prompt_arr Please enter your name:
+prompt_arr.add 32
+input user_input_arr, prompt_arr
+message_arr.clear
+arradd message_arr You entered:
+message_arr.add 32
+
+user_input_arr.size
+Loop, rax
+    user_input_arr.index A_Index
+    message_arr.add rax
+loopend
+message_arr.add 10
+
+message_arr.size
+Loop, rax
+    message_arr.index A_Index
+    print_rax_as_char
+loopend
+
+; File I/O test
+temp_arr.clear
+arradd temp_arr This is a test of the file system.
+temp_arr.add 10
+fileappend "test_output.txt", temp_arr
+fileappend "test_output.txt", message_arr
+temp_arr.clear
+fileread temp_arr, "test_output.txt"
+i := 0
+temp_arr.size
+Loop, rax
+    temp_arr.index i
+    print_rax_as_char
+    i++
+loopend
+filedelete "test_output.txt"
+
+; Final test
+print("Test Done")
+```
+
+---
+
+## Compilation Workflow
+
+1. Compile HTLL compiler:
+
 ```bash
 g++ -shared -fPIC HTLL.cpp wrapper.cpp -o libHTLL-lib.so
 ```
 
-**2. Build the Compiler Front-End:**
-The front-end is written in HTLL (`my_program.htll`). You compile it with the *previous* version of the compiler's output (`finalASM_HTLL_ASM.s`).
-```bash
-# Assemble the compiler's assembly source
-nasm -f elf64 finalASM_HTLL_ASM.s -o test.o
+2. Compile HTLL source to `.s`:
 
-# Link it against the Core to create the new compiler
-ld -o my_program test.o -L. -lHTLL-lib -lc --dynamic-linker /lib64/ld-linux-x86-64.so.2 -rpath '$ORIGIN'
+```bash
+./HTLL my_program.htll && chmod 644 my_program.s
 ```
 
-**3. Use Your New Freedom:**
-You can now use `my_program` to compile `my_program.htll` file.
+3. Assemble `.s` file:
+
 ```bash
-# Use your new compiler to compile a program
+fasm my_program.s my_program.o
+```
+
+4. Link object to executable:
+
+```bash
+ld my_program.o -o my_program
+```
+
+5. Run executable:
+
+```bash
 ./my_program
-
-# The output is a pure assembly file: finalASM_HTLL_ASM.s
-# Assemble and link it into a static, dependency-free binary
-nasm -f elf64 finalASM_HTLL_ASM.s -o final.o
-ld -o final_program final.o
-
-# Run your masterpiece
-./final_program
 ```
+
+---
+
+## Bootstrapping Notes
+
+* Currently, HTLL relies on a `.so` library for some built-in functions.
+* Goal: full bootstrap, removing all external dependencies.
+* Future statically linked HTLL compiler will produce binaries under 100 KB with zero dependencies.
+
+---

@@ -2189,6 +2189,7 @@ std::string compiler(std::string code) {
     }
     code = StringTrimRight(out, 1);
     std::vector<std::string> allFuncCALLS;
+    HTVM_Append(allFuncCALLS, "array_unpack_from_bytes");
     std::vector<std::string> allFuncCALLS_alredy;
     std::vector<std::string> items22 = LoopParseFunc(code, "\n", "\r");
     for (size_t A_Index22 = 0; A_Index22 < items22.size(); A_Index22++) {

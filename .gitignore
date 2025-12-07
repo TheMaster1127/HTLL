@@ -1,0 +1,16 @@
+# HTLL binaries and object files
+*.o
+*.s
+*.so
+*.a
+HTLL
+my_program
+output
+
+# Temporary/test scripts (optional)
+test*.htll
+output.s
+*.s
+
+# Notes
+*.txt

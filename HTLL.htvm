@@ -2094,6 +2094,7 @@ StringTrimRight, code, out, 1
 
 
 arr str allFuncCALLS
+allFuncCALLS.add("array_unpack_from_bytes")
 arr str allFuncCALLS_alredy
 Loop, Parse, code, `n, `r {
 
@@ -2209,6 +2210,7 @@ temp_in_funcName := 0
 
 
 
+
     ; =========================================================================
     ; FINAL FASM OBJECT FILE ASSEMBLY - THE TRUE BLUEPRINT
     ; =========================================================================
@@ -2248,6 +2250,8 @@ upCode .= "section '.bss' writeable" . Chr(10) . "    input_buffer rb 256" . Chr
     } else {
         codeOUT := fasm_header . upCode . out . downCode
     }
+
+
 
 
 
