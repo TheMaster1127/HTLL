@@ -349,3 +349,17 @@ ld my_program.o -o my_program
 * Future statically linked HTLL compiler will produce binaries under 100 KB with zero dependencies.
 
 ---
+
+## 💀 The "Escape Programming" Philosophy
+- **Definition:** "Escaping Programming" means **rejecting the authority** of external compilers and interpreters (G++, Python, GCC, etc.) that impose their own rules, syntax, and constraints. It's about seizing absolute control over the entire software creation process.
+- **The Ultimate Goal:** A fully self-hosting development environment where I only code in my own syntax. The final compiler will be a single, statically linked binary that produces code with **zero** dependencies (no `libc`), speaking directly to the kernel via syscalls.
+- **The Enemy:** Restriction and Bloat. `G++` is a dictator. `libc` is a dependency chain. I reject any tool that forces me to think within its predefined box.
+
+---
+
+## License
+
+This project is licensed under the [GNU General Public License v3.0 (GPLv3)](https://www.gnu.org/licenses/gpl-3.0.html).
+You are free to use, modify, and distribute this software under the terms of the GPLv3.
+
+---
