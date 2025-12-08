@@ -392,9 +392,9 @@ std::string compiler(std::string code) {
     std::string out = "";
     std::string main_syntax = "";
     if (RegExMatch(code, "\\bargs_array\\b")) {
-        main_syntax = "" + Chr(10) + "; =============================================================================" + Chr(10) + "; MAIN PROGRAM ENTRY POINT" + Chr(10) + "; =============================================================================" + Chr(10) + "_start:" + Chr(10) + "push rbp" + Chr(10) + "mov rbp, rsp" + Chr(10) + "and rsp, -16 " + Chr(10) + "mov rdi, args_array" + Chr(10) + "call array_clear" + Chr(10) + "mov r12, [rbp+8]" + Chr(10) + "lea r13, [rbp+16]" + Chr(10) + "mov r14, 1" + Chr(10) + ".arg_loop:" + Chr(10) + "cmp r14, r12" + Chr(10) + "jge .args_done" + Chr(10) + "mov rsi, [r13 + r14*8]" + Chr(10) + "mov rdi, args_array" + Chr(10) + "call array_unpack_from_bytes" + Chr(10) + "mov rdi, args_array" + Chr(10) + "mov rsi, 10" + Chr(10) + "call array_append" + Chr(10) + "inc r14" + Chr(10) + "jmp .arg_loop" + Chr(10) + ".args_done:" + Chr(10) + Chr(10);
+        main_syntax = Chr(10) + "_start:" + Chr(10) + "push rbp" + Chr(10) + "mov rbp, rsp" + Chr(10) + "and rsp, -16 " + Chr(10) + "mov rdi, args_array" + Chr(10) + "call array_clear" + Chr(10) + "mov r12, [rbp+8]" + Chr(10) + "lea r13, [rbp+16]" + Chr(10) + "mov r14, 1" + Chr(10) + ".arg_loop:" + Chr(10) + "cmp r14, r12" + Chr(10) + "jge .args_done" + Chr(10) + "mov rsi, [r13 + r14*8]" + Chr(10) + "mov rdi, args_array" + Chr(10) + "call array_unpack_from_bytes" + Chr(10) + "mov rdi, args_array" + Chr(10) + "mov rsi, 10" + Chr(10) + "call array_append" + Chr(10) + "inc r14" + Chr(10) + "jmp .arg_loop" + Chr(10) + ".args_done:" + Chr(10) + Chr(10);
     } else {
-        main_syntax = "" + Chr(10) + "; =============================================================================" + Chr(10) + "; MAIN PROGRAM ENTRY POINT" + Chr(10) + "; =============================================================================" + Chr(10) + "_start:" + Chr(10) + "push rbp" + Chr(10) + "mov rbp, rsp" + Chr(10) + "and rsp, -16 " + Chr(10) + Chr(10);
+        main_syntax = Chr(10) + "_start:" + Chr(10) + "push rbp" + Chr(10) + "mov rbp, rsp" + Chr(10) + "and rsp, -16 " + Chr(10) + Chr(10);
     }
     std::string HTLL_Libs_x86 = FileRead("HTLL_Libs_x86.txt");
     int isDotCompile = 0;
@@ -1966,7 +1966,7 @@ std::string compiler(std::string code) {
             funcName = str2;
             out += str2 + ":" + Chr(10) + "push rbp" + Chr(10) + "mov rbp, rsp" + Chr(10) + "sub rsp, " + STR(8 + (localVarNum * 8)) + Chr(10);
         }
-        else if (Trim(A_LoopField15) == "funcend") {
+        else if (Trim(A_LoopField15) == "funcend" || Trim(A_LoopField15) == "funcend") {
             out += "." + funcName + "_return:" + Chr(10) + "add rsp, " + STR(8 + (localVarNum * 8)) + Chr(10) + "pop rbp" + Chr(10) + "ret" + Chr(10);
             funcCount++;
         }
@@ -2039,6 +2039,10 @@ std::string compiler(std::string code) {
         else if (SubStr(StrLower(A_LoopField15), 1, 5) == "togo ") {
             str1 = Trim(StringTrimLeft(A_LoopField15, 5));
             out += ".__HTLL_HTLL_" + str1 + ":" + Chr(10);
+        }
+        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "sleep, ") {
+            str1 = Trim(StringTrimLeft(A_LoopField15, 7));
+            out += "mov rdi, " + str1 + Chr(10) + "call sleep_ms" + Chr(10);
         }
         else if (SubStr(StrLower(A_LoopField15), 1, 13) == "fileread_arr ") {
             str1 = Trim(StringTrimLeft(A_LoopField15, 13));
@@ -2321,7 +2325,7 @@ std::string compiler(std::string code) {
         upCode += "segment readable executable" + Chr(10) + HTLL_Libs_x86_new + Chr(10);
     }
     // --- FASM FOOTER ---
-    std::string downCode = Chr(10) + "    ; --- Exit cleanly ---" + Chr(10) + "    mov rsp, rbp" + Chr(10) + "    pop rbp" + Chr(10) + "    mov rax, 60" + Chr(10) + "    xor rdi, rdi" + Chr(10) + "    syscall" + Chr(10) + "";
+    std::string downCode = Chr(10) + "    mov rsp, rbp" + Chr(10) + "    pop rbp" + Chr(10) + "    mov rax, 60" + Chr(10) + "    xor rdi, rdi" + Chr(10) + "    syscall" + Chr(10) + "";
     // --- ASSEMBLE THE FINAL STRING ---
     std::string codeOUT = "";
     if (seenMain == 0) {

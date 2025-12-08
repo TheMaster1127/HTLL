@@ -6,7 +6,7 @@
 rm -f my_program
 
 # 2. Compile HTLL source (first step)
-./HTLL HTLL.htll && chmod 644 HTLL.s
+./HTLL HTLL.htll
 
 # 3. Rename generated assembly file
 mv finalASM_HTLL_ASM.s HTLL.s
@@ -15,7 +15,7 @@ mv finalASM_HTLL_ASM.s HTLL.s
 g++ -shared -fPIC HTLL.cpp wrapper.cpp -o libHTLL-lib.so
 
 # 5. Compile HTLL to assembly
-./HTLL HTLL.htll && chmod 644 HTLL.s
+./HTLL HTLL.htll
 
 # 6. Assemble with FASM
 fasm HTLL.s HTLL.o
@@ -24,7 +24,7 @@ fasm HTLL.s HTLL.o
 ld -o HTLL HTLL.o -L. -lHTLL-lib --dynamic-linker /lib64/ld-linux-x86-64.so.2 -rpath '$ORIGIN'
 
 # 8. Compile your test program to assembly
-./HTLL my_program.htll && chmod 644 my_program.s
+./HTLL my_program.htll
 
 # 9. Assemble the test program
 fasm my_program.s

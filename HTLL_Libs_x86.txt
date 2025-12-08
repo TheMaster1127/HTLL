@@ -3,8 +3,8 @@ $$$$is_nint_negative$$$$
 ; UTILITY FUNCTIONS (Correct and Properly Formatted)
 ; =============================================================================
 
-;-----------------------------------------------------------------------------
-;-----------------------------------------------------------------------------
+
+
 ; is_nint_negative: Reads a signed number, updates its corresponding sign
 ;                   flag, AND converts the original number to its positive
 ;                   magnitude if it was negative.
@@ -16,7 +16,7 @@ $$$$is_nint_negative$$$$
 ; [Out]
 ;   The memory at [rsi] will be overwritten with 0 or 1.
 ;   The memory at [rdi] will be overwritten with its positive magnitude.
-;-----------------------------------------------------------------------------
+
 is_nint_negative:
     push rbp
     mov rbp, rsp
@@ -27,7 +27,7 @@ is_nint_negative:
 
     ; Check its sign using the CPU's Sign Flag
     test rax, rax
-    jns .is_positive_or_zero    ; Jump if Not Sign
+    jns .is_positive_or_zero    
 
 .is_negative:
     ; The number is negative.
@@ -57,7 +57,7 @@ $$$$divide_and_store$$$$
 ; [In] rdi: dividend_int, rsi: dividend_dec
 ;      rdx: divisor_int,  rcx: divisor_dec
 ;      r8:  ptr to result_int, r9: ptr to result_dec
-;-----------------------------------------------------------------------------
+
 divide_and_store:
     ; Prologue
     push rbx
@@ -67,30 +67,30 @@ divide_and_store:
     push r15
 
     ; --- THE FIX: Save all volatile input arguments immediately ---
-    mov r12, rdi            ; Save dividend_int
-    mov r13, rsi            ; Save dividend_dec
-    mov r14, rdx            ; Save divisor_int (THIS IS THE CRITICAL FIX)
-    mov r15, rcx            ; Save divisor_dec
+    mov r12, rdi            
+    mov r13, rsi            
+    mov r14, rdx            
+    mov r15, rcx            
     
     ; --- Step 1: Scale the Dividend ---
-    mov rax, r12            ; Use the saved dividend_int
+    mov rax, r12
     mov rbx, [SCALE_FACTOR]
     mul rbx
-    add rax, r13            ; Add the saved dividend_dec
-    mov r12, rax            ; r12 now holds the final scaled dividend
+    add rax, r13 
+    mov r12, rax 
 
     ; --- Step 2: Scale the Divisor ---
-    mov rax, r14            ; Use the saved divisor_int
+    mov rax, r14 
     mov rbx, [SCALE_FACTOR]
     mul rbx
-    add rax, r15            ; Add the saved divisor_dec
-    mov r13, rax            ; r13 now holds the final scaled divisor
-
+    add rax, r15 
+    mov r13, rax 
+    
     ; --- Step 3: Perform the main 128-bit division ---
-    mov rax, r12            ; Load the scaled dividend
+    mov rax, r12        
     mov rbx, [SCALE_FACTOR]
     mul rbx
-    div r13                 ; Divide by the scaled divisor
+    div r13
     
     ; --- Step 4: De-scale the final result ---
     mov rbx, [SCALE_FACTOR]
@@ -98,8 +98,8 @@ divide_and_store:
     div rbx
 
     ; --- Step 5: Store the results using the pointers from r8 and r9 ---
-    mov [r8], rax           ; Store the integer result
-    mov [r9], rdx           ; Store the decimal result
+    mov [r8], rax 
+    mov [r9], rdx 
 
     ; Epilogue
     pop r15
@@ -110,10 +110,10 @@ divide_and_store:
     ret
 %%%%divide_and_store%%%%
 $$$$print_div$$$$
-;-----------------------------------------------------------------------------
+
 ; print_div: (Unchanged logic, but now properly formatted)
 ; [In] rdi: integer part, rsi: decimal part
-;-----------------------------------------------------------------------------
+
 print_div:
     ; Prologue
     push rbp
@@ -187,19 +187,19 @@ print_div:
     ret
 %%%%print_div%%%%
 $$$$print_number$$$$
-;-----------------------------------------------------------------------------
+
 ; print_number: Prints a number, prepending a '-' sign if requested.
 ;
 ; [In]
 ;   rdi - The number to print (as an unsigned, positive magnitude).
 ;   rsi - The "is_negative" flag. 0 for positive, 1 for negative.
-;-----------------------------------------------------------------------------
+
 print_number:
     push rbp
     mov rbp, rsp
     push rbx
     push r12
-    push rdi        ; Save the number itself (the value from rdi) on the stack.
+    push rdi    
 
     ; Check the is_negative flag passed in rsi
     cmp rsi, 0
@@ -265,14 +265,14 @@ print_str:
     ret
 %%%%print_str%%%%
 $$$$input$$$$
-;-----------------------------------------------------------------------------
+
 ; input: Reads a line from stdin, handles empty input, removes the trailing
 ;        newline, and stores the raw string and its length.
 ;
 ; [In]
 ;   rdi - Pointer to the buffer where the string should be stored.
 ;   rsi - Pointer to a qword where the length of the clean string will be stored.
-;-----------------------------------------------------------------------------
+
 input:
     push rbp
     mov rbp, rsp
@@ -280,8 +280,8 @@ input:
     push r13
 
     ; Save the pointers passed as arguments immediately
-    mov r12, rdi ; r12 holds pointer to the buffer
-    mov r13, rsi ; r13 holds pointer to the length variable
+    mov r12, rdi 
+    mov r13, rsi 
 
     ; Correctly set up all registers for the sys_read syscall
     mov rax, 0
@@ -294,12 +294,12 @@ input:
     ; Check if the user entered anything. If they just press Enter, rax will be 1.
     ; If they press Ctrl+D, rax will be 0. Both cases mean empty input.
     cmp rax, 1
-    jle .read_empty     ; Jump if Less or Equal (handles 0 and 1)
+    jle .read_empty
 
     ; This code only runs for valid input (rax > 1).
     ; The length of the clean string is (bytes_read - 1).
     dec rax
-    jmp .store_length   ; Jump to the end to store the calculated length
+    jmp .store_length
 
 .read_empty:
     ; === THE FIX IS HERE ===
@@ -342,8 +342,8 @@ array_copy:
     push r14
     push r15
 
-    mov r12, rdi             ; r12 = pointer to destination struct
-    mov r13, rsi             ; r13 = pointer to source struct
+    mov r12, rdi
+    mov r13, rsi             
 
     ; --- Step 1: Free the destination's old memory block ---
     mov rdi, [r12 + DynamicArray.pointer]
@@ -364,17 +364,17 @@ array_copy:
     cmp rbx, 0
     je .copy_epilogue_fix      
     
-    mov r14, rbx             ; Save the size in a safe register
-    imul r14, 8              ; r14 holds bytes needed
+    mov r14, rbx
+    imul r14, 8 
 
     ; ======================= THE CRITICAL FIX IS HERE =========================
     ; Syscalls clobber registers. We need r12 and r13 after. Save them.
     push r12
     push r13
     
-    mov rax, 9               ; mmap syscall
+    mov rax, 9  
     mov rdi, 0
-    mov rsi, r14             ; Use the size from our safe register
+    mov rsi, r14
     mov rdx, 3
     mov r10, 34
     mov r8, -1
@@ -389,13 +389,13 @@ array_copy:
     cmp rax, 0
     jl .copy_epilogue_fix    
 
-    mov [r12 + DynamicArray.pointer], rax ; Update destination pointer
+    mov [r12 + DynamicArray.pointer], rax
 
     ; --- Step 4: Copy the data ---
-    mov rcx, [r13 + DynamicArray.size] 
-    mov rdi, [r12 + DynamicArray.pointer] 
-    mov rsi, [r13 + DynamicArray.pointer] 
-    rep movsq                
+    mov rsi, [r13 + DynamicArray.pointer]
+    mov rdi, [r12 + DynamicArray.pointer]
+    mov rcx, [r13 + DynamicArray.size]
+    rep movsq
 
 .copy_epilogue_fix:
     pop r15
@@ -408,7 +408,7 @@ array_copy:
 %%%%array_copy%%%%
 $$$$array_clear$$$$
 ; [In] rdi: Pointer to the DynamicArray struct.
-;-----------------------------------------------------------------------------
+
 array_clear:
     push rbp
     mov rbp, rsp
@@ -431,8 +431,8 @@ array_append:
     push r14
     push r15
 
-    mov r12, rdi             ; r12 = pointer to the array struct
-    mov r13, rsi             ; r13 = the qword value to add
+    mov r12, rdi
+    mov r13, rsi
 
     mov rcx, [r12 + DynamicArray.size]
     cmp rcx, [r12 + DynamicArray.capacity]
@@ -440,8 +440,8 @@ array_append:
 
 ; --- Resize Logic ---
 .resize:
-    mov r14, [r12 + DynamicArray.pointer]   ; r14 = old pointer
-    mov r15, [r12 + DynamicArray.capacity]  ; r15 = old capacity
+    mov r14, [r12 + DynamicArray.pointer]   
+    mov r15, [r12 + DynamicArray.capacity]  
     
     mov rbx, r15
     cmp rbx, 0
@@ -459,8 +459,8 @@ array_append:
     push r14
     push r15
 
-    imul rbx, 8                             ; Convert new capacity to bytes
-    mov rax, 9                              ; sys_mmap
+    imul rbx, 8                             
+    mov rax, 9              
     mov rdi, 0
     mov rsi, rbx
     mov rdx, 3
@@ -479,15 +479,15 @@ array_append:
     ; A valid pointer will be a small positive number. An error is a large
     ; number close to -1 (0xFFFFFFFFFFFFFFFF).
     cmp rax, 0
-    jl .mmap_failed                         ; If rax is Less than 0, mmap failed.
+    jl .mmap_failed
     ; ====================================================================
 
     ; --- Copy old data to new block ---
-    cmp r14, 0                              ; Was there an old block?
+    cmp r14, 0
     je .skip_copy                           
 
-    mov rdi, rax                            ; Destination is new block
-    mov rsi, r14                            ; Source is old block
+    mov rdi, rax
+    mov rsi, r14
     mov rcx, [r12 + DynamicArray.size]      
     rep movsq                               
 
@@ -496,10 +496,10 @@ array_append:
     push r12
     push r13
 
-    imul r15, 8                             ; Old capacity in bytes
-    mov rdi, r14                            ; Pointer to the old block
-    mov rsi, r15                            ; Size of the old block
-    mov rax, 11                             ; sys_munmap
+    imul r15, 8 
+    mov rdi, r14
+    mov rsi, r15
+    mov rax, 11 
     syscall
 
     pop r13
@@ -561,7 +561,7 @@ array_pop:
     ret
 %%%%array_pop%%%%
 $$$$print_char$$$$
-;-----------------------------------------------------------------------------
+
 print_char:
     push rbp
     mov rbp, rsp
@@ -571,10 +571,10 @@ print_char:
     ; the lowest byte of RDI, so this works perfectly.
     push rdi
 
-    mov rax, 1                 ; sys_write
-    mov rdi, 1                 ; stdout
-    mov rsi, rsp               ; The pointer to the character is now the top of the stack
-    mov rdx, 1                 ; length = 1
+    mov rax, 1                 
+    mov rdi, 1                 
+    mov rsi, rsp               
+    mov rdx, 1                 
     syscall
 
     ; Clean up the stack by popping the value we pushed.
@@ -598,12 +598,12 @@ sys_read_line:
     mov rbp, rsp
 
     ; Prepare arguments for the sys_read syscall
-    mov rax, 0      ; syscall number for sys_read
-    mov rdx, rsi    ; 3rd arg: max number of bytes to read
-    mov rsi, rdi    ; 2nd arg: the destination buffer pointer
-    mov rdi, 0      ; 1st arg: file descriptor for stdin (0)
+    mov rax, 0      
+    mov rdx, rsi    
+    mov rsi, rdi    
+    mov rdi, 0      
     
-    syscall         ; Execute the read. rax will contain bytes read.
+    syscall         
 
     pop rbp
     ret
@@ -635,16 +635,16 @@ get_user_input:
     cmp rcx, 0
     je .read_from_user
 
-    mov r14, rcx             ; Save original size.
-    add rcx, 15              ; Round up for alignment.
+    mov r14, rcx            
+    add rcx, 15             
     and rcx, -16
-    mov rbx, rcx             ; Save aligned size in safe RBX (syscall clobbers RCX).
-    sub rsp, rbx             ; Allocate space using the safe value from RBX.
+    mov rbx, rcx            
+    sub rsp, rbx            
 
     ; Pack the prompt into the stack buffer.
     mov rdi, rsp
     mov rsi, [r13 + DynamicArray.pointer]
-    push rbx                 ; Save rbx (aligned size) before the loop uses it.
+    push rbx
     xor rbx, rbx
 .pack_loop:
     cmp rbx, r14
@@ -654,15 +654,15 @@ get_user_input:
     inc rbx
     jmp .pack_loop
 .do_prompt_print:
-    pop rbx                  ; Restore rbx (aligned size).
+    pop rbx 
     
     mov rax, 1
     mov rdi, 1
     mov rsi, rsp
-    mov rdx, r14             ; Use the original size for the write length.
+    mov rdx, r14
     syscall
 
-    add rsp, rbx             ; Clean up the stack using the SAFE value from RBX.
+    add rsp, rbx
 
     ; --- Part 2: Read user's input ---
 .read_from_user:
@@ -725,24 +725,24 @@ fileread_from_ptr:
     push r14
     push r15
 
-    mov r12, rdi             ; r12 = pointer to dest array
-    mov r13, rsi             ; r13 = A POINTER to the file path
+    mov r12, rdi             
+    mov r13, rsi             
 
     ; --- Open the file ---
-    mov rax, 2               ; sys_open
+    mov rax, 2               
     mov rdi, r13
-    xor rsi, rsi             ; O_RDONLY
+    xor rsi, rsi             
     syscall
     
     ; ======================= THE ARMOR PLATE =========================
     ; A valid file descriptor is a small positive number. Errors are negative.
     cmp rax, 0
-    jl .read_error_ptr       ; If rax is Less than 0, ABORT.
+    jl .read_error_ptr
     ; ===================================================================
-    mov r14, rax             ; r14 = file descriptor
+    mov r14, rax      
 
 .read_loop_ptr:
-    mov rax, 0               ; sys_read
+    mov rax, 0        
     mov rdi, r14
     mov rsi, file_read_buffer
     mov rdx, 4096
@@ -769,7 +769,7 @@ fileread_from_ptr:
     jmp .append_byte_loop_ptr
 
 .close_and_exit_ptr:
-    mov rax, 3               ; sys_close
+    mov rax, 3
     mov rdi, r14             
     syscall
     jmp .read_done_ptr
@@ -802,12 +802,12 @@ fileappend_from_ptr:
     push r14
     push r15
 
-    mov r12, rdi             ; r12 = A POINTER to the file path
-    mov r13, rsi             ; r13 = pointer to array struct
+    mov r12, rdi
+    mov r13, rsi
 
     mov rcx, [r13 + DynamicArray.size]
     cmp rcx, 0
-    je .append_epilogue_ptr  ; If there's nothing to write, just exit
+    je .append_epilogue_ptr
 
     ; --- Pack the array into a byte buffer on the stack ---
     mov r14, rcx
@@ -831,15 +831,15 @@ fileappend_from_ptr:
     ; --- Open the file ---
     mov rax, 2
     mov rdi, r12
-    mov rsi, 1089            ; O_WRONLY | O_CREAT | O_APPEND
-    mov rdx, 0x644
+    mov rsi, 1089       
+    mov rdx, 420
     syscall
 
     ; ======================= THE ARMOR PLATE =========================
     cmp rax, 0
-    jl .append_error_ptr     ; If open failed, jump to cleanup.
+    jl .append_error_ptr     
     ; ===================================================================
-    mov r14, rax             ; Save FD
+    mov r14, rax            
 
     ; --- Write the packed data ---
     mov rax, 1
@@ -856,7 +856,7 @@ fileappend_from_ptr:
 .append_error_ptr:
     ; This label is jumped to if open fails. We just clean up the stack.
 .append_cleanup_ptr:
-    add rsp, rbx ; Deallocate stack space
+    add rsp, rbx 
 
 .append_epilogue_ptr:
     pop r15
@@ -877,7 +877,7 @@ filedelete_from_ptr:
     push rbp
     mov rbp, rsp
     
-    mov rax, 87              ; syscall for sys_unlink
+    mov rax, 87
     syscall
     ; For robustness, you could check if rax is 0 (success) or -1 (failure)
     
@@ -942,8 +942,8 @@ array_pack_to_bytes:
     cmp rdi, 0
     je .pack_fail
 
-    mov r14, [rdi + DynamicArray.pointer] ; r14 is our source pointer (the qwords)
-    mov r12, [rdi + DynamicArray.size]    ; r12 = number of elements
+    mov r14, [rdi + DynamicArray.pointer] 
+    mov r12, [rdi + DynamicArray.size]    
 
     ; --- ROBUSTNESS CHECK 2 ---
     ; Check if the array's internal data pointer is null or if size is zero
@@ -954,8 +954,8 @@ array_pack_to_bytes:
 
     ; === Step A: Ask the kernel for memory ===
     mov r13, r12
-    inc r13                             ; Space for all chars + one '0' byte
-    mov rax, 9                          ; sys_mmap
+    inc r13
+    mov rax, 9
     mov rdi, 0
     mov rsi, r13
     mov rdx, 3
@@ -968,8 +968,8 @@ array_pack_to_bytes:
     jl .pack_fail
 
     ; === Step B: Copy the bytes, one by one ===
-    mov r13, rax                        ; r13 is our destination pointer
-    xor rbx, rbx                        ; rbx is our loop counter, i=0
+    mov r13, rax
+    xor rbx, rbx
 
 .pack_loop:
     cmp rbx, r12
@@ -984,8 +984,8 @@ array_pack_to_bytes:
 .pack_add_null:
     mov byte [r13 + rbx], 0
     mov rax, r13
-    mov rdx, r12                        ; Get original size (number of chars)
-    inc rdx                             ; Add 1 for the null terminato
+    mov rdx, r12
+    inc rdx     
     jmp .pack_done
 
 .pack_fail:
@@ -1018,13 +1018,13 @@ array_unpack_from_bytes:
     push r12
     push r13
 
-    mov r12, rdi  ; r12 = pointer to destination array struct
-    mov r13, rsi  ; r13 = pointer to source C-string
+    mov r12, rdi  
+    mov r13, rsi  
 
     ; --- THE FIX IS HERE ---
     ; Before we do anything, check if the C-string pointer is NULL.
     cmp r13, 0
-    je .unpack_done       ; If it's NULL, there's nothing to do. Exit safely.
+    je .unpack_done       
     ; --- END FIX ---
 
     ; Clear the destination array to be safe.
@@ -1032,16 +1032,16 @@ array_unpack_from_bytes:
     call array_clear
 
 .unpack_loop:
-    movzx rbx, byte [r13] ; Load ONE byte. This is now safe.
-    cmp rbx, 0            ; Is this the null terminator?
-    je .unpack_done       ; If yes, we are finished.
+    movzx rbx, byte [r13]
+    cmp rbx, 0           
+    je .unpack_done      
 
     ; Append the character to the HTLL array.
     mov rdi, r12
     mov rsi, rbx
     call array_append
     
-    inc r13               ; Move to the next character in the C-string.
+    inc r13
     jmp .unpack_loop
 
 .unpack_done:
@@ -1066,7 +1066,7 @@ free_packed_string:
     cmp rdi, 0
     je .free_done
 
-    mov rax, 11         ; syscall for sys_munmap
+    mov rax, 11
     ; rdi (pointer) and rsi (size) are already set by the caller.
     syscall
 
@@ -1074,3 +1074,33 @@ free_packed_string:
     pop rbp
     ret
 %%%%free_packed_string%%%%
+$$$$sleep_ms$$$$
+; =============================================================
+; sleep_ms
+; [In] rdi = milliseconds to sleep
+; =============================================================
+sleep_ms:
+    ; --- 1. Math: Split ms into Seconds and Nanoseconds ---
+    mov rax, rdi            
+    xor rdx, rdx            
+    mov rcx, 1000
+    div rcx                 
+
+    imul rdx, rdx, 1000000  
+
+    ; --- 2. Build 'timespec' Struct on Stack ---
+    ; Struct is 16 bytes: { qword tv_sec, qword tv_nsec }
+    sub rsp, 16              
+    mov [rsp], rax           
+    mov [rsp+8], rdx         
+
+    ; --- 3. Call Kernel ---
+    mov rax, 35              
+    mov rdi, rsp             
+    xor rsi, rsi             
+    syscall
+
+    ; --- 4. Cleanup ---
+    add rsp, 16              
+    ret
+%%%%sleep_ms%%%%

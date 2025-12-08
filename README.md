@@ -88,7 +88,7 @@ To build the `HTLL` compiler from source, follow these exact steps:
 
 5. **Regenerate the assembly and fix permissions:**
    ```bash
-   ./HTLL HTLL.htll && chmod 644 HTLL.s
+   ./HTLL HTLL.htl
    ```
 
 6. **Assemble the Compiler:**
@@ -107,7 +107,7 @@ Once the compiler is built, use these steps to run your own programs (e.g., `my_
 
 1. **Compile Source to Assembly:**
    ```bash
-   ./HTLL my_program.htll && chmod 644 my_program.s
+   ./HTLL my_program.htll
    ```
 
 2. **Assemble to Executable:**
