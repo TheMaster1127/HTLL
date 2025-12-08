@@ -359,7 +359,6 @@ std::string str17 = "";
 std::string str18 = "";
 std::string str19 = "";
 std::string str20 = "";
-std::string main_syntax = "" + Chr(10) + "; =============================================================================" + Chr(10) + "; MAIN PROGRAM ENTRY POINT" + Chr(10) + "; =============================================================================" + Chr(10) + "_start:" + Chr(10) + "push rbp" + Chr(10) + "mov rbp, rsp" + Chr(10) + "and rsp, -16 " + Chr(10) + "mov rdi, args_array" + Chr(10) + "call array_clear" + Chr(10) + "mov r12, [rbp+8]" + Chr(10) + "lea r13, [rbp+16]" + Chr(10) + "mov r14, 1" + Chr(10) + ".arg_loop:" + Chr(10) + "cmp r14, r12" + Chr(10) + "jge .args_done" + Chr(10) + "mov rsi, [r13 + r14*8]" + Chr(10) + "mov rdi, args_array" + Chr(10) + "call array_unpack_from_bytes" + Chr(10) + "mov rdi, args_array" + Chr(10) + "mov rsi, 10" + Chr(10) + "call array_append" + Chr(10) + "inc r14" + Chr(10) + "jmp .arg_loop" + Chr(10) + ".args_done:" + Chr(10) + Chr(10);
 std::string SubStrLastChars(std::string text, int numOfChars) {
     std::string LastOut = "";
     int NumOfChars = 0;
@@ -391,6 +390,12 @@ bool isNint(std::string name) {
 }
 std::string compiler(std::string code) {
     std::string out = "";
+    std::string main_syntax = "";
+    if (RegExMatch(code, "\\bargs_array\\b")) {
+        main_syntax = "" + Chr(10) + "; =============================================================================" + Chr(10) + "; MAIN PROGRAM ENTRY POINT" + Chr(10) + "; =============================================================================" + Chr(10) + "_start:" + Chr(10) + "push rbp" + Chr(10) + "mov rbp, rsp" + Chr(10) + "and rsp, -16 " + Chr(10) + "mov rdi, args_array" + Chr(10) + "call array_clear" + Chr(10) + "mov r12, [rbp+8]" + Chr(10) + "lea r13, [rbp+16]" + Chr(10) + "mov r14, 1" + Chr(10) + ".arg_loop:" + Chr(10) + "cmp r14, r12" + Chr(10) + "jge .args_done" + Chr(10) + "mov rsi, [r13 + r14*8]" + Chr(10) + "mov rdi, args_array" + Chr(10) + "call array_unpack_from_bytes" + Chr(10) + "mov rdi, args_array" + Chr(10) + "mov rsi, 10" + Chr(10) + "call array_append" + Chr(10) + "inc r14" + Chr(10) + "jmp .arg_loop" + Chr(10) + ".args_done:" + Chr(10) + Chr(10);
+    } else {
+        main_syntax = "" + Chr(10) + "; =============================================================================" + Chr(10) + "; MAIN PROGRAM ENTRY POINT" + Chr(10) + "; =============================================================================" + Chr(10) + "_start:" + Chr(10) + "push rbp" + Chr(10) + "mov rbp, rsp" + Chr(10) + "and rsp, -16 " + Chr(10) + Chr(10);
+    }
     std::string HTLL_Libs_x86 = FileRead("HTLL_Libs_x86.txt");
     int isDotCompile = 0;
     std::string dot_data = Chr(10);
@@ -2189,13 +2194,13 @@ std::string compiler(std::string code) {
     }
     code = StringTrimRight(out, 1);
     std::vector<std::string> allFuncCALLS;
-    HTVM_Append(allFuncCALLS, "array_unpack_from_bytes");
     std::vector<std::string> allFuncCALLS_alredy;
-    std::vector<std::string> items22 = LoopParseFunc(code, "\n", "\r");
+    std::string code_TEMP = code + Chr(10) + main_syntax;
+    std::vector<std::string> items22 = LoopParseFunc(code_TEMP, "\n", "\r");
     for (size_t A_Index22 = 0; A_Index22 < items22.size(); A_Index22++) {
         std::string A_LoopField22 = items22[A_Index22 - 0];
-        if (SubStr(Trim(A_LoopField22), 1, 5) == "call ") {
-            HTVM_Append(allFuncCALLS, Trim(StringTrimLeft(Trim(A_LoopField22), 5)));
+        if (SubStr(Trim(A_LoopField22), 1, 5) == "call " || SubStr(Trim(A_LoopField22), 1, 4) == "jmp ") {
+            HTVM_Append(allFuncCALLS, Trim(StringTrimLeft(Trim(A_LoopField22), 4)));
         }
     }
     std::string HTLL_Libs_x86_new = Chr(10);
@@ -2233,7 +2238,7 @@ std::string compiler(std::string code) {
     allFuncCALLS = {};
     int anotherVar_INT_HELP_BUILD_IN_FUNCS_INT = 0;
     std::string ALoopField = "";
-    std::vector<std::string> items25 = LoopParseFunc(HTLL_Libs_x86, "\n", "\r");
+    std::vector<std::string> items25 = LoopParseFunc(HTLL_Libs_x86_new, "\n", "\r");
     for (size_t A_Index25 = 0; A_Index25 < items25.size(); A_Index25++) {
         std::string A_LoopField25 = items25[A_Index25 - 0];
         ALoopField = A_LoopField25;
@@ -2333,6 +2338,174 @@ std::string compiler(std::string code) {
         }
     }
     codeOUT = StrReplace(codeOUT, " [rax]", " rax");
+    int is_1_optimize = 0;
+    int is_2_optimize = 0;
+    int is_3_optimize = 0;
+    int is_4_optimize = 0;
+    int is_5_optimize = 0;
+    int is_6_optimize = 0;
+    int is_7_optimize = 0;
+    int is_8_optimize = 0;
+    int is_9_optimize = 0;
+    int is_10_optimize = 0;
+    int is_11_optimize = 0;
+    int is_12_optimize = 0;
+    int is_13_optimize = 0;
+    int is_14_optimize = 0;
+    int is_15_optimize = 0;
+    int is_16_optimize = 0;
+    int is_17_optimize = 0;
+    int is_18_optimize = 0;
+    int is_19_optimize = 0;
+    int is_20_optimize = 0;
+    int is_21_optimize = 0;
+    int is_22_optimize = 0;
+    int is_in_under = 0;
+    std::string allInOne_temp = "";
+    std::vector<std::string> items30 = LoopParseFunc(codeOUT, "\n", "\r");
+    for (size_t A_Index30 = 0; A_Index30 < items30.size(); A_Index30++) {
+        std::string A_LoopField30 = items30[A_Index30 - 0];
+        if (SubStr(Trim(A_LoopField30), 1, 2) != "; ") {
+            allInOne_temp += Trim(A_LoopField30) + Chr(10);
+            // Ignore definitions so they don't count as usage
+            if (InStr(A_LoopField30, " db ") == 0 && InStr(A_LoopField30, " rb ") == 0 && InStr(A_LoopField30, " rq ") == 0 && InStr(A_LoopField30, " dq ") == 0 && InStr(A_LoopField30, " = ") == 0) {
+                // CHANGED ALL "else if" TO "if" TO PREVENT OVERLAPPING REGEX BUGS
+                if (RegExMatch(A_LoopField30, "\\bDynamicArray.pointer\\b")) {
+                    is_1_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\bDynamicArray.size\\b")) {
+                    is_2_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\bDynamicArray.capacity\\b")) {
+                    is_3_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\bsizeof.DynamicArray\\b")) {
+                    is_4_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\bSCALE" + Chr(95) + "FACTOR\\b")) {
+                    is_5_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\bINITIAL" + Chr(95) + "CAPACITY\\b")) {
+                    is_6_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\bprint" + Chr(95) + "buffer\\b")) {
+                    is_7_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\bdot\\b")) {
+                    is_8_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\bminus" + Chr(95) + "sign\\b")) {
+                    is_9_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\b" + Chr(110) + Chr(108) + "\\b")) {
+                    is_10_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\binput" + Chr(95) + "buffer\\b")) {
+                    is_11_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\bfile" + Chr(95) + "read" + Chr(95) + "buffer\\b")) {
+                    is_12_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\binput" + Chr(95) + "len\\b")) {
+                    is_13_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\bfilename" + Chr(95) + "ptr" + Chr(95) + "size\\b")) {
+                    is_14_optimize = 1;
+                }
+                // FIXED REGEX FOR SOURCE_PTR (is_15)
+                if (RegExMatch(A_LoopField30, "\\bsource" + Chr(95) + "ptr\\b")) {
+                    is_15_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\bsource" + Chr(95) + "ptr" + Chr(95) + "size\\b")) {
+                    is_16_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\bargs" + Chr(95) + "array\\b")) {
+                    is_17_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\bfilename" + Chr(95) + "ptr\\b")) {
+                    is_18_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\basm" + Chr(95) + "code" + Chr(95) + "ptr\\b")) {
+                    is_19_optimize = 1;
+                }
+                if (RegExMatch(A_LoopField30, "\\bprint" + Chr(95) + "buffer" + Chr(95) + "n\\b")) {
+                    is_20_optimize = 1;
+                }
+            }
+        }
+    }
+    codeOUT = Trim(allInOne_temp);
+    allInOne_temp = "";
+    int aredy_int = 0;
+    std::vector<std::string> items31 = LoopParseFunc(codeOUT, "\n", "\r");
+    for (size_t A_Index31 = 0; A_Index31 < items31.size(); A_Index31++) {
+        std::string A_LoopField31 = items31[A_Index31 - 0];
+        aredy_int = 0;
+        if (Trim(A_LoopField31) == "DynamicArray.pointer  = 0" && is_1_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "DynamicArray.size     = 8" && is_2_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "DynamicArray.capacity = 16" && is_3_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "sizeof.DynamicArray   = 24" && is_4_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "SCALE_FACTOR   dq 1000000" && is_5_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "INITIAL_CAPACITY = 2" && is_6_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "print_buffer   rb 21" && is_7_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "dot            db " + Chr(39) + "." + Chr(39) + "" && is_8_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "minus_sign     db " + Chr(39) + Chr(45) + Chr(39) && is_9_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == Chr(110) + Chr(108) + "   db 10" && is_10_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "input_buffer rb 256" && is_11_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "file_read_buffer rb 4096" && is_12_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "input_len    rq 1" && is_13_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "filename_ptr_size  rq 1" && is_14_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "source_ptr      rq 1" && is_15_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "source_ptr_size rq 1" && is_16_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "args_array rq 3" && is_17_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "filename_ptr      rq 1" && is_18_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "asm_code_ptr    rq 1" && is_19_optimize == 0) {
+            aredy_int = 1;
+        }
+        else if (Trim(A_LoopField31) == "print_buffer_n rb 20" && is_20_optimize == 0) {
+            aredy_int = 1;
+        }
+        if (aredy_int == 0) {
+            allInOne_temp += A_LoopField31 + Chr(10);
+        }
+    }
+    codeOUT = Trim(allInOne_temp);
     return codeOUT;
 }
 int main(int argc, char* argv[]) {
@@ -2341,11 +2514,11 @@ int main(int argc, char* argv[]) {
     if (params == "") {
         print("Usage:" + Chr(10) + "./HTLL your_file.htll");
     } else {
-        std::vector<std::string> items30 = LoopParseFunc(params, "\n", "\r");
-        for (size_t A_Index30 = 0; A_Index30 < items30.size(); A_Index30++) {
-            std::string A_LoopField30 = items30[A_Index30 - 0];
-            paramsTemp = Trim(A_LoopField30);
-            if (A_Index30 == 0) {
+        std::vector<std::string> items32 = LoopParseFunc(params, "\n", "\r");
+        for (size_t A_Index32 = 0; A_Index32 < items32.size(); A_Index32++) {
+            std::string A_LoopField32 = items32[A_Index32 - 0];
+            paramsTemp = Trim(A_LoopField32);
+            if (A_Index32 == 0) {
                 FileDelete("finalASM_HTLL_ASM.s");
                 FileAppend(compiler(FileRead(paramsTemp)), "finalASM_HTLL_ASM.s");
                 print("Compilation finished: finalASM_HTLL_ASM.s generated.");
