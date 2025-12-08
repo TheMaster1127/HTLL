@@ -55,7 +55,7 @@ str main_syntax := ""
 
 
 if (RegExMatch(code, "\bargs_array\b")) {
-main_syntax := Chr(10) . "_start:" . Chr(10) . "push rbp" . Chr(10) . "mov rbp, rsp" . Chr(10) . "and rsp, -16 " . Chr(10) . "mov rdi, args_array" . Chr(10) . "call array_clear" . Chr(10) . "mov r12, [rbp+8]" . Chr(10) . "lea r13, [rbp+16]" . Chr(10) . "mov r14, 1" . Chr(10) . ".arg_loop:" . Chr(10) . "cmp r14, r12" . Chr(10) . "jge .args_done" . Chr(10) . "mov rsi, [r13 + r14*8]" . Chr(10) . "mov rdi, args_array" . Chr(10) . "call array_unpack_from_bytes" . Chr(10) . "mov rdi, args_array" . Chr(10) . "mov rsi, 10" . Chr(10) . "call array_append" . Chr(10) . "inc r14" . Chr(10) . "jmp .arg_loop" . Chr(10) . ".args_done:" . Chr(10) . Chr(10)
+main_syntax := Chr(10) . "_start:" . Chr(10) . "push rbp" . Chr(10) . "mov rbp, rsp" . Chr(10) . "and rsp, -16" . Chr(10) . "mov rdi, args_array" . Chr(10) . "call array_clear" . Chr(10) . "mov r12, [rbp+8]" . Chr(10) . "lea r13, [rbp+16]" . Chr(10) . "mov r14, 1" . Chr(10) . ".arg_loop:" . Chr(10) . "cmp r14, r12" . Chr(10) . "jge .args_done" . Chr(10) . "mov r15, [r13 + r14*8]" . Chr(10) . ".unpack_byte_loop:" . Chr(10) . "movzx rbx, byte [r15]" . Chr(10) . "cmp rbx, 0" . Chr(10) . "je .unpack_byte_done" . Chr(10) . "mov rdi, args_array" . Chr(10) . "mov rsi, rbx" . Chr(10) . "call array_append" . Chr(10) . "inc r15" . Chr(10) . "jmp .unpack_byte_loop" . Chr(10) . ".unpack_byte_done:" . Chr(10) . "mov rdi, args_array" . Chr(10) . "mov rsi, 10" . Chr(10) . "call array_append" . Chr(10) . "inc r14" . Chr(10) . "jmp .arg_loop" . Chr(10) . ".args_done:" . Chr(10) . Chr(10)
 }
 else {
 main_syntax := Chr(10) . "_start:" . Chr(10) . "push rbp" . Chr(10) . "mov rbp, rsp" . Chr(10) . "and rsp, -16 " . Chr(10) . Chr(10)

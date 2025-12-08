@@ -48,7 +48,7 @@ In low-level computing, distinct data types like "string" or "boolean" don't tru
 The `arr` type is a raw buffer of bytes. It can function as a "string" if you fill it with ASCII values and print them as characters. It can function as a list of "integers" if you fill it with numbers and perform arithmetic. You, the programmer, are in complete control of data representation.
 
 **Example 1: Dual-purpose buffer**
-```htll
+```ahk
 arr buffer
 arradd buffer Some text ; Use as a "string"
 buffer.clear
@@ -57,7 +57,7 @@ buffer.add 1991         ; Now use as a list of numbers
 
 **Example 2: Populating with character literals**
 You can also build up text using single-quoted character literals.
-```htll
+```ahk
 arr greeting
 greeting.add 'H'
 greeting.add 'e'
@@ -86,7 +86,7 @@ HTLL supports 64-bit integers. Following the global scope rule, they should be d
 
 **Syntax:** No spaces are allowed between a variable name and the `++` or `--` operators.
 
-```htll
+```ahk
 ; --- Declaration and Initialization ---
 int counter := 0
 int value := 50
@@ -110,7 +110,7 @@ Arrays are the core data structure in HTLL. They are dynamically-sized buffers t
 The `arradd` command is designed for efficiency and trims any trailing spaces from its input. This means you cannot add a space at the end of a line with it. To add a space or other specific characters, you must use the `.add` method with the character's ASCII value. The value for a space is `32`.
 
 **Example: Creating a spaced prompt**
-```htll
+```ahk
 arr prompt
 ; Correct way to create "Name: "
 arradd prompt Name:
@@ -131,20 +131,30 @@ prompt.add 32 ; This adds the trailing space
 
 ### 6. Control Flow: Loops
 
-Loops are zero-indexed and can be nested up to 9 levels (`Loop`, `Loop2`, ..., `Loop9`). The current iteration index is available in a corresponding special variable (`A_Index`, `A_Index2`, etc.).
+Loops are **zero-indexed** and can be nested up to 9 levels (`Loop`, `Loop2`, ..., `Loop9`). The number (`2`, `3`, etc.) is only for the parser to keep track of nesting; it does not change the behavior.
 
 **Syntax:** `Loop, <count>`
 
-**Example 1: Basic counted loop**
-```htll
+**CRITICAL:** The current iteration index is **always** available in the special variable `A_Index`. There is no `A_Index2` or `A_Index3`. This means if you have nested loops, `A_Index` will refer to the index of the innermost loop currently executing.
+
+**Example 1: Basic zero-indexed loop**
+```ahk
+; This will print 0, 1, 2, 3, 4
+Loop, 5
+    print(A_Index)
+endloop
+```
+
+**Example 2: Basic counted loop**
+```ahk
 ; Prints 0, 1, 2
 Loop, 3
     print(A_Index)
 endloop
 ```
 
-**Example 2: Iterating over an array**
-```htll
+**Example 3: Iterating over an array**
+```ahk
 arr data
 data.add 11
 data.add 22
@@ -157,6 +167,19 @@ Loop, rax
 endloop
 ```
 
+**Example 4: Nested Loops and `A_Index`**
+```ahk
+Loop, 2 ; Outer loop from 0 to 1
+    print("Outer:")
+    print(A_Index) ; This A_Index belongs to the outer loop
+    
+    Loop2, 3 ; Inner loop from 0 to 2
+        print("  Inner:")
+        print(A_Index) ; This A_Index belongs to the inner loop
+    endloop2
+endloop
+```
+
 ---
 
 ### 7. Control Flow: Conditionals
@@ -166,7 +189,7 @@ Conditional logic requires parentheses and can also be nested up to 9 levels (`i
 **Operators:** `=`, `!=`, `>`, `<`, `>=`, `<=`
 
 **Example 1: Simple check**
-```htll
+```ahk
 int val := 10
 if (val = 10)
     print("Value is 10.")
@@ -175,7 +198,7 @@ ifend
 
 **Example 2: Simulating an `else` block**
 HTLL does not have an `else` keyword. You achieve this with `goto`.
-```htll
+```ahk
 int access_level := 5
 if (access_level > 8)
     print("Admin access granted.")
@@ -195,7 +218,7 @@ togo end_check
 *   `goto <label_name>`: Jumps execution to the label.
 
 **Example: A `goto`-based loop**
-```htll
+```ahk
 int counter := 0
 togo loop_start
     counter++
@@ -213,7 +236,7 @@ print("Loop finished.")
 #### Function Parameters: The Only Local Scope
 Function parameters are the **only** exception to the "everything is global" rule. They are pushed onto the stack when the function is called and exist only for the duration of that function's execution.
 
-```htll
+```ahk
 int x := 10
 
 func my_func(x) ; This 'x' is a local parameter, shadowing the global 'x'
@@ -230,7 +253,7 @@ main
 **Do not define variables inside functions (`int i := 0`).** While the syntax is allowed, it does not behave as you might expect from other languages. Due to HTLL's global nature, the variable is created globally and initialized *only once* when the compiler first sees it. It will **not** be reset on subsequent function calls.
 
 **The Wrong Way (Bugged Logic):**
-```htll
+```ahk
 func counter_broken()
     int i := 0 ; This line only truly runs once during compilation!
     i++
@@ -244,7 +267,7 @@ main
 ```
 
 **The Correct Way (Declare Globally, Reset Locally):**
-```htll
+```ahk
 int i := 0 ; 1. Declare the variable in the global scope.
 
 func counter_correct()
@@ -268,7 +291,7 @@ main
 This is a core design choice. The correct way to have a function process array data is to use the "Global Buffer Pattern." You and the function agree on a global array to use as a shared workspace. The caller places data into the buffer, and the function reads from it.
 
 **Example: Correctly processing array data**
-```htll
+```ahk
 arr my_data
 arr shared_buffer ; This is the agreed-upon global buffer
 
@@ -305,15 +328,79 @@ HTLL provides direct syscalls for file I/O. For each operation, there are two ve
 *   `fileappend "file.txt", <source_arr>` / `fileappend_arr <filename_arr>, <source_arr>`
 *   `filedelete "file.txt"` / `filedelete_arr <filename_arr>`
 
+**Example: Reading, Writing, and Deleting a file**
+```ahk
+arr content_buffer
+arr filename_buffer
+
+main
+    arradd filename_buffer temp_file.txt
+    arradd content_buffer This is a test.
+    content_buffer.add 10 ; Add a newline
+
+    ; Write the content to the file
+    print("Writing to file...")
+    fileappend_arr filename_buffer, content_buffer
+
+    ; Clear the buffer and read the file back
+    content_buffer.clear
+    print("Reading from file...")
+    fileread_arr content_buffer, filename_buffer
+
+    ; Print the contents
+    content_buffer.size
+    Loop, rax
+        content_buffer.index A_Index
+        print_rax_as_char
+    endloop
+
+    ; Clean up
+    print("Deleting file...")
+    filedelete_arr filename_buffer
+```
+
 ---
 
 ### 12. System Commands & Features
 
-**Command Line Arguments:**
-HTLL populates the special global array `args_array` at startup. **Do not declare this array yourself.** Arguments are stored sequentially, separated by a newline character (ASCII `10`).
+#### Command Line Arguments (`args_array`)
+HTLL automatically populates the special global array `args_array` at startup with any command-line arguments you provide. **Do not declare this array yourself.**
 
-**Sleep:**
-The `Sleep, <ms>` command pauses execution via a kernel syscall.
+Internally, HTLL loops through the arguments provided by the operating system, unpacks them, and appends them to the `args_array` one by one, adding a newline character (ASCII `10`) after each argument to act as a separator.
+
+**Example: Displaying arguments**
+```ahk
+; To run from terminal: ./my_program arg1 "second arg" third
+
+main
+    print("--- Arguments Received ---")
+    args_array.size
+    if (rax = 0)
+        print("None.")
+        goto args_done
+    ifend
+        
+    Loop, rax
+        args_array.index A_Index
+        if (rax = 10)
+            print("") ; A newline separates each argument
+            continue
+        ifend
+        print_rax_as_char
+    endloop
+    
+    togo args_done
+```
+
+#### Sleep
+The `Sleep, <ms>` command pauses execution via a kernel syscall for the specified number of milliseconds.
+
+**Example: Timed execution**
+```ahk
+print("Step 1")
+Sleep, 1000 ; Pause for 1 second (1000 ms)
+print("Step 2")
+```
 
 ---
 
@@ -324,7 +411,7 @@ The `Sleep, <ms>` command pauses execution via a kernel syscall.
     *   `loop` -> `endloop` or `end loop`
     *   `func` -> `funcend` or `endfunc`
 *   **Nesting Limit:** Loops and conditionals can be nested up to 9 levels deep.
-*   **Loop Iterator:** The loop variable is `A_Index` for the first level, up to `A_Index9`.
+*   **Loop Iterator:** The loop variable is **always** `A_Index`.
 
 ---
 
@@ -332,7 +419,7 @@ The `Sleep, <ms>` command pauses execution via a kernel syscall.
 
 This single program demonstrates the correct usage of globals, functions, the buffer pattern, I/O, loops, and conditionals to perform a series of tasks.
 
-```htll
+```ahk
 ;#######################################################
 ;# HTLL All-In-One Demonstration
 ;#######################################################
