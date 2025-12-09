@@ -7,9 +7,8 @@
 
 HTLL is not an academic exercise; it is a practical tool for creating hyper-efficient software. Its simplicity translates directly to size and performance.
 
-*   A standard `Hello, World!` program in HTLL compiles to a **440-byte** assembly (`.s`) file.
-*   When assembled with FASM, the resulting binary file is only **255 bytes**.
-*   A more complex program, like a full Bubble Sort algorithm, produces a final executable of just **1.1 kilobytes**.
+*   A standard `Hello, World!` program in HTLL compiles to a **440-byte** assembly (`.s`) file. When assembled, the final **statically linked** binary file is only **255 bytes**.
+*   A more complex program, like a full Bubble Sort algorithm, produces a final **statically linked** executable of just **1.1 kilobytes**.
 
 This is the result of rejecting unnecessary layers of abstraction.
 
