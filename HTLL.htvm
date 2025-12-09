@@ -2051,6 +2051,12 @@ else if (InStr(A_LoopField, ".set ")) {
 
     out .= "mov [rbx + rcx*8], rsi" . Chr(10)
 }
+else if (Trim(A_LoopField) = "rax++") {
+out .= "inc rax" . Chr(10)
+}
+else if (Trim(A_LoopField) = "rax--") {
+out .= "dec rax" . Chr(10)
+}
 else if (SubStrLastChars(Trim(A_LoopField), 1) = ")") {
 str1 := StringTrimRight(Trim(A_LoopField), 1)
 str2 := StrSplit(str1, "(", 1)

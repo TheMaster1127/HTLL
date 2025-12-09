@@ -2154,6 +2154,12 @@ std::string compiler(std::string code) {
             }
             out += "mov [rbx + rcx*8], rsi" + Chr(10);
         }
+        else if (Trim(A_LoopField15) == "rax++") {
+            out += "inc rax" + Chr(10);
+        }
+        else if (Trim(A_LoopField15) == "rax--") {
+            out += "dec rax" + Chr(10);
+        }
         else if (SubStrLastChars(Trim(A_LoopField15), 1) == ")") {
             str1 = StringTrimRight(Trim(A_LoopField15), 1);
             str2 = StrSplit(str1, "(", 1);
