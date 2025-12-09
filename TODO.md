@@ -2,14 +2,14 @@
 
 1.  `StrLen`
 2.  `Chr`
-3.  `StrLower`
+3.  `StringTrimRight`
 4.  `countChars`
-5.  `STR`
-6.  `Trim`
-7.  `StringTrimRight`
-8.  `InStr`
-9.  `SubStr`
-10. `StringTrimLeft`
+5.  `StringTrimLeft`
+6.  `StrLower`
+7.  `SubStr`
+8.  `Trim`
+9.  `InStr`
+10. `STR`
 11. `StrSplit`
 12. `RegExMatch`
 13. `StrReplace`
@@ -27,28 +27,28 @@ funcend
 func Chr(val)
 funcend
 
-func StrLower(str)
+func StringTrimRight(str, count)
 funcend
 
 func countChars(str, needle)
 funcend
 
-func STR(val)
+func StringTrimLeft(str, count)
 funcend
 
-func Trim(str)
-funcend
-
-func StringTrimRight(str, count)
-funcend
-
-func InStr(haystack, needle)
+func StrLower(str)
 funcend
 
 func SubStr(str, start_pos, length)
 funcend
 
-func StringTrimLeft(str, count)
+func Trim(str)
+funcend
+
+func InStr(haystack, needle)
+funcend
+
+func STR(val)
 funcend
 
 func StrSplit(input, delim, num)
