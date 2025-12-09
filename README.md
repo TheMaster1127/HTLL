@@ -6,8 +6,8 @@ HTLL is a low-level programming language that compiles directly to **x86-64 Linu
 
 HTLL's simplicity translates directly to hyper-efficient executables.
 
-*   A standard `Hello, World!` program in HTLL compiles to a **440-byte** assembly (`.s`) file. When assembled, the final binary file is only **255 bytes**.
-*   A more complex program, like a full Bubble Sort algorithm, produces a final executable of just **1.1 kilobytes**.
+*   A standard `Hello, World!` program in HTLL compiles to a **440-byte** assembly (`.s`) file. When assembled, the final **statically linked** binary file is only **255 bytes**.
+*   A more complex program, like a full Bubble Sort algorithm, produces a final **statically linked** executable of just **1.1 kilobytes**.
 
 This is the result of speaking directly to the metal without unnecessary abstraction layers.
 
