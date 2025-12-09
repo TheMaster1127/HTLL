@@ -226,38 +226,24 @@ print("Loop finished.")
 
 ### 9. Functions: Scope, Parameters, and Variables
 
-#### Function Parameters: The Uniqueness Rule
-Function parameters are the **only** exception to the "everything is global" rule. They are pushed onto the stack when the function is called.
+#### Function Parameters: True Local Scope
+Function parameters are the **only** local variables in HTLL. They are pushed onto the stack when the function is called and exist only for the duration of that function's execution.
 
-**CRITICAL WARNING:** You **cannot** give a parameter the same name as a global variable.
-Because the compiler is designed for maximum minimalism, it does not "unwind" scopes. If you name a parameter `x` and you already have a global `x`, the global `x` will become inaccessible even after the function finishes.
+**Shadowing:**
+HTLL supports parameter shadowing. If you define a function parameter with the same name as a global variable, the compiler automatically isolates the parameter. Inside the function, that name refers to the local stack value. Outside, it refers to the global variable.
 
-**Always use distinct names for your parameters.**
-
-**The Wrong Way (Naming Collision):**
+**Example: Safe Shadowing**
 ```ahk
-int x := 10
+int x := 10  ; Global variable
 
-; BAD: 'x' is already a global. The compiler will get confused.
-func my_func(x) 
-    x += 5
-    print(x)
-funcend
-```
-
-**The Correct Way (Distinct Names):**
-```ahk
-int x := 10
-
-; GOOD: 'val' is unique. No collision with global 'x'.
-func my_func(val) 
-    val += 5     ; This modifies the local stack value
-    print(val)   ; Prints 25
+func my_func(x) ; This 'x' is a local parameter, shadowing the global 'x'
+    x += 5     ; This modifies the local 'x' on the stack (20 + 5)
+    print(x)   ; Prints 25
 funcend
 
 main
-    my_func(20) ; We pass 20.
-    print(x)    ; Prints 10. The global 'x' remains safe and accessible.
+    my_func(20) ; We pass 20 to the function.
+    print(x)    ; Prints 10. The global 'x' was never touched.
 ```
 
 #### Defining Variables Inside Functions: The Anti-Pattern
