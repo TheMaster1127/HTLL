@@ -357,6 +357,61 @@ out .= A_LoopField . Chr(10)
 StringTrimRight, code, out, 1
 
 
+int fix_func_temp_int := 0
+arr str fix_func_temp_arr
+out := ""
+Loop, Parse, code, `n, `r {
+if (SubStr(A_LoopField, 1, 5) = "func ") {
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+str1 := Trim(StringTrimLeft(A_LoopField, 5))
+str2 := Trim(StrSplit(str1, "(", 1))
+
+str3 := StrSplit(str1, "(", 2)
+str3 := Trim(StrReplace(str3, ")", ""))
+
+str4 := ""
+if (Trim(str3) != "") {
+fix_func_temp_arr := []
+fix_func_temp_int := 1
+Loop, Parse, str3, "," {
+str4 .= "_jhkjli_HTLL_HTLL_HTLL_" . Trim(A_LoopField) . ", "
+fix_func_temp_arr.add(Trim(A_LoopField))
+}
+StringTrimRight, str4, str4, 2
+
+out .= "func " . str2 . "(" . str4 . ")" . Chr(10)
+
+}
+else {
+out .= A_LoopField . Chr(10)
+}
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+}
+else if (Trim(A_LoopField) = "funcend") or (Trim(A_LoopField) = "endfunc") {
+fix_func_temp_int := 0
+fix_func_temp_arr := []
+out .= A_LoopField . Chr(10)
+}
+else {
+if (fix_func_temp_int = 1) {
+str1 := A_LoopField
+
+Loop, % fix_func_temp_arr.size() {
+str1 := RegExReplace(str1, "\b" . Trim(fix_func_temp_arr[A_Index]) . "\b", "_jhkjli_HTLL_HTLL_HTLL_" . Trim(fix_func_temp_arr[A_Index]))
+}
+
+out .= str1 . Chr(10)
+}
+else {
+out .= A_LoopField . Chr(10)
+}
+}
+}
+
+StringTrimRight, code, out, 1
+
 
 out := ""
 Loop, Parse, code, `n, `r {
@@ -1810,7 +1865,7 @@ int1 := 1
 funcName := str2
 out .= str2 . ":" . Chr(10) . "push rbp" . Chr(10) . "mov rbp, rsp" . Chr(10) . "sub rsp, " . STR(8 + (localVarNum * 8)) . Chr(10)
 }
-else if (Trim(A_LoopField) = "funcend") or (Trim(A_LoopField) = "funcend") {
+else if (Trim(A_LoopField) = "funcend") or (Trim(A_LoopField) = "endfunc") {
 out .= "." . funcName . "_return:" . Chr(10) . "add rsp, " . STR(8 + (localVarNum * 8)) . Chr(10) . "pop rbp" . Chr(10) . "ret" . Chr(10)
 funcCount++
 }

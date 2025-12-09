@@ -589,24 +589,72 @@ std::string compiler(std::string code) {
         }
     }
     code = StringTrimRight(out, 1);
+    int fix_func_temp_int = 0;
+    std::vector<std::string> fix_func_temp_arr;
     out = "";
     std::vector<std::string> items15 = LoopParseFunc(code, "\n", "\r");
     for (size_t A_Index15 = 0; A_Index15 < items15.size(); A_Index15++) {
         std::string A_LoopField15 = items15[A_Index15 - 0];
-        if (SubStr(A_LoopField15, 1, 7) == "arradd ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 7));
+        if (SubStr(A_LoopField15, 1, 5) == "func ") {
+            //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            str1 = Trim(StringTrimLeft(A_LoopField15, 5));
+            str2 = Trim(StrSplit(str1, "(", 1));
+            str3 = StrSplit(str1, "(", 2);
+            str3 = Trim(StrReplace(str3, ")", ""));
+            str4 = "";
+            if (Trim(str3) != "") {
+                fix_func_temp_arr = {};
+                fix_func_temp_int = 1;
+                std::vector<std::string> items16 = LoopParseFunc(str3, ",");
+                for (size_t A_Index16 = 0; A_Index16 < items16.size(); A_Index16++) {
+                    std::string A_LoopField16 = items16[A_Index16 - 0];
+                    str4 += "_jhkjli_HTLL_HTLL_HTLL_" + Trim(A_LoopField16) + ", ";
+                    HTVM_Append(fix_func_temp_arr, Trim(A_LoopField16));
+                }
+                str4 = StringTrimRight(str4, 2);
+                out += "func " + str2 + "(" + str4 + ")" + Chr(10);
+            } else {
+                out += A_LoopField15 + Chr(10);
+            }
+            //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        }
+        else if (Trim(A_LoopField15) == "funcend" || Trim(A_LoopField15) == "endfunc") {
+            fix_func_temp_int = 0;
+            fix_func_temp_arr = {};
+            out += A_LoopField15 + Chr(10);
+        } else {
+            if (fix_func_temp_int == 1) {
+                str1 = A_LoopField15;
+                for (int A_Index17 = 0; A_Index17 < HTVM_Size(fix_func_temp_arr); A_Index17++) {
+                    str1 = RegExReplace(str1, "\\b" + Trim(fix_func_temp_arr[A_Index17]) + "\\b", "_jhkjli_HTLL_HTLL_HTLL_" + Trim(fix_func_temp_arr[A_Index17]));
+                }
+                out += str1 + Chr(10);
+            } else {
+                out += A_LoopField15 + Chr(10);
+            }
+        }
+    }
+    code = StringTrimRight(out, 1);
+    out = "";
+    std::vector<std::string> items18 = LoopParseFunc(code, "\n", "\r");
+    for (size_t A_Index18 = 0; A_Index18 < items18.size(); A_Index18++) {
+        std::string A_LoopField18 = items18[A_Index18 - 0];
+        if (SubStr(A_LoopField18, 1, 7) == "arradd ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 7));
             str2 = StrSplit(str1, " ", 1);
             str3 = StringTrimLeft(str1, StrLen(str2) + 1);
             str4 = "";
-            std::vector<std::string> items16 = LoopParseFunc(str3);
-            for (size_t A_Index16 = 0; A_Index16 < items16.size(); A_Index16++) {
-                std::string A_LoopField16 = items16[A_Index16 - 0];
-                str4 += "mov rsi, " + Chr(39) + A_LoopField16 + Chr(39) + Chr(10) + "mov rdi, " + str2 + Chr(10) + "call array_append" + Chr(10);
+            std::vector<std::string> items19 = LoopParseFunc(str3);
+            for (size_t A_Index19 = 0; A_Index19 < items19.size(); A_Index19++) {
+                std::string A_LoopField19 = items19[A_Index19 - 0];
+                str4 += "mov rsi, " + Chr(39) + A_LoopField19 + Chr(39) + Chr(10) + "mov rdi, " + str2 + Chr(10) + "call array_append" + Chr(10);
             }
             out += str4 + Chr(10);
         }
-        else if (SubStr(A_LoopField15, 1, 4) == "int ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+        else if (SubStr(A_LoopField18, 1, 4) == "int ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             if (InStr(str1, ":=")) {
                 str2 = Trim(StrSplit(str1, ":=", 1));
                 str3 = Trim(StrSplit(str1, ":=", 2));
@@ -639,7 +687,7 @@ std::string compiler(std::string code) {
             }
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-            if (InStr(A_LoopField15, " += ")) {
+            if (InStr(A_LoopField18, " += ")) {
                 str2 = Trim(StrSplit(str1, "+=", 1));
                 str3 = Trim(StrSplit(str1, "+=", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
@@ -649,7 +697,7 @@ std::string compiler(std::string code) {
                     out += "add qword [" + str2 + "], rdi" + Chr(10);
                 }
             }
-            else if (InStr(A_LoopField15, " *= ")) {
+            else if (InStr(A_LoopField18, " *= ")) {
                 str2 = Trim(StrSplit(str1, "*=", 1));
                 str3 = Trim(StrSplit(str1, "*=", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
@@ -664,7 +712,7 @@ std::string compiler(std::string code) {
                     out += "mov [" + str2 + "], rax" + Chr(10);
                 }
             }
-            else if (InStr(A_LoopField15, " -= ")) {
+            else if (InStr(A_LoopField18, " -= ")) {
                 str2 = Trim(StrSplit(str1, "-=", 1));
                 str3 = Trim(StrSplit(str1, "-=", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
@@ -677,8 +725,8 @@ std::string compiler(std::string code) {
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
         }
-        else if (SubStr(A_LoopField15, 1, 5) == "nint ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 5));
+        else if (SubStr(A_LoopField18, 1, 5) == "nint ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 5));
             if (InStr(str1, " ")) {
                 HTVM_Append(nintArr, StrSplit(str1, " ", 1));
             } else {
@@ -722,7 +770,7 @@ std::string compiler(std::string code) {
             }
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-            if (InStr(A_LoopField15, " += ")) {
+            if (InStr(A_LoopField18, " += ")) {
                 str2 = Trim(StrSplit(str1, "+=", 1));
                 str3 = Trim(StrSplit(str1, "+=", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
@@ -734,7 +782,7 @@ std::string compiler(std::string code) {
                     out += "lea rdi, [" + str2 + "]" + Chr(10) + "lea rsi, [" + str2 + "_is_negative]" + Chr(10) + "call is_nint_negative" + Chr(10);
                 }
             }
-            else if (InStr(A_LoopField15, " *= ")) {
+            else if (InStr(A_LoopField18, " *= ")) {
                 str2 = Trim(StrSplit(str1, "*=", 1));
                 str3 = Trim(StrSplit(str1, "*=", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
@@ -751,7 +799,7 @@ std::string compiler(std::string code) {
                     out += "lea rdi, [" + str2 + "]" + Chr(10) + "lea rsi, [" + str2 + "_is_negative]" + Chr(10) + "call is_nint_negative" + Chr(10);
                 }
             }
-            else if (InStr(A_LoopField15, " -= ")) {
+            else if (InStr(A_LoopField18, " -= ")) {
                 str2 = Trim(StrSplit(str1, "-=", 1));
                 str3 = Trim(StrSplit(str1, "-=", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
@@ -766,16 +814,16 @@ std::string compiler(std::string code) {
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
         }
-        else if (SubStr(A_LoopField15, 1, 4) == "str ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+        else if (SubStr(A_LoopField18, 1, 4) == "str ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str2 = Trim(StrSplit(str1, "[", 2));
             str2 = Trim(StrSplit(str2, "]", 1));
             str1 = Trim(StrSplit(str1, "[", 1));
             dot_bss_str += str1 + " rb " + str2 + Chr(10);
         }
-        else if (InStr(A_LoopField15, " := ") || InStr(A_LoopField15, " += ") || InStr(A_LoopField15, " -= ") || InStr(A_LoopField15, " *= ")) {
-            if (InStr(A_LoopField15, " := ")) {
-                str1 = Trim(A_LoopField15);
+        else if (InStr(A_LoopField18, " := ") || InStr(A_LoopField18, " += ") || InStr(A_LoopField18, " -= ") || InStr(A_LoopField18, " *= ")) {
+            if (InStr(A_LoopField18, " := ")) {
+                str1 = Trim(A_LoopField18);
                 str2 = Trim(StrSplit(str1, ":=", 1));
                 str3 = Trim(StrSplit(str1, ":=", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
@@ -791,8 +839,8 @@ std::string compiler(std::string code) {
                     }
                 }
             }
-            else if (InStr(A_LoopField15, " += ")) {
-                str1 = Trim(A_LoopField15);
+            else if (InStr(A_LoopField18, " += ")) {
+                str1 = Trim(A_LoopField18);
                 str2 = Trim(StrSplit(str1, "+=", 1));
                 str3 = Trim(StrSplit(str1, "+=", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
@@ -808,8 +856,8 @@ std::string compiler(std::string code) {
                     }
                 }
             }
-            else if (InStr(A_LoopField15, " *= ")) {
-                str1 = Trim(A_LoopField15);
+            else if (InStr(A_LoopField18, " *= ")) {
+                str1 = Trim(A_LoopField18);
                 str2 = Trim(StrSplit(str1, "*=", 1));
                 str3 = Trim(StrSplit(str1, "*=", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
@@ -830,8 +878,8 @@ std::string compiler(std::string code) {
                     }
                 }
             }
-            else if (InStr(A_LoopField15, " -= ")) {
-                str1 = Trim(A_LoopField15);
+            else if (InStr(A_LoopField18, " -= ")) {
+                str1 = Trim(A_LoopField18);
                 str2 = Trim(StrSplit(str1, "-=", 1));
                 str3 = Trim(StrSplit(str1, "-=", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
@@ -848,24 +896,24 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (InStr(A_LoopField15, "++")) {
-            str1 = Trim(A_LoopField15);
+        else if (InStr(A_LoopField18, "++")) {
+            str1 = Trim(A_LoopField18);
             str1 = StringTrimRight(str1, 2);
             out += "inc qword [" + Trim(str1) + "]" + Chr(10);
             if (isNint(str1)) {
                 out += "lea rdi, [" + str1 + "]" + Chr(10) + "lea rsi, [" + str1 + "_is_negative]" + Chr(10) + "call is_nint_negative" + Chr(10);
             }
         }
-        else if (InStr(A_LoopField15, "--")) {
-            str1 = Trim(A_LoopField15);
+        else if (InStr(A_LoopField18, "--")) {
+            str1 = Trim(A_LoopField18);
             str1 = StringTrimRight(str1, 2);
             out += "dec qword [" + Trim(str1) + "]" + Chr(10);
             if (isNint(str1)) {
                 out += "lea rdi, [" + str1 + "]" + Chr(10) + "lea rsi, [" + str1 + "_is_negative]" + Chr(10) + "call is_nint_negative" + Chr(10);
             }
         }
-        else if (SubStr(A_LoopField15, 1, 6) == "print(") {
-            str1 = StringTrimLeft(A_LoopField15, 6);
+        else if (SubStr(A_LoopField18, 1, 6) == "print(") {
+            str1 = StringTrimLeft(A_LoopField18, 6);
             str1 = StringTrimRight(str1, 1);
             if (RegExMatch(str1, "^\\d+$")) {
                 out += "mov rdi, " + Trim(str1) + Chr(10) + "mov rsi, 0" + Chr(10) + "call print_number" + Chr(10);
@@ -882,173 +930,173 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (Trim(A_LoopField15) == "print_rax_as_char") {
+        else if (Trim(A_LoopField18) == "print_rax_as_char") {
             out += "mov rdi, rax" + Chr(10) + "push rcx" + Chr(10) + "call print_char" + Chr(10) + "pop rcx" + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "continue" || StrLower(Trim(A_LoopField15)) == "continue1") {
+        else if (StrLower(Trim(A_LoopField18)) == "continue" || StrLower(Trim(A_LoopField18)) == "continue1") {
             out += "jmp .cloop1_end" + STR(loopCount1) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "continue2") {
+        else if (StrLower(Trim(A_LoopField18)) == "continue2") {
             out += "jmp .cloop2_end" + STR(loopCount2) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "continue3") {
+        else if (StrLower(Trim(A_LoopField18)) == "continue3") {
             out += "jmp .cloop3_end" + STR(loopCount3) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "continue4") {
+        else if (StrLower(Trim(A_LoopField18)) == "continue4") {
             out += "jmp .cloop4_end" + STR(loopCount4) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "continue5") {
+        else if (StrLower(Trim(A_LoopField18)) == "continue5") {
             out += "jmp .cloop5_end" + STR(loopCount5) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "continue6") {
+        else if (StrLower(Trim(A_LoopField18)) == "continue6") {
             out += "jmp .cloop6_end" + STR(loopCount6) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "continue7") {
+        else if (StrLower(Trim(A_LoopField18)) == "continue7") {
             out += "jmp .cloop7_end" + STR(loopCount7) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "continue8") {
+        else if (StrLower(Trim(A_LoopField18)) == "continue8") {
             out += "jmp .cloop8_end" + STR(loopCount8) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "continue9") {
+        else if (StrLower(Trim(A_LoopField18)) == "continue9") {
             out += "jmp .cloop9_end" + STR(loopCount9) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "break" || StrLower(Trim(A_LoopField15)) == "break1") {
+        else if (StrLower(Trim(A_LoopField18)) == "break" || StrLower(Trim(A_LoopField18)) == "break1") {
             out += "jmp .loop1_end" + STR(loopCount1) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "break2") {
+        else if (StrLower(Trim(A_LoopField18)) == "break2") {
             out += "jmp .loop2_end" + STR(loopCount2) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "break3") {
+        else if (StrLower(Trim(A_LoopField18)) == "break3") {
             out += "jmp .loop3_end" + STR(loopCount3) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "break4") {
+        else if (StrLower(Trim(A_LoopField18)) == "break4") {
             out += "jmp .loop4_end" + STR(loopCount4) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "break5") {
+        else if (StrLower(Trim(A_LoopField18)) == "break5") {
             out += "jmp .loop5_end" + STR(loopCount5) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "break6") {
+        else if (StrLower(Trim(A_LoopField18)) == "break6") {
             out += "jmp .loop6_end" + STR(loopCount6) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "break7") {
+        else if (StrLower(Trim(A_LoopField18)) == "break7") {
             out += "jmp .loop7_end" + STR(loopCount7) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "break8") {
+        else if (StrLower(Trim(A_LoopField18)) == "break8") {
             out += "jmp .loop8_end" + STR(loopCount8) + Chr(10);
         }
-        else if (StrLower(Trim(A_LoopField15)) == "break9") {
+        else if (StrLower(Trim(A_LoopField18)) == "break9") {
             out += "jmp .loop9_end" + STR(loopCount9) + Chr(10);
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 6) == "loop, " || SubStr(StrLower(A_LoopField15), 1, 7) == "loop1, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 6));
+        else if (SubStr(StrLower(A_LoopField18), 1, 6) == "loop, " || SubStr(StrLower(A_LoopField18), 1, 7) == "loop1, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField18), 6));
             if (RegExMatch(str1, "^\\d+$")) {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop1_" + STR(loopCount1) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop1_end" + STR(loopCount1) + Chr(10);
             } else {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop1_" + STR(loopCount1) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop1_end" + STR(loopCount1) + Chr(10);
             }
         }
-        else if (Trim(A_LoopField15) == "loopend" || Trim(A_LoopField15) == "endloop" || Trim(A_LoopField15) == "loopend1" || Trim(A_LoopField15) == "endloop1") {
+        else if (Trim(A_LoopField18) == "loopend" || Trim(A_LoopField18) == "endloop" || Trim(A_LoopField18) == "loopend1" || Trim(A_LoopField18) == "endloop1") {
             out += ".cloop1_end" + STR(loopCount1) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop1_" + STR(loopCount1) + Chr(10) + ".loop1_end" + STR(loopCount1) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount1++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop2, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+        else if (SubStr(StrLower(A_LoopField18), 1, 7) == "loop2, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField18), 7));
             if (RegExMatch(str1, "^\\d+$")) {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop2_" + STR(loopCount2) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop2_end" + STR(loopCount2) + Chr(10);
             } else {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop2_" + STR(loopCount2) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop2_end" + STR(loopCount2) + Chr(10);
             }
         }
-        else if (Trim(A_LoopField15) == "loopend2" || Trim(A_LoopField15) == "endloop2") {
+        else if (Trim(A_LoopField18) == "loopend2" || Trim(A_LoopField18) == "endloop2") {
             out += ".cloop2_end" + STR(loopCount2) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop2_" + STR(loopCount2) + Chr(10) + ".loop2_end" + STR(loopCount2) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount2++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop3, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+        else if (SubStr(StrLower(A_LoopField18), 1, 7) == "loop3, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField18), 7));
             if (RegExMatch(str1, "^\\d+$")) {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop3_" + STR(loopCount3) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop3_end" + STR(loopCount3) + Chr(10);
             } else {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop3_" + STR(loopCount3) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop3_end" + STR(loopCount3) + Chr(10);
             }
         }
-        else if (Trim(A_LoopField15) == "loopend3" || Trim(A_LoopField15) == "endloop3") {
+        else if (Trim(A_LoopField18) == "loopend3" || Trim(A_LoopField18) == "endloop3") {
             out += ".cloop3_end" + STR(loopCount3) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop3_" + STR(loopCount3) + Chr(10) + ".loop3_end" + STR(loopCount3) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount3++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop4, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+        else if (SubStr(StrLower(A_LoopField18), 1, 7) == "loop4, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField18), 7));
             if (RegExMatch(str1, "^\\d+$")) {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop4_" + STR(loopCount4) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop4_end" + STR(loopCount4) + Chr(10);
             } else {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop4_" + STR(loopCount4) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop4_end" + STR(loopCount4) + Chr(10);
             }
         }
-        else if (Trim(A_LoopField15) == "loopend4" || Trim(A_LoopField15) == "endloop4") {
+        else if (Trim(A_LoopField18) == "loopend4" || Trim(A_LoopField18) == "endloop4") {
             out += ".cloop4_end" + STR(loopCount4) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop4_" + STR(loopCount4) + Chr(10) + ".loop4_end" + STR(loopCount4) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount4++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop5, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+        else if (SubStr(StrLower(A_LoopField18), 1, 7) == "loop5, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField18), 7));
             if (RegExMatch(str1, "^\\d+$")) {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop5_" + STR(loopCount5) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop5_end" + STR(loopCount5) + Chr(10);
             } else {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop5_" + STR(loopCount5) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop5_end" + STR(loopCount5) + Chr(10);
             }
         }
-        else if (Trim(A_LoopField15) == "loopend5" || Trim(A_LoopField15) == "endloop5") {
+        else if (Trim(A_LoopField18) == "loopend5" || Trim(A_LoopField18) == "endloop5") {
             out += ".cloop5_end" + STR(loopCount5) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop5_" + STR(loopCount5) + Chr(10) + ".loop5_end" + STR(loopCount5) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount5++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop6, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+        else if (SubStr(StrLower(A_LoopField18), 1, 7) == "loop6, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField18), 7));
             if (RegExMatch(str1, "^\\d+$")) {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop6_" + STR(loopCount6) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop6_end" + STR(loopCount6) + Chr(10);
             } else {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop6_" + STR(loopCount6) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop6_end" + STR(loopCount6) + Chr(10);
             }
         }
-        else if (Trim(A_LoopField15) == "loopend6" || Trim(A_LoopField15) == "endloop6") {
+        else if (Trim(A_LoopField18) == "loopend6" || Trim(A_LoopField18) == "endloop6") {
             out += ".cloop6_end" + STR(loopCount6) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop6_" + STR(loopCount6) + Chr(10) + ".loop6_end" + STR(loopCount6) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount6++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop7, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+        else if (SubStr(StrLower(A_LoopField18), 1, 7) == "loop7, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField18), 7));
             if (RegExMatch(str1, "^\\d+$")) {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop7_" + STR(loopCount7) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop7_end" + STR(loopCount7) + Chr(10);
             } else {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop7_" + STR(loopCount7) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop7_end" + STR(loopCount7) + Chr(10);
             }
         }
-        else if (Trim(A_LoopField15) == "loopend7" || Trim(A_LoopField15) == "endloop7") {
+        else if (Trim(A_LoopField18) == "loopend7" || Trim(A_LoopField18) == "endloop7") {
             out += ".cloop7_end" + STR(loopCount7) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop7_" + STR(loopCount7) + Chr(10) + ".loop7_end" + STR(loopCount7) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount7++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop8, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+        else if (SubStr(StrLower(A_LoopField18), 1, 7) == "loop8, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField18), 7));
             if (RegExMatch(str1, "^\\d+$")) {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop8_" + STR(loopCount8) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop8_end" + STR(loopCount8) + Chr(10);
             } else {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop8_" + STR(loopCount8) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop8_end" + STR(loopCount8) + Chr(10);
             }
         }
-        else if (Trim(A_LoopField15) == "loopend8" || Trim(A_LoopField15) == "endloop8") {
+        else if (Trim(A_LoopField18) == "loopend8" || Trim(A_LoopField18) == "endloop8") {
             out += ".cloop8_end" + STR(loopCount8) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop8_" + STR(loopCount8) + Chr(10) + ".loop8_end" + STR(loopCount8) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount8++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "loop9, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+        else if (SubStr(StrLower(A_LoopField18), 1, 7) == "loop9, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField18), 7));
             if (RegExMatch(str1, "^\\d+$")) {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop9_" + STR(loopCount9) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop9_end" + STR(loopCount9) + Chr(10);
             } else {
                 out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop9_" + STR(loopCount9) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop9_end" + STR(loopCount9) + Chr(10);
             }
         }
-        else if (Trim(A_LoopField15) == "loopend9" || Trim(A_LoopField15) == "endloop9") {
+        else if (Trim(A_LoopField18) == "loopend9" || Trim(A_LoopField18) == "endloop9") {
             out += ".cloop9_end" + STR(loopCount9) + ":" + Chr(10) + "inc r13" + Chr(10) + "dec r12" + Chr(10) + "jmp .loop9_" + STR(loopCount9) + Chr(10) + ".loop9_end" + STR(loopCount9) + ":" + Chr(10) + "pop r13" + Chr(10) + "pop r12" + Chr(10);
             loopCount9++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 3) == "if " || SubStr(StrLower(A_LoopField15), 1, 4) == "if1 ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 3));
+        else if (SubStr(StrLower(A_LoopField18), 1, 3) == "if " || SubStr(StrLower(A_LoopField18), 1, 4) == "if1 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 3));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             isNum = 0;
@@ -1145,12 +1193,12 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (Trim(A_LoopField15) == "ifend" || Trim(A_LoopField15) == "endif" || Trim(A_LoopField15) == "ifend1" || Trim(A_LoopField15) == "endif1") {
+        else if (Trim(A_LoopField18) == "ifend" || Trim(A_LoopField18) == "endif" || Trim(A_LoopField18) == "ifend1" || Trim(A_LoopField18) == "endif1") {
             out += ".end_if1_" + STR(ifCount1) + ":" + Chr(10);
             ifCount1++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "if2 ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+        else if (SubStr(StrLower(A_LoopField18), 1, 4) == "if2 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
@@ -1245,12 +1293,12 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (Trim(A_LoopField15) == "ifend2" || Trim(A_LoopField15) == "endif2") {
+        else if (Trim(A_LoopField18) == "ifend2" || Trim(A_LoopField18) == "endif2") {
             out += ".end_if2_" + STR(ifCount2) + ":" + Chr(10);
             ifCount2++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "if3 ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+        else if (SubStr(StrLower(A_LoopField18), 1, 4) == "if3 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
@@ -1345,12 +1393,12 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (Trim(A_LoopField15) == "ifend3" || Trim(A_LoopField15) == "endif3") {
+        else if (Trim(A_LoopField18) == "ifend3" || Trim(A_LoopField18) == "endif3") {
             out += ".end_if3_" + STR(ifCount3) + ":" + Chr(10);
             ifCount3++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "if4 ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+        else if (SubStr(StrLower(A_LoopField18), 1, 4) == "if4 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
@@ -1445,12 +1493,12 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (Trim(A_LoopField15) == "ifend4" || Trim(A_LoopField15) == "endif4") {
+        else if (Trim(A_LoopField18) == "ifend4" || Trim(A_LoopField18) == "endif4") {
             out += ".end_if4_" + STR(ifCount4) + ":" + Chr(10);
             ifCount4++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "if5 ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+        else if (SubStr(StrLower(A_LoopField18), 1, 4) == "if5 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
@@ -1545,12 +1593,12 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (Trim(A_LoopField15) == "ifend5" || Trim(A_LoopField15) == "endif5") {
+        else if (Trim(A_LoopField18) == "ifend5" || Trim(A_LoopField18) == "endif5") {
             out += ".end_if5_" + STR(ifCount5) + ":" + Chr(10);
             ifCount5++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "if6 ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+        else if (SubStr(StrLower(A_LoopField18), 1, 4) == "if6 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
@@ -1645,12 +1693,12 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (Trim(A_LoopField15) == "ifend6" || Trim(A_LoopField15) == "endif6") {
+        else if (Trim(A_LoopField18) == "ifend6" || Trim(A_LoopField18) == "endif6") {
             out += ".end_if6_" + STR(ifCount6) + ":" + Chr(10);
             ifCount6++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "if7 ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+        else if (SubStr(StrLower(A_LoopField18), 1, 4) == "if7 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
@@ -1745,12 +1793,12 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (Trim(A_LoopField15) == "ifend7" || Trim(A_LoopField15) == "endif7") {
+        else if (Trim(A_LoopField18) == "ifend7" || Trim(A_LoopField18) == "endif7") {
             out += ".end_if7_" + STR(ifCount7) + ":" + Chr(10);
             ifCount7++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "if8 ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+        else if (SubStr(StrLower(A_LoopField18), 1, 4) == "if8 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
@@ -1845,12 +1893,12 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (Trim(A_LoopField15) == "ifend8" || Trim(A_LoopField15) == "endif8") {
+        else if (Trim(A_LoopField18) == "ifend8" || Trim(A_LoopField18) == "endif8") {
             out += ".end_if8_" + STR(ifCount8) + ":" + Chr(10);
             ifCount8++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "if9 ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 4));
+        else if (SubStr(StrLower(A_LoopField18), 1, 4) == "if9 ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
@@ -1920,20 +1968,20 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (Trim(A_LoopField15) == "ifend9" || Trim(A_LoopField15) == "endif9") {
+        else if (Trim(A_LoopField18) == "ifend9" || Trim(A_LoopField18) == "endif9") {
             out += ".end_if9_" + STR(ifCount9) + ":" + Chr(10);
             ifCount9++;
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 5) == "func ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 5));
+        else if (SubStr(StrLower(A_LoopField18), 1, 5) == "func ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField18), 5));
             str2 = "";
-            std::vector<std::string> items17 = LoopParseFunc(str1);
-            for (size_t A_Index17 = 0; A_Index17 < items17.size(); A_Index17++) {
-                std::string A_LoopField17 = items17[A_Index17 - 0];
-                if (A_LoopField17 == "(") {
+            std::vector<std::string> items20 = LoopParseFunc(str1);
+            for (size_t A_Index20 = 0; A_Index20 < items20.size(); A_Index20++) {
+                std::string A_LoopField20 = items20[A_Index20 - 0];
+                if (A_LoopField20 == "(") {
                     break;
                 } else {
-                    str2 += A_LoopField17;
+                    str2 += A_LoopField20;
                 }
             }
             str2 = Trim(str2);
@@ -1944,20 +1992,20 @@ std::string compiler(std::string code) {
             int2 = 0;
             if (InStr(str1, ",") || InStr(str1, "()") == false) {
                 funcArgsArr = {};
-                std::vector<std::string> items18 = LoopParseFunc(str1);
-                for (size_t A_Index18 = 0; A_Index18 < items18.size(); A_Index18++) {
-                    std::string A_LoopField18 = items18[A_Index18 - 0];
-                    if (A_LoopField18 == ")") {
+                std::vector<std::string> items21 = LoopParseFunc(str1);
+                for (size_t A_Index21 = 0; A_Index21 < items21.size(); A_Index21++) {
+                    std::string A_LoopField21 = items21[A_Index21 - 0];
+                    if (A_LoopField21 == ")") {
                         break;
                     }
-                    if (int1 == 1 && A_LoopField18 != "," && A_LoopField18 != " ") {
-                        funcArgsArr[int2] = funcArgsArr[int2] + A_LoopField18;
+                    if (int1 == 1 && A_LoopField21 != "," && A_LoopField21 != " ") {
+                        funcArgsArr[int2] = funcArgsArr[int2] + A_LoopField21;
                     }
-                    if (A_LoopField18 == ",") {
+                    if (A_LoopField21 == ",") {
                         HTVM_Append(funcArgsArr, "");
                         int2++;
                     }
-                    if (A_LoopField18 == "(") {
+                    if (A_LoopField21 == "(") {
                         HTVM_Append(funcArgsArr, "");
                         int1 = 1;
                     }
@@ -1966,15 +2014,15 @@ std::string compiler(std::string code) {
             funcName = str2;
             out += str2 + ":" + Chr(10) + "push rbp" + Chr(10) + "mov rbp, rsp" + Chr(10) + "sub rsp, " + STR(8 + (localVarNum * 8)) + Chr(10);
         }
-        else if (Trim(A_LoopField15) == "funcend" || Trim(A_LoopField15) == "funcend") {
+        else if (Trim(A_LoopField18) == "funcend" || Trim(A_LoopField18) == "endfunc") {
             out += "." + funcName + "_return:" + Chr(10) + "add rsp, " + STR(8 + (localVarNum * 8)) + Chr(10) + "pop rbp" + Chr(10) + "ret" + Chr(10);
             funcCount++;
         }
-        else if (Trim(A_LoopField15) == "return") {
+        else if (Trim(A_LoopField18) == "return") {
             out += "jmp ." + funcName + "_return" + Chr(10);
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "return ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 7));
+        else if (SubStr(StrLower(A_LoopField18), 1, 7) == "return ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField18), 7));
             str2 = str1;
             if (RegExMatch(str1, "^\\d+$")) {
                 out += "mov rax, " + str2 + Chr(10) + "jmp ." + funcName + "_return" + Chr(10);
@@ -1982,13 +2030,13 @@ std::string compiler(std::string code) {
                 out += "mov rax, [" + str2 + "]" + Chr(10) + "jmp ." + funcName + "_return" + Chr(10);
             }
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 4) == "arr ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField15), 4));
+        else if (SubStr(StrLower(A_LoopField18), 1, 4) == "arr ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField18), 4));
             arrBss += "    " + Trim(str1) + " rq 3" + Chr(10);
         }
-        else if (InStr(A_LoopField15, ".add ")) {
-            str1 = Trim(StrSplit(A_LoopField15, ".", 1));
-            str2 = Trim(StrSplit(A_LoopField15, ".add", 2));
+        else if (InStr(A_LoopField18, ".add ")) {
+            str1 = Trim(StrSplit(A_LoopField18, ".", 1));
+            str2 = Trim(StrSplit(A_LoopField18, ".add", 2));
             if (RegExMatch(str2, "^\\d+$")) {
                 str3 = "mov rsi, " + str2 + Chr(10) + "mov rdi, " + str1 + Chr(10);
             } else {
@@ -1996,28 +2044,28 @@ std::string compiler(std::string code) {
             }
             out += str3 + Chr(10) + "call array_append" + Chr(10);
         }
-        else if (InStr(A_LoopField15, ".pop")) {
-            str1 = Trim(StrSplit(A_LoopField15, ".", 1));
-            str2 = Trim(StrSplit(A_LoopField15, ".pop", 2));
+        else if (InStr(A_LoopField18, ".pop")) {
+            str1 = Trim(StrSplit(A_LoopField18, ".", 1));
+            str2 = Trim(StrSplit(A_LoopField18, ".pop", 2));
             str3 = "mov rdi, " + str1 + Chr(10);
             out += str3 + Chr(10) + "call array_pop" + Chr(10);
         }
-        else if (InStr(A_LoopField15, ".clear")) {
-            str1 = Trim(StrSplit(A_LoopField15, ".", 1));
+        else if (InStr(A_LoopField18, ".clear")) {
+            str1 = Trim(StrSplit(A_LoopField18, ".", 1));
             out += "mov rdi, " + str1 + Chr(10) + "call array_clear" + Chr(10);
         }
-        else if (InStr(A_LoopField15, ".copy ")) {
-            str1 = Trim(StrSplit(A_LoopField15, ".", 1));
-            str2 = Trim(StrSplit(A_LoopField15, ".copy", 2));
+        else if (InStr(A_LoopField18, ".copy ")) {
+            str1 = Trim(StrSplit(A_LoopField18, ".", 1));
+            str2 = Trim(StrSplit(A_LoopField18, ".copy", 2));
             out += "mov rdi, " + str1 + Chr(10) + "mov rsi, " + str2 + Chr(10) + "call array_copy" + Chr(10);
         }
-        else if (InStr(A_LoopField15, ".size")) {
-            str1 = Trim(StrSplit(A_LoopField15, ".", 1));
+        else if (InStr(A_LoopField18, ".size")) {
+            str1 = Trim(StrSplit(A_LoopField18, ".", 1));
             out += "mov rax, [" + str1 + " + DynamicArray.size]" + Chr(10);
         }
-        else if (InStr(A_LoopField15, ".index ")) {
-            str1 = Trim(StrSplit(A_LoopField15, ".", 1));
-            str2 = Trim(StrSplit(A_LoopField15, ".index", 2));
+        else if (InStr(A_LoopField18, ".index ")) {
+            str1 = Trim(StrSplit(A_LoopField18, ".", 1));
+            str2 = Trim(StrSplit(A_LoopField18, ".index", 2));
             if (RegExMatch(str2, "^\\d+$")) {
                 str3 = "mov rcx, " + str2 + Chr(10);
             } else {
@@ -2025,27 +2073,27 @@ std::string compiler(std::string code) {
             }
             out += str3 + Chr(10) + "mov rbx, [" + str1 + " + DynamicArray.pointer]" + Chr(10) + "mov rax, [rbx + rcx*8]" + Chr(10);
         }
-        else if (InStr(A_LoopField15, ".compile ")) {
+        else if (InStr(A_LoopField18, ".compile ")) {
             // arrName.compile outArr
-            str1 = Trim(StrSplit(A_LoopField15, ".", 1));
-            str2 = Trim(StrSplit(A_LoopField15, ".compile", 2));
+            str1 = Trim(StrSplit(A_LoopField18, ".", 1));
+            str2 = Trim(StrSplit(A_LoopField18, ".compile", 2));
             isDotCompile = 1;
             out += "mov rdi, " + str1 + Chr(10) + "call array_pack_to_bytes" + Chr(10) + "mov [source_ptr], rax" + Chr(10) + "mov rdi, [source_ptr]" + Chr(10) + "call compiler_c" + Chr(10) + "mov [asm_code_ptr], rax" + Chr(10) + "mov rdi, " + str2 + Chr(10) + "mov rsi, [asm_code_ptr]" + Chr(10) + "call array_unpack_from_bytes" + Chr(10) + "mov rdi, [source_ptr]" + Chr(10) + "mov rsi, [source_ptr_size]" + Chr(10) + "call free_packed_string" + Chr(10) + "mov rdi, [asm_code_ptr]" + Chr(10) + "call free_string_c" + Chr(10);
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 5) == "goto ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 5));
+        else if (SubStr(StrLower(A_LoopField18), 1, 5) == "goto ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 5));
             out += "jmp .__HTLL_HTLL_" + str1 + Chr(10);
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 5) == "togo ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 5));
+        else if (SubStr(StrLower(A_LoopField18), 1, 5) == "togo ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 5));
             out += ".__HTLL_HTLL_" + str1 + ":" + Chr(10);
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 7) == "sleep, ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 7));
+        else if (SubStr(StrLower(A_LoopField18), 1, 7) == "sleep, ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 7));
             out += "mov rdi, " + str1 + Chr(10) + "call sleep_ms" + Chr(10);
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 13) == "fileread_arr ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 13));
+        else if (SubStr(StrLower(A_LoopField18), 1, 13) == "fileread_arr ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 13));
             str2 = Trim(StrSplit(str1, ",", 1));
             str3 = Trim(StrSplit(str1, ",", 2));
             // --- THE PURE ASSEMBLY GENERATION ---
@@ -2065,8 +2113,8 @@ std::string compiler(std::string code) {
             out += "mov rsi, [filename_ptr_size]" + Chr(10);
             out += "call free_packed_string" + Chr(10);
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 15) == "fileappend_arr ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 15));
+        else if (SubStr(StrLower(A_LoopField18), 1, 15) == "fileappend_arr ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 15));
             str2 = Trim(StrSplit(str1, ",", 1));
             str3 = Trim(StrSplit(str1, ",", 2));
             // --- THE PURE ASSEMBLY GENERATION ---
@@ -2086,8 +2134,8 @@ std::string compiler(std::string code) {
             out += "mov rsi, [filename_ptr_size]" + Chr(10);
             out += "call free_packed_string" + Chr(10);
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 15) == "filedelete_arr ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 15));
+        else if (SubStr(StrLower(A_LoopField18), 1, 15) == "filedelete_arr ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 15));
             // --- THE PURE ASSEMBLY GENERATION ---
             // Pack the FILENAME array (str1) into a C-string.
             out += "mov rdi, " + str1 + Chr(10);
@@ -2104,8 +2152,8 @@ std::string compiler(std::string code) {
             out += "mov rsi, [filename_ptr_size]" + Chr(10);
             out += "call free_packed_string" + Chr(10);
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 9) == "fileread ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 9));
+        else if (SubStr(StrLower(A_LoopField18), 1, 9) == "fileread ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 9));
             str2 = Trim(StrSplit(str1, ",", 1));
             str3 = Trim(StrSplit(str1, ",", 2));
             dot_data_print_temp_strings_count++;
@@ -2113,8 +2161,8 @@ std::string compiler(std::string code) {
             dot_data_print_temp_strings += path_label + " db " + str3 + ", 0" + Chr(10);
             out += "mov rdi, " + str2 + Chr(10) + "mov rsi, " + path_label + Chr(10) + "call file_read" + Chr(10);
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 11) == "fileappend ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 11));
+        else if (SubStr(StrLower(A_LoopField18), 1, 11) == "fileappend ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 11));
             str2 = Trim(StrSplit(str1, ",", 1));
             str3 = Trim(StrSplit(str1, ",", 2));
             dot_data_print_temp_strings_count++;
@@ -2122,23 +2170,23 @@ std::string compiler(std::string code) {
             dot_data_print_temp_strings += path_label + " db " + str2 + ", 0" + Chr(10);
             out += "mov rdi, " + path_label + Chr(10) + "mov rsi, " + str3 + Chr(10) + "call file_append" + Chr(10);
         }
-        else if (SubStr(StrLower(A_LoopField15), 1, 11) == "filedelete ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 11));
+        else if (SubStr(StrLower(A_LoopField18), 1, 11) == "filedelete ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 11));
             dot_data_print_temp_strings_count++;
             path_label = "FILE_PATH_" + STR(dot_data_print_temp_strings_count);
             dot_data_print_temp_strings += path_label + " db " + str1 + ", 0" + Chr(10);
             out += "mov rdi, " + path_label + Chr(10) + "call file_delete" + Chr(10);
         }
-        else if (SubStr(A_LoopField15, 1, 6) == "input ") {
-            str1 = Trim(StringTrimLeft(A_LoopField15, 6));
+        else if (SubStr(A_LoopField18, 1, 6) == "input ") {
+            str1 = Trim(StringTrimLeft(A_LoopField18, 6));
             str2 = Trim(StrSplit(str1, ",", 1));
             str3 = Trim(StrSplit(str1, ",", 2));
             // Generate the assembly call
             out += "mov rdi, " + str2 + Chr(10) + "mov rsi, " + str3 + Chr(10) + "call get_user_input" + Chr(10);
         }
-        else if (InStr(A_LoopField15, ".set ")) {
-            str1 = Trim(StrSplit(A_LoopField15, ".", 1));
-            str2 = Trim(StringTrimLeft(A_LoopField15, StrLen(str1) + 5));
+        else if (InStr(A_LoopField18, ".set ")) {
+            str1 = Trim(StrSplit(A_LoopField18, ".", 1));
+            str2 = Trim(StringTrimLeft(A_LoopField18, StrLen(str1) + 5));
             str_index = Trim(StrSplit(str2, ",", 1));
             str_value = Trim(StrSplit(str2, ",", 2));
             out += "mov rbx, [" + str1 + " + DynamicArray.pointer]" + Chr(10);
@@ -2154,19 +2202,19 @@ std::string compiler(std::string code) {
             }
             out += "mov [rbx + rcx*8], rsi" + Chr(10);
         }
-        else if (Trim(A_LoopField15) == "rax++") {
+        else if (Trim(A_LoopField18) == "rax++") {
             out += "inc rax" + Chr(10);
         }
-        else if (Trim(A_LoopField15) == "rax--") {
+        else if (Trim(A_LoopField18) == "rax--") {
             out += "dec rax" + Chr(10);
         }
-        else if (SubStrLastChars(Trim(A_LoopField15), 1) == ")") {
-            str1 = StringTrimRight(Trim(A_LoopField15), 1);
+        else if (SubStrLastChars(Trim(A_LoopField18), 1) == ")") {
+            str1 = StringTrimRight(Trim(A_LoopField18), 1);
             str2 = StrSplit(str1, "(", 1);
-            std::vector<std::string> items19 = LoopParseFunc(str2, " ");
-            for (size_t A_Index19 = 0; A_Index19 < items19.size(); A_Index19++) {
-                std::string A_LoopField19 = items19[A_Index19 - 0];
-                str3 = A_LoopField19;
+            std::vector<std::string> items22 = LoopParseFunc(str2, " ");
+            for (size_t A_Index22 = 0; A_Index22 < items22.size(); A_Index22++) {
+                std::string A_LoopField22 = items22[A_Index22 - 0];
+                str3 = A_LoopField22;
             }
             str2 = str3;
             str3 = StrSplit(str1, "(", 2);
@@ -2176,13 +2224,13 @@ std::string compiler(std::string code) {
             if (Trim(str3) == "") {
                 int1 = 1;
             }
-            std::vector<std::string> items20 = LoopParseFunc(str3, ", ");
-            for (size_t A_Index20 = 0; A_Index20 < items20.size(); A_Index20++) {
-                std::string A_LoopField20 = items20[A_Index20 - 0];
-                if (RegExMatch(A_LoopField20, "^\\d+$")) {
-                    str4 += "push " + A_LoopField20 + Chr(10);
+            std::vector<std::string> items23 = LoopParseFunc(str3, ", ");
+            for (size_t A_Index23 = 0; A_Index23 < items23.size(); A_Index23++) {
+                std::string A_LoopField23 = items23[A_Index23 - 0];
+                if (RegExMatch(A_LoopField23, "^\\d+$")) {
+                    str4 += "push " + A_LoopField23 + Chr(10);
                 } else {
-                    str4 += "push qword [" + A_LoopField20 + "]" + Chr(10);
+                    str4 += "push qword [" + A_LoopField23 + "]" + Chr(10);
                 }
                 int5++;
             }
@@ -2192,10 +2240,10 @@ std::string compiler(std::string code) {
                 out += str4 + "call " + str2 + Chr(10);
             }
         } else {
-            out += A_LoopField15 + Chr(10);
+            out += A_LoopField18 + Chr(10);
         }
-        for (int A_Index21 = 0; A_Index21 < HTVM_Size(funcArgsArr); A_Index21++) {
-            out = RegExReplace(out, "\\b" + Trim(funcArgsArr[A_Index21]) + "\\b", "rbp + " + STR(8 + ( (HTVM_Size(funcArgsArr) - A_Index21) * 8 )));
+        for (int A_Index24 = 0; A_Index24 < HTVM_Size(funcArgsArr); A_Index24++) {
+            out = RegExReplace(out, "\\b" + Trim(funcArgsArr[A_Index24]) + "\\b", "rbp + " + STR(8 + ( (HTVM_Size(funcArgsArr) - A_Index24) * 8 )));
         }
         out = StrReplace(out, "']", "'");
         out = StrReplace(out, "['", "'");
@@ -2206,11 +2254,11 @@ std::string compiler(std::string code) {
     std::vector<std::string> allFuncCALLS;
     std::vector<std::string> allFuncCALLS_alredy;
     std::string code_TEMP = code + Chr(10) + main_syntax;
-    std::vector<std::string> items22 = LoopParseFunc(code_TEMP, "\n", "\r");
-    for (size_t A_Index22 = 0; A_Index22 < items22.size(); A_Index22++) {
-        std::string A_LoopField22 = items22[A_Index22 - 0];
-        if (SubStr(Trim(A_LoopField22), 1, 5) == "call " || SubStr(Trim(A_LoopField22), 1, 4) == "jmp ") {
-            HTVM_Append(allFuncCALLS, Trim(StringTrimLeft(Trim(A_LoopField22), 4)));
+    std::vector<std::string> items25 = LoopParseFunc(code_TEMP, "\n", "\r");
+    for (size_t A_Index25 = 0; A_Index25 < items25.size(); A_Index25++) {
+        std::string A_LoopField25 = items25[A_Index25 - 0];
+        if (SubStr(Trim(A_LoopField25), 1, 5) == "call " || SubStr(Trim(A_LoopField25), 1, 4) == "jmp ") {
+            HTVM_Append(allFuncCALLS, Trim(StringTrimLeft(Trim(A_LoopField25), 4)));
         }
     }
     std::string HTLL_Libs_x86_new = Chr(10);
@@ -2220,25 +2268,25 @@ std::string compiler(std::string code) {
     //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    std::vector<std::string> items23 = LoopParseFunc(HTLL_Libs_x86, "\n", "\r");
-    for (size_t A_Index23 = 0; A_Index23 < items23.size(); A_Index23++) {
-        std::string A_LoopField23 = items23[A_Index23 - 0];
-        if (InStr(A_LoopField23, "$$$$") == false && InStr(A_LoopField23, "%%%%") == false && temp_in_funcName == 1 && canWeGetFunc == 1) {
-            HTLL_Libs_x86_new += A_LoopField23 + Chr(10);
+    std::vector<std::string> items26 = LoopParseFunc(HTLL_Libs_x86, "\n", "\r");
+    for (size_t A_Index26 = 0; A_Index26 < items26.size(); A_Index26++) {
+        std::string A_LoopField26 = items26[A_Index26 - 0];
+        if (InStr(A_LoopField26, "$$$$") == false && InStr(A_LoopField26, "%%%%") == false && temp_in_funcName == 1 && canWeGetFunc == 1) {
+            HTLL_Libs_x86_new += A_LoopField26 + Chr(10);
         }
-        if (InStr(A_LoopField23, "$$$$")) {
-            temp_funcName = StringTrimLeft(StringTrimRight(Trim(A_LoopField23), 4), 4);
+        if (InStr(A_LoopField26, "$$$$")) {
+            temp_funcName = StringTrimLeft(StringTrimRight(Trim(A_LoopField26), 4), 4);
             temp_in_funcName = 1;
             canWeGetFunc = 0;
-            for (int A_Index24 = 0; A_Index24 < HTVM_Size(allFuncCALLS); A_Index24++) {
-                if (temp_funcName == allFuncCALLS[A_Index24]) {
+            for (int A_Index27 = 0; A_Index27 < HTVM_Size(allFuncCALLS); A_Index27++) {
+                if (temp_funcName == allFuncCALLS[A_Index27]) {
                     canWeGetFunc = 1;
                     HTVM_Append(allFuncCALLS_alredy, temp_funcName);
                     break;
                 }
             }
         }
-        else if (InStr(A_LoopField23, "%%%%")) {
+        else if (InStr(A_LoopField26, "%%%%")) {
             temp_in_funcName = 0;
         }
     }
@@ -2248,14 +2296,14 @@ std::string compiler(std::string code) {
     allFuncCALLS = {};
     int anotherVar_INT_HELP_BUILD_IN_FUNCS_INT = 0;
     std::string ALoopField = "";
-    std::vector<std::string> items25 = LoopParseFunc(HTLL_Libs_x86_new, "\n", "\r");
-    for (size_t A_Index25 = 0; A_Index25 < items25.size(); A_Index25++) {
-        std::string A_LoopField25 = items25[A_Index25 - 0];
-        ALoopField = A_LoopField25;
-        if (SubStr(Trim(A_LoopField25), 1, 5) == "call " || SubStr(Trim(A_LoopField25), 1, 4) == "jmp ") {
+    std::vector<std::string> items28 = LoopParseFunc(HTLL_Libs_x86_new, "\n", "\r");
+    for (size_t A_Index28 = 0; A_Index28 < items28.size(); A_Index28++) {
+        std::string A_LoopField28 = items28[A_Index28 - 0];
+        ALoopField = A_LoopField28;
+        if (SubStr(Trim(A_LoopField28), 1, 5) == "call " || SubStr(Trim(A_LoopField28), 1, 4) == "jmp ") {
             anotherVar_INT_HELP_BUILD_IN_FUNCS_INT = 1;
-            for (int A_Index26 = 0; A_Index26 < HTVM_Size(allFuncCALLS_alredy); A_Index26++) {
-                if (allFuncCALLS_alredy[A_Index26] == Trim(StringTrimLeft(Trim(ALoopField), 4))) {
+            for (int A_Index29 = 0; A_Index29 < HTVM_Size(allFuncCALLS_alredy); A_Index29++) {
+                if (allFuncCALLS_alredy[A_Index29] == Trim(StringTrimLeft(Trim(ALoopField), 4))) {
                     anotherVar_INT_HELP_BUILD_IN_FUNCS_INT = 0;
                 }
             }
@@ -2270,24 +2318,24 @@ std::string compiler(std::string code) {
     //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    std::vector<std::string> items27 = LoopParseFunc(HTLL_Libs_x86, "\n", "\r");
-    for (size_t A_Index27 = 0; A_Index27 < items27.size(); A_Index27++) {
-        std::string A_LoopField27 = items27[A_Index27 - 0];
-        if (InStr(A_LoopField27, "$$$$") == false && InStr(A_LoopField27, "%%%%") == false && temp_in_funcName == 1 && canWeGetFunc == 1) {
-            HTLL_Libs_x86_new += A_LoopField27 + Chr(10);
+    std::vector<std::string> items30 = LoopParseFunc(HTLL_Libs_x86, "\n", "\r");
+    for (size_t A_Index30 = 0; A_Index30 < items30.size(); A_Index30++) {
+        std::string A_LoopField30 = items30[A_Index30 - 0];
+        if (InStr(A_LoopField30, "$$$$") == false && InStr(A_LoopField30, "%%%%") == false && temp_in_funcName == 1 && canWeGetFunc == 1) {
+            HTLL_Libs_x86_new += A_LoopField30 + Chr(10);
         }
-        if (InStr(A_LoopField27, "$$$$")) {
-            temp_funcName = StringTrimLeft(StringTrimRight(Trim(A_LoopField27), 4), 4);
+        if (InStr(A_LoopField30, "$$$$")) {
+            temp_funcName = StringTrimLeft(StringTrimRight(Trim(A_LoopField30), 4), 4);
             temp_in_funcName = 1;
             canWeGetFunc = 0;
-            for (int A_Index28 = 0; A_Index28 < HTVM_Size(allFuncCALLS); A_Index28++) {
-                if (temp_funcName == allFuncCALLS[A_Index28]) {
+            for (int A_Index31 = 0; A_Index31 < HTVM_Size(allFuncCALLS); A_Index31++) {
+                if (temp_funcName == allFuncCALLS[A_Index31]) {
                     canWeGetFunc = 1;
                     break;
                 }
             }
         }
-        else if (InStr(A_LoopField27, "%%%%")) {
+        else if (InStr(A_LoopField30, "%%%%")) {
             temp_in_funcName = 0;
         }
     }
@@ -2340,11 +2388,11 @@ std::string compiler(std::string code) {
         codeOUT = fasm_header + upCode + out + downCode;
     }
     //;;;;;;;;;;;;;;;;;;;;;;;;;
-    for (int A_Index29 = 0; A_Index29 < theIdNumOfThe34; A_Index29++) {
-        if (theIdNumOfThe34 == A_Index29 + 1) {
-            codeOUT = StrReplace(codeOUT, "VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFC" + Chr(65) + Chr(65) + STR(A_Index29 + 1) + Chr(65) + Chr(65), StrReplace(theIdNumOfThe34theVar[A_Index29 + 1], keyWordEscpaeChar, "\\") + Chr(34));
+    for (int A_Index32 = 0; A_Index32 < theIdNumOfThe34; A_Index32++) {
+        if (theIdNumOfThe34 == A_Index32 + 1) {
+            codeOUT = StrReplace(codeOUT, "VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFC" + Chr(65) + Chr(65) + STR(A_Index32 + 1) + Chr(65) + Chr(65), StrReplace(theIdNumOfThe34theVar[A_Index32 + 1], keyWordEscpaeChar, "\\") + Chr(34));
         } else {
-            codeOUT = StrReplace(codeOUT, "VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFC" + Chr(65) + Chr(65) + STR(A_Index29 + 1) + Chr(65) + Chr(65), StrReplace(theIdNumOfThe34theVar[A_Index29 + 1], keyWordEscpaeChar, "\\"));
+            codeOUT = StrReplace(codeOUT, "VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFC" + Chr(65) + Chr(65) + STR(A_Index32 + 1) + Chr(65) + Chr(65), StrReplace(theIdNumOfThe34theVar[A_Index32 + 1], keyWordEscpaeChar, "\\"));
         }
     }
     codeOUT = StrReplace(codeOUT, " [rax]", " rax");
@@ -2372,73 +2420,73 @@ std::string compiler(std::string code) {
     int is_22_optimize = 0;
     int is_in_under = 0;
     std::string allInOne_temp = "";
-    std::vector<std::string> items30 = LoopParseFunc(codeOUT, "\n", "\r");
-    for (size_t A_Index30 = 0; A_Index30 < items30.size(); A_Index30++) {
-        std::string A_LoopField30 = items30[A_Index30 - 0];
-        if (SubStr(Trim(A_LoopField30), 1, 2) != "; ") {
-            allInOne_temp += Trim(A_LoopField30) + Chr(10);
+    std::vector<std::string> items33 = LoopParseFunc(codeOUT, "\n", "\r");
+    for (size_t A_Index33 = 0; A_Index33 < items33.size(); A_Index33++) {
+        std::string A_LoopField33 = items33[A_Index33 - 0];
+        if (SubStr(Trim(A_LoopField33), 1, 2) != "; ") {
+            allInOne_temp += Trim(A_LoopField33) + Chr(10);
             // Ignore definitions so they don't count as usage
-            if (InStr(A_LoopField30, " db ") == 0 && InStr(A_LoopField30, " rb ") == 0 && InStr(A_LoopField30, " rq ") == 0 && InStr(A_LoopField30, " dq ") == 0 && InStr(A_LoopField30, " = ") == 0) {
+            if (InStr(A_LoopField33, " db ") == 0 && InStr(A_LoopField33, " rb ") == 0 && InStr(A_LoopField33, " rq ") == 0 && InStr(A_LoopField33, " dq ") == 0 && InStr(A_LoopField33, " = ") == 0) {
                 // CHANGED ALL "else if" TO "if" TO PREVENT OVERLAPPING REGEX BUGS
-                if (RegExMatch(A_LoopField30, "\\bDynamicArray.pointer\\b")) {
+                if (RegExMatch(A_LoopField33, "\\bDynamicArray.pointer\\b")) {
                     is_1_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\bDynamicArray.size\\b")) {
+                if (RegExMatch(A_LoopField33, "\\bDynamicArray.size\\b")) {
                     is_2_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\bDynamicArray.capacity\\b")) {
+                if (RegExMatch(A_LoopField33, "\\bDynamicArray.capacity\\b")) {
                     is_3_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\bsizeof.DynamicArray\\b")) {
+                if (RegExMatch(A_LoopField33, "\\bsizeof.DynamicArray\\b")) {
                     is_4_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\bSCALE" + Chr(95) + "FACTOR\\b")) {
+                if (RegExMatch(A_LoopField33, "\\bSCALE" + Chr(95) + "FACTOR\\b")) {
                     is_5_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\bINITIAL" + Chr(95) + "CAPACITY\\b")) {
+                if (RegExMatch(A_LoopField33, "\\bINITIAL" + Chr(95) + "CAPACITY\\b")) {
                     is_6_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\bprint" + Chr(95) + "buffer\\b")) {
+                if (RegExMatch(A_LoopField33, "\\bprint" + Chr(95) + "buffer\\b")) {
                     is_7_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\bdot\\b")) {
+                if (RegExMatch(A_LoopField33, "\\bdot\\b")) {
                     is_8_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\bminus" + Chr(95) + "sign\\b")) {
+                if (RegExMatch(A_LoopField33, "\\bminus" + Chr(95) + "sign\\b")) {
                     is_9_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\b" + Chr(110) + Chr(108) + "\\b")) {
+                if (RegExMatch(A_LoopField33, "\\b" + Chr(110) + Chr(108) + "\\b")) {
                     is_10_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\binput" + Chr(95) + "buffer\\b")) {
+                if (RegExMatch(A_LoopField33, "\\binput" + Chr(95) + "buffer\\b")) {
                     is_11_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\bfile" + Chr(95) + "read" + Chr(95) + "buffer\\b")) {
+                if (RegExMatch(A_LoopField33, "\\bfile" + Chr(95) + "read" + Chr(95) + "buffer\\b")) {
                     is_12_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\binput" + Chr(95) + "len\\b")) {
+                if (RegExMatch(A_LoopField33, "\\binput" + Chr(95) + "len\\b")) {
                     is_13_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\bfilename" + Chr(95) + "ptr" + Chr(95) + "size\\b")) {
+                if (RegExMatch(A_LoopField33, "\\bfilename" + Chr(95) + "ptr" + Chr(95) + "size\\b")) {
                     is_14_optimize = 1;
                 }
                 // FIXED REGEX FOR SOURCE_PTR (is_15)
-                if (RegExMatch(A_LoopField30, "\\bsource" + Chr(95) + "ptr\\b")) {
+                if (RegExMatch(A_LoopField33, "\\bsource" + Chr(95) + "ptr\\b")) {
                     is_15_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\bsource" + Chr(95) + "ptr" + Chr(95) + "size\\b")) {
+                if (RegExMatch(A_LoopField33, "\\bsource" + Chr(95) + "ptr" + Chr(95) + "size\\b")) {
                     is_16_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\bargs" + Chr(95) + "array\\b")) {
+                if (RegExMatch(A_LoopField33, "\\bargs" + Chr(95) + "array\\b")) {
                     is_17_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\bfilename" + Chr(95) + "ptr\\b")) {
+                if (RegExMatch(A_LoopField33, "\\bfilename" + Chr(95) + "ptr\\b")) {
                     is_18_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\basm" + Chr(95) + "code" + Chr(95) + "ptr\\b")) {
+                if (RegExMatch(A_LoopField33, "\\basm" + Chr(95) + "code" + Chr(95) + "ptr\\b")) {
                     is_19_optimize = 1;
                 }
-                if (RegExMatch(A_LoopField30, "\\bprint" + Chr(95) + "buffer" + Chr(95) + "n\\b")) {
+                if (RegExMatch(A_LoopField33, "\\bprint" + Chr(95) + "buffer" + Chr(95) + "n\\b")) {
                     is_20_optimize = 1;
                 }
             }
@@ -2447,72 +2495,72 @@ std::string compiler(std::string code) {
     codeOUT = Trim(allInOne_temp);
     allInOne_temp = "";
     int aredy_int = 0;
-    std::vector<std::string> items31 = LoopParseFunc(codeOUT, "\n", "\r");
-    for (size_t A_Index31 = 0; A_Index31 < items31.size(); A_Index31++) {
-        std::string A_LoopField31 = items31[A_Index31 - 0];
+    std::vector<std::string> items34 = LoopParseFunc(codeOUT, "\n", "\r");
+    for (size_t A_Index34 = 0; A_Index34 < items34.size(); A_Index34++) {
+        std::string A_LoopField34 = items34[A_Index34 - 0];
         aredy_int = 0;
-        if (Trim(A_LoopField31) == "DynamicArray.pointer  = 0" && is_1_optimize == 0) {
+        if (Trim(A_LoopField34) == "DynamicArray.pointer  = 0" && is_1_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "DynamicArray.size     = 8" && is_2_optimize == 0) {
+        else if (Trim(A_LoopField34) == "DynamicArray.size     = 8" && is_2_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "DynamicArray.capacity = 16" && is_3_optimize == 0) {
+        else if (Trim(A_LoopField34) == "DynamicArray.capacity = 16" && is_3_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "sizeof.DynamicArray   = 24" && is_4_optimize == 0) {
+        else if (Trim(A_LoopField34) == "sizeof.DynamicArray   = 24" && is_4_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "SCALE_FACTOR   dq 1000000" && is_5_optimize == 0) {
+        else if (Trim(A_LoopField34) == "SCALE_FACTOR   dq 1000000" && is_5_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "INITIAL_CAPACITY = 2" && is_6_optimize == 0) {
+        else if (Trim(A_LoopField34) == "INITIAL_CAPACITY = 2" && is_6_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "print_buffer   rb 21" && is_7_optimize == 0) {
+        else if (Trim(A_LoopField34) == "print_buffer   rb 21" && is_7_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "dot            db " + Chr(39) + "." + Chr(39) + "" && is_8_optimize == 0) {
+        else if (Trim(A_LoopField34) == "dot            db " + Chr(39) + "." + Chr(39) + "" && is_8_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "minus_sign     db " + Chr(39) + Chr(45) + Chr(39) && is_9_optimize == 0) {
+        else if (Trim(A_LoopField34) == "minus_sign     db " + Chr(39) + Chr(45) + Chr(39) && is_9_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == Chr(110) + Chr(108) + "   db 10" && is_10_optimize == 0) {
+        else if (Trim(A_LoopField34) == Chr(110) + Chr(108) + "   db 10" && is_10_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "input_buffer rb 256" && is_11_optimize == 0) {
+        else if (Trim(A_LoopField34) == "input_buffer rb 256" && is_11_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "file_read_buffer rb 4096" && is_12_optimize == 0) {
+        else if (Trim(A_LoopField34) == "file_read_buffer rb 4096" && is_12_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "input_len    rq 1" && is_13_optimize == 0) {
+        else if (Trim(A_LoopField34) == "input_len    rq 1" && is_13_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "filename_ptr_size  rq 1" && is_14_optimize == 0) {
+        else if (Trim(A_LoopField34) == "filename_ptr_size  rq 1" && is_14_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "source_ptr      rq 1" && is_15_optimize == 0) {
+        else if (Trim(A_LoopField34) == "source_ptr      rq 1" && is_15_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "source_ptr_size rq 1" && is_16_optimize == 0) {
+        else if (Trim(A_LoopField34) == "source_ptr_size rq 1" && is_16_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "args_array rq 3" && is_17_optimize == 0) {
+        else if (Trim(A_LoopField34) == "args_array rq 3" && is_17_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "filename_ptr      rq 1" && is_18_optimize == 0) {
+        else if (Trim(A_LoopField34) == "filename_ptr      rq 1" && is_18_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "asm_code_ptr    rq 1" && is_19_optimize == 0) {
+        else if (Trim(A_LoopField34) == "asm_code_ptr    rq 1" && is_19_optimize == 0) {
             aredy_int = 1;
         }
-        else if (Trim(A_LoopField31) == "print_buffer_n rb 20" && is_20_optimize == 0) {
+        else if (Trim(A_LoopField34) == "print_buffer_n rb 20" && is_20_optimize == 0) {
             aredy_int = 1;
         }
         if (aredy_int == 0) {
-            allInOne_temp += A_LoopField31 + Chr(10);
+            allInOne_temp += A_LoopField34 + Chr(10);
         }
     }
     codeOUT = Trim(allInOne_temp);
@@ -2524,11 +2572,11 @@ int main(int argc, char* argv[]) {
     if (params == "") {
         print("Usage:" + Chr(10) + "./HTLL your_file.htll");
     } else {
-        std::vector<std::string> items32 = LoopParseFunc(params, "\n", "\r");
-        for (size_t A_Index32 = 0; A_Index32 < items32.size(); A_Index32++) {
-            std::string A_LoopField32 = items32[A_Index32 - 0];
-            paramsTemp = Trim(A_LoopField32);
-            if (A_Index32 == 0) {
+        std::vector<std::string> items35 = LoopParseFunc(params, "\n", "\r");
+        for (size_t A_Index35 = 0; A_Index35 < items35.size(); A_Index35++) {
+            std::string A_LoopField35 = items35[A_Index35 - 0];
+            paramsTemp = Trim(A_LoopField35);
+            if (A_Index35 == 0) {
                 FileDelete("finalASM_HTLL_ASM.s");
                 FileAppend(compiler(FileRead(paramsTemp)), "finalASM_HTLL_ASM.s");
                 print("Compilation finished: finalASM_HTLL_ASM.s generated.");
