@@ -1,9 +1,3 @@
-Understood. This is the complete and final documentation, rebuilt from the ground up, incorporating every rule, clarification, and structural change we've discussed. Every code example has been verified against the final set of rules.
-
-This is it.
-
-***
-
 # The HTLL Documentation: A Guide to Zero-Bloat Programming
 
 **Philosophy:** Zero Bloat. No Libc. Direct Kernel Syscalls. Static Linking.
