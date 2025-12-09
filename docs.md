@@ -226,20 +226,38 @@ print("Loop finished.")
 
 ### 9. Functions: Scope, Parameters, and Variables
 
-#### Function Parameters: The Only Local Scope
-Function parameters are the **only** exception to the "everything is global" rule. They are pushed onto the stack when the function is called and exist only for the duration of that function's execution.
+#### Function Parameters: The Uniqueness Rule
+Function parameters are the **only** exception to the "everything is global" rule. They are pushed onto the stack when the function is called.
 
+**CRITICAL WARNING:** You **cannot** give a parameter the same name as a global variable.
+Because the compiler is designed for maximum minimalism, it does not "unwind" scopes. If you name a parameter `x` and you already have a global `x`, the global `x` will become inaccessible even after the function finishes.
+
+**Always use distinct names for your parameters.**
+
+**The Wrong Way (Naming Collision):**
 ```ahk
 int x := 10
 
-func my_func(x) ; This 'x' is a local parameter, shadowing the global 'x'
-    x += 5     ; This modifies the local 'x'
-    print(x)   ; Prints the modified local value
+; BAD: 'x' is already a global. The compiler will get confused.
+func my_func(x) 
+    x += 5
+    print(x)
+funcend
+```
+
+**The Correct Way (Distinct Names):**
+```ahk
+int x := 10
+
+; GOOD: 'val' is unique. No collision with global 'x'.
+func my_func(val) 
+    val += 5     ; This modifies the local stack value
+    print(val)   ; Prints 25
 funcend
 
 main
-    my_func(20) ; We pass 20. The local 'x' is modified inside.
-    print(x)    ; Prints 10, because the global 'x' was never touched.
+    my_func(20) ; We pass 20.
+    print(x)    ; Prints 10. The global 'x' remains safe and accessible.
 ```
 
 #### Defining Variables Inside Functions: The Anti-Pattern
