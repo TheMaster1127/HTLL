@@ -148,14 +148,14 @@ endloop
 
 **Example 3: Iterating over an array**
 ```ahk
-arr data
-data.add 11
-data.add 22
-data.add 33
+arr data_arr
+data_arr.add 11
+data_arr.add 22
+data_arr.add 33
 
-data.size ; Place size (3) into rax
+data_arr.size ; Place size (3) into rax
 Loop, rax
-    data.index A_Index
+    data_arr.index A_Index
     print(rax)
 endloop
 ```
