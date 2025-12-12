@@ -1,0 +1,584 @@
+
+int rax_fake := 0
+arr my_string
+arr my_string2
+arr InStr_string_test
+int size_out := 0
+; ------------------------------------------
+; ------------------------------------------
+; ------------------------------------------
+arr func_arr
+int countChars_counter := 0
+arr StringTrimLeft_arr_help
+int StrLower_val := 0
+arr SubStr_arr_help
+int i := 0
+
+; Global variables for Trim logic
+int trim_start_idx := 0
+int trim_end_idx := 0
+int trim_char := 0
+int trim_len := 0
+arr trim_buffer
+
+arr InStr_string
+int InStr_string_len := 0
+; ------------------------------------------
+
+func StrLen()
+func_arr.size
+return rax
+funcend
+
+func Chr(num)
+return num
+funcend
+
+func StringTrimRight(count)
+Loop, count
+func_arr.pop
+loopend
+funcend
+
+func countChars(one_char)
+countChars_counter := 0
+func_arr.size
+Loop, rax
+func_arr.index A_Index
+rax_fake := rax
+if (rax_fake = one_char)
+countChars_counter++
+endif
+loopend
+return countChars_counter
+funcend
+
+
+func StringTrimLeft(count)
+StringTrimLeft_arr_help.clear
+func_arr.size
+Loop, rax
+if (A_Index >= count)
+func_arr.index A_Index
+StringTrimLeft_arr_help.add rax
+endif
+loopend
+func_arr.copy StringTrimLeft_arr_help 
+
+funcend
+
+
+func StrLower()
+func_arr.size
+Loop, rax
+    func_arr.index A_Index
+    StrLower_val := rax
+    ; Check if 'A' (65) <= val <= 'Z' (90)
+    if (StrLower_val >= 65)
+        if2 (StrLower_val <= 90)
+            StrLower_val += 32 ; Convert to lowercase
+            func_arr.set A_Index, StrLower_val
+        endif2
+    endif
+loopend
+funcend
+
+
+
+func SubStr(start, len)
+    SubStr_arr_help.clear
+    func_arr.size
+    i := 0
+    Loop, rax
+        i++ ; 1 indexed i need
+        if (i >= start)
+                if2 (i <= len)
+                    func_arr.index A_Index
+                    SubStr_arr_help.add rax
+            endif2
+        endif
+    loopend
+    func_arr.copy SubStr_arr_help
+funcend
+
+
+
+func Trim()
+    ; 1. Find Start Index (Skip leading whitespace)
+    trim_start_idx := 0
+    func_arr.size
+    Loop, rax
+        func_arr.index A_Index
+        trim_char := rax
+        
+        ; Check if whitespace (Space=32, Tab=9, LF=10, CR=13)
+        if (trim_char = 32)
+            trim_start_idx++
+            continue
+        endif
+        if (trim_char = 9)
+            trim_start_idx++
+            continue
+        endif
+        if (trim_char = 10)
+            trim_start_idx++
+            continue
+        endif
+        if (trim_char = 13)
+            trim_start_idx++
+            continue
+        endif
+        
+        ; If we hit a non-whitespace, stop scanning
+        break
+    loopend
+
+    ; 2. Find End Index (Skip trailing whitespace)
+    func_arr.size
+    trim_end_idx := rax
+    trim_end_idx-- ; Convert to 0-based index for scanning backward
+    
+    togo trim_scan_backward
+        if (trim_end_idx < trim_start_idx)
+            goto trim_scan_done ; String is empty or all whitespace
+        endif
+
+        func_arr.index trim_end_idx
+        trim_char := rax
+
+        if (trim_char = 32)
+            trim_end_idx--
+            goto trim_scan_backward
+        endif
+        if (trim_char = 9)
+            trim_end_idx--
+            goto trim_scan_backward
+        endif
+        if (trim_char = 10)
+            trim_end_idx--
+            goto trim_scan_backward
+        endif
+        if (trim_char = 13)
+            trim_end_idx--
+            goto trim_scan_backward
+        endif
+        
+        ; Found non-whitespace
+        goto trim_scan_done
+
+    togo trim_scan_done
+
+    ; 3. Calculate Length and Extract
+    ; Length = (End - Start) + 1
+    trim_len := trim_end_idx
+    trim_len -= trim_start_idx
+    trim_len++
+
+    ; Use manual copy logic (essentially SubStr) to fill trim_buffer
+    trim_buffer.clear
+    
+    if (trim_len > 0)
+        Loop, trim_len
+            ; Calculate source index: start_idx + A_Index
+            int curr_idx := trim_start_idx
+            curr_idx += A_Index
+            
+            func_arr.index curr_idx
+            trim_buffer.add rax
+        loopend
+    endif
+
+    ; 4. Result back to func_arr
+    func_arr.copy trim_buffer
+funcend
+
+
+
+
+int Is2arr_equal_size1 := 0
+int Is2arr_equal_temp := 0
+int Is2arr_equal_count := 0
+
+
+arr Is2arr_equal_ARG1
+arr Is2arr_equal_ARG2
+func Is2arr_equal()
+
+Is2arr_equal_ARG1.size 
+Is2arr_equal_size1 := rax
+Is2arr_equal_ARG2.size 
+
+rax_fake := rax
+if (Is2arr_equal_size1 != rax_fake)
+return 0
+endif
+
+rax_fake := rax
+if (Is2arr_equal_size1 = rax_fake)
+if (Is2arr_equal_size1 = 0)
+return 1
+endif2
+endif
+
+Is2arr_equal_temp := 0
+Is2arr_equal_count := 0
+
+Loop, Is2arr_equal_size1
+Is2arr_equal_ARG1.index A_Index
+Is2arr_equal_temp := rax
+Is2arr_equal_ARG2.index A_Index
+rax_fake := rax
+if (Is2arr_equal_temp = rax_fake)
+Is2arr_equal_count++
+goto Is2arr_equal_else_simulate
+endif
+rax_fake := rax
+if (Is2arr_equal_temp != rax_fake)
+return 0
+endif
+togo Is2arr_equal_else_simulate
+
+endloop
+
+if (Is2arr_equal_count = Is2arr_equal_size1)
+return 1
+endif
+
+return 0
+funcend
+
+
+arr InStr_temp
+arr InStr_ARG1
+int InStr_out_num := 0
+func InStr()
+
+
+
+    InStr_temp.clear
+    InStr_string_len := 0    
+    InStr_ARG1.copy func_arr
+    ; InStr_string is the needle in the hay InStr_ARG1
+    InStr_string.size
+    InStr_string_len := rax
+    func_arr.size
+    Loop, rax
+        InStr_temp.clear
+        
+
+if (A_Index > 0)        
+
+
+func_arr.copy InStr_ARG1
+StringTrimLeft(1)
+InStr_ARG1.copy func_arr
+InStr_ARG1.size
+rax_fake := rax
+if2 (rax_fake <= InStr_string_len)
+pop r13
+pop r12
+return 0
+endif2
+
+    func_arr.copy InStr_ARG1
+    SubStr(1, InStr_string_len)
+    InStr_temp.copy func_arr
+
+Is2arr_equal_ARG1.copy InStr_temp
+Is2arr_equal_ARG2.copy InStr_string
+Is2arr_equal()
+
+rax_fake := rax
+if2 (rax_fake = 1)
+InStr_out_num := A_Index
+pop r13
+pop r12
+return InStr_out_num
+endif2
+
+
+    goto else_InStr_func
+endif
+if (A_Index = 0)        
+    func_arr.copy InStr_ARG1
+    SubStr(1, InStr_string_len)
+    InStr_temp.copy func_arr
+Is2arr_equal_ARG1.copy InStr_temp
+Is2arr_equal_ARG2.copy InStr_string
+Is2arr_equal()
+rax_fake := rax
+if2 (rax_fake = 1)
+InStr_out_num := A_Index
+pop r13
+pop r12
+return InStr_out_num
+endif2
+
+endif
+togo else_InStr_func
+
+
+
+     
+    endloop
+    
+
+    
+    
+    return 0 
+funcend
+
+
+
+; --- Globals for the STR function ---
+int STR_main_num := 0
+arr STR_temp_buffer ; For holding the reversed digits
+
+int quotient_counter := 0
+int remainder_val := 0
+
+func INT_To_STR()
+    ; Handle the edge case of zero
+    if (STR_main_num = 0)
+        func_arr.clear
+        func_arr.add 48 ; Add ASCII for '0'
+        return
+    endif
+
+    STR_temp_buffer.clear
+    remainder_val := STR_main_num
+
+    ; --- PHASE 1: Extraction Loop ---
+    togo str_extraction_loop
+        ; This is our "Mod/Div Machine"
+        quotient_counter := 0
+        togo mod_div_machine_loop
+            if (remainder_val < 10)
+                goto mod_div_machine_done
+            endif
+            remainder_val -= 10
+            quotient_counter++
+            goto mod_div_machine_loop
+        togo mod_div_machine_done
+
+        ; Now, remainder_val is the digit (0-9)
+        ; and quotient_counter is the new number for the next iteration.
+
+        remainder_val += 48 ; Convert digit to ASCII
+        STR_temp_buffer.add remainder_val
+        
+        remainder_val := quotient_counter
+        if (remainder_val > 0)
+            goto str_extraction_loop
+        endif
+
+    ; --- PHASE 2: Reversal Loop ---
+    func_arr.clear
+    STR_temp_buffer.size
+    Loop, rax
+        ; We need to index backwards. The last item is at index (size - 1).
+        ; So, the index is (size - 1) - A_Index.
+        STR_temp_buffer.size
+        int current_idx := rax
+        current_idx--
+        current_idx -= A_Index
+        
+        STR_temp_buffer.index current_idx
+        func_arr.add rax
+    loopend
+funcend
+
+
+arr StrSplit_haystack
+arr StrSplit_needle
+arr StrSplit_out_buffer
+int StrSplit_int1 := 0
+int StrSplit_int2 := 0
+int StrSplit_int3 := 0
+int StrSplit_int4 := 0
+func StrSplit(num)
+    StrSplit_needle.size
+    StrSplit_int1 := rax
+    
+
+    StrSplit_haystack.size
+    StrSplit_int3 := rax
+    
+        
+    if (num = 1)
+
+    func_arr.copy StrSplit_haystack
+    InStr_string.copy StrSplit_needle
+    InStr()
+    StrSplit_int2 := rax
+    
+    func_arr.copy StrSplit_haystack
+    SubStr(1, StrSplit_int2)
+    StrSplit_out_buffer.copy func_arr
+    
+    endif
+    
+    if (num = 2)
+    
+    
+    func_arr.copy StrSplit_haystack
+    InStr_string.copy StrSplit_needle
+    InStr()
+    StrSplit_int2 := rax
+    StrSplit_int2 += StrSplit_int1
+    StrSplit_int2++
+    func_arr.copy StrSplit_haystack
+    SubStr(StrSplit_int2, StrSplit_int3)
+    StrSplit_out_buffer.copy func_arr
+    
+    
+    
+    endif
+    if (num > 2)
+    print("StrSplit CANT HAVE MORE THEN 2 PLS FIX IT!!!")
+    print("StrSplit CANT HAVE MORE THEN 2 PLS FIX IT!!!")
+    print("StrSplit CANT HAVE MORE THEN 2 PLS FIX IT!!!")
+    endif
+
+    
+    
+
+    
+
+funcend
+
+; ------------------------------------------
+; ------------------------------------------
+; ------------------------------------------
+
+main
+
+arradd my_string Hello Man
+my_string2.add 10
+my_string2.add 10
+my_string2.add 65
+my_string2.add 66
+my_string2.add 67
+my_string2.add 32
+my_string2.add 32
+my_string2.add 32
+
+func_arr.copy my_string
+StrLen()
+size_out := rax
+
+print("The Size is:")
+print(size_out)
+
+print("-----------------------------------------")
+Chr(65)
+print_rax_as_char
+print("")
+print("-----------------------------------------")
+
+func_arr.copy my_string
+StringTrimRight(2)
+my_string.copy func_arr
+my_string.size
+Loop, rax
+my_string.index A_Index
+print_rax_as_char
+loopend
+print("")
+print("-----------------------------------------")
+func_arr.copy my_string
+countChars('l')
+print(rax)
+print("-----------------------------------------")
+
+func_arr.copy my_string
+StringTrimLeft(2)
+my_string.copy func_arr
+my_string.size
+Loop, rax
+my_string.index A_Index
+print_rax_as_char
+loopend
+print("")
+
+print("-----------------------------------------")
+func_arr.copy my_string
+StrLower()
+my_string.copy func_arr
+my_string.size
+Loop, rax
+my_string.index A_Index
+print_rax_as_char
+loopend
+print("")
+print("-----------------------------------------")
+func_arr.copy my_string
+SubStr(3, 5)
+my_string.copy func_arr
+my_string.size
+Loop, rax
+my_string.index A_Index
+print_rax_as_char
+loopend
+print("")
+print("-----------------------------------------")
+func_arr.copy my_string2
+Trim()
+my_string2.copy func_arr
+my_string2.size
+Loop, rax
+my_string2.index A_Index
+print_rax_as_char
+loopend
+print("")
+print("-----------------------------------------")
+
+arradd my_string2 Hello man234 how are doing man
+arradd InStr_string_test how are
+
+func_arr.copy my_string2
+InStr_string.copy InStr_string_test
+InStr()
+print(rax)
+print("")
+print("-----------------------------------------")
+
+
+    STR_main_num := 5000
+    INT_To_STR() ; func_arr now contains ['1', '9', '9', '1']
+    ; Print the result to prove it works
+    func_arr.size
+    Loop, rax
+        func_arr.index A_Index
+        print_rax_as_char
+    loopend
+    print("")
+print("-----------------------------------------")
+
+
+
+    arr StrSplit_my_data
+    arr StrSplit_my_delimiter
+    arr StrSplit_out
+
+    arradd StrSplit_my_data if (var1 = 4)
+    arradd StrSplit_my_delimiter  =
+    StrSplit_my_delimiter.add 32
+
+    StrSplit_haystack.copy StrSplit_my_data
+    StrSplit_needle.copy StrSplit_my_delimiter
+    StrSplit(1)
+StrSplit_out.copy StrSplit_out_buffer
+
+    StrSplit_out.size
+    Loop, rax
+        StrSplit_out.index A_Index
+        print_rax_as_char
+    loopend
+    print("")
+print("-----------------------------------------")
+
+
+; ------------------------------------------
+; print a new line at the end just in case
+print("")

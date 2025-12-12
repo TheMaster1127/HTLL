@@ -1096,6 +1096,7 @@ std::string compiler(std::string code) {
             loopCount9++;
         }
         else if (SubStr(StrLower(A_LoopField18), 1, 3) == "if " || SubStr(StrLower(A_LoopField18), 1, 4) == "if1 ") {
+            isNum = 0;
             str1 = Trim(StringTrimLeft(A_LoopField18, 3));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
@@ -1198,11 +1199,13 @@ std::string compiler(std::string code) {
             ifCount1++;
         }
         else if (SubStr(StrLower(A_LoopField18), 1, 4) == "if2 ") {
+            isNum = 0;
             str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
                 str2 = Trim(StrSplit(str1, " = ", 1));
+                str3 = Trim(StrSplit(str1, " = ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1214,6 +1217,7 @@ std::string compiler(std::string code) {
             }
             else if (InStr(str1, " != ")) {
                 str2 = Trim(StrSplit(str1, " != ", 1));
+                str3 = Trim(StrSplit(str1, " != ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1298,11 +1302,13 @@ std::string compiler(std::string code) {
             ifCount2++;
         }
         else if (SubStr(StrLower(A_LoopField18), 1, 4) == "if3 ") {
+            isNum = 0;
             str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
                 str2 = Trim(StrSplit(str1, " = ", 1));
+                str3 = Trim(StrSplit(str1, " = ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1314,6 +1320,7 @@ std::string compiler(std::string code) {
             }
             else if (InStr(str1, " != ")) {
                 str2 = Trim(StrSplit(str1, " != ", 1));
+                str3 = Trim(StrSplit(str1, " != ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1398,11 +1405,13 @@ std::string compiler(std::string code) {
             ifCount3++;
         }
         else if (SubStr(StrLower(A_LoopField18), 1, 4) == "if4 ") {
+            isNum = 0;
             str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
                 str2 = Trim(StrSplit(str1, " = ", 1));
+                str3 = Trim(StrSplit(str1, " = ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1414,6 +1423,7 @@ std::string compiler(std::string code) {
             }
             else if (InStr(str1, " != ")) {
                 str2 = Trim(StrSplit(str1, " != ", 1));
+                str3 = Trim(StrSplit(str1, " != ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1498,11 +1508,13 @@ std::string compiler(std::string code) {
             ifCount4++;
         }
         else if (SubStr(StrLower(A_LoopField18), 1, 4) == "if5 ") {
+            isNum = 0;
             str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
                 str2 = Trim(StrSplit(str1, " = ", 1));
+                str3 = Trim(StrSplit(str1, " = ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1514,6 +1526,7 @@ std::string compiler(std::string code) {
             }
             else if (InStr(str1, " != ")) {
                 str2 = Trim(StrSplit(str1, " != ", 1));
+                str3 = Trim(StrSplit(str1, " != ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1598,11 +1611,13 @@ std::string compiler(std::string code) {
             ifCount5++;
         }
         else if (SubStr(StrLower(A_LoopField18), 1, 4) == "if6 ") {
+            isNum = 0;
             str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
                 str2 = Trim(StrSplit(str1, " = ", 1));
+                str3 = Trim(StrSplit(str1, " = ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1614,6 +1629,7 @@ std::string compiler(std::string code) {
             }
             else if (InStr(str1, " != ")) {
                 str2 = Trim(StrSplit(str1, " != ", 1));
+                str3 = Trim(StrSplit(str1, " != ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1698,11 +1714,13 @@ std::string compiler(std::string code) {
             ifCount6++;
         }
         else if (SubStr(StrLower(A_LoopField18), 1, 4) == "if7 ") {
+            isNum = 0;
             str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
                 str2 = Trim(StrSplit(str1, " = ", 1));
+                str3 = Trim(StrSplit(str1, " = ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1714,6 +1732,7 @@ std::string compiler(std::string code) {
             }
             else if (InStr(str1, " != ")) {
                 str2 = Trim(StrSplit(str1, " != ", 1));
+                str3 = Trim(StrSplit(str1, " != ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1798,11 +1817,13 @@ std::string compiler(std::string code) {
             ifCount7++;
         }
         else if (SubStr(StrLower(A_LoopField18), 1, 4) == "if8 ") {
+            isNum = 0;
             str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
                 str2 = Trim(StrSplit(str1, " = ", 1));
+                str3 = Trim(StrSplit(str1, " = ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1814,6 +1835,7 @@ std::string compiler(std::string code) {
             }
             else if (InStr(str1, " != ")) {
                 str2 = Trim(StrSplit(str1, " != ", 1));
+                str3 = Trim(StrSplit(str1, " != ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1898,11 +1920,13 @@ std::string compiler(std::string code) {
             ifCount8++;
         }
         else if (SubStr(StrLower(A_LoopField18), 1, 4) == "if9 ") {
+            isNum = 0;
             str1 = Trim(StringTrimLeft(A_LoopField18, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
                 str2 = Trim(StrSplit(str1, " = ", 1));
+                str3 = Trim(StrSplit(str1, " = ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1914,6 +1938,7 @@ std::string compiler(std::string code) {
             }
             else if (InStr(str1, " != ")) {
                 str2 = Trim(StrSplit(str1, " != ", 1));
+                str3 = Trim(StrSplit(str1, " != ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1925,6 +1950,7 @@ std::string compiler(std::string code) {
             }
             else if (InStr(str1, " > ")) {
                 str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1936,6 +1962,7 @@ std::string compiler(std::string code) {
             }
             else if (InStr(str1, " < ")) {
                 str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1947,6 +1974,7 @@ std::string compiler(std::string code) {
             }
             else if (InStr(str1, " >= ")) {
                 str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
@@ -1958,6 +1986,7 @@ std::string compiler(std::string code) {
             }
             else if (InStr(str1, " <= ")) {
                 str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
                 if (RegExMatch(str3, "^\\d+$")) {
                     isNum = 1;
                 }
