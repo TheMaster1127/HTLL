@@ -6,6 +6,7 @@
 HTLL
 my_program
 output
+HTLL_Lib
 
 # Temporary/test scripts (optional)
 test*.htll
