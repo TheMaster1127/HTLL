@@ -1,0 +1,807 @@
+$$$$is_nint_negative$$$$
+// In: x0 -> ptr to nint, x1 -> ptr to is_negative flag
+// Out: Memory at [x0] becomes positive magnitude, [x1] gets 0 or 1.
+is_nint_negative:
+    stp     x29, x30, [sp, #-16]!
+    mov     x29, sp
+
+    ldr     x2, [x0]            // Load the signed value into x2
+    cmp     x2, #0              // Check its sign
+    b.ge    .is_positive_or_zero
+
+.is_negative:
+    mov     x3, #1              // The flag is 1
+    str     x3, [x1]            // Store the flag
+    neg     x2, x2              // Negate the value to get magnitude
+    str     x2, [x0]            // Store positive magnitude back
+    b       .done_nint
+
+.is_positive_or_zero:
+    str     xzr, [x1]           // Store flag = 0 (using zero register)
+
+.done_nint:
+    ldp     x29, x30, [sp], #16
+    ret
+%%%%is_nint_negative%%%%
+$$$$divide_and_store$$$$
+// In: x0: dividend_int, x1: dividend_dec
+//     x2: divisor_int,  x3: divisor_dec
+//     x4: ptr to result_int, x5: ptr to result_dec
+divide_and_store:
+    stp     x29, x30, [sp, #-32]!
+    stp     x19, x20, [sp, #16]
+    // Callee-saved registers for inputs
+    mov     x19, x0     // dividend_int
+    mov     x20, x1     // dividend_dec
+    mov     x21, x2     // divisor_int
+    mov     x22, x3     // divisor_dec
+    mov     x23, x4     // ptr to result_int
+    mov     x24, x5     // ptr to result_dec
+
+    // Assuming SCALE_FACTOR is a label pointing to a qword
+    ldr     x9, =SCALE_FACTOR
+    ldr     x9, [x9]
+
+    // Step 1: Scale dividend
+    mul     x19, x19, x9
+    add     x19, x19, x20   // x19 = scaled dividend
+
+    // Step 2: Scale divisor
+    mul     x21, x21, x9
+    add     x21, x21, x22   // x21 = scaled divisor
+
+    // Step 3: Main 128-bit equivalent division
+    mul     x12, x19, x9    // x12 = scaled dividend * scale
+    udiv    x12, x12, x21   // x12 = (scaled dividend * scale) / scaled divisor
+
+    // Step 4: De-scale the result
+    udiv    x0, x12, x9     // x0 = final_quotient (integer part)
+    msub    x1, x0, x9, x12 // x1 = final_remainder (decimal part)
+
+    // Step 5: Store results
+    str     x0, [x23]
+    str     x1, [x24]
+
+    ldp     x19, x20, [sp, #16]
+    ldp     x29, x30, [sp], #32
+    ret
+%%%%divide_and_store%%%%
+$$$$print_div$$$$
+// In: x0: integer part, x1: decimal part
+print_div:
+    stp     x29, x30, [sp, #-32]!
+    mov     x29, sp
+    sub     sp, sp, #32             // Buffer space on stack
+    stp     x19, x20, [sp, #16]     // Save callee-saved regs
+
+    mov     x19, x0                 // Save integer part
+    mov     x20, x1                 // Save decimal part
+
+    // --- Print integer part ---
+    add     x9, sp, #19             // x9 = buffer pointer (end)
+    mov     x10, #10                // Divisor
+.int_convert_loop:
+    udiv    x11, x19, x10           // quotient
+    msub    x12, x11, x10, x19      // remainder
+    add     x12, x12, #'0'          // to ASCII
+    strb    w12, [x9], #-1          // store byte, pre-decrement
+    mov     x19, x11                // next dividend is quotient
+    cmp     x19, #0
+    b.ne    .int_convert_loop
+
+    add     x9, x9, #1              // Point to start of number string
+    add     x1, sp, #20             // Calculate length
+    sub     x2, x1, x9
+    mov     x0, #1                  // stdout
+    mov     x1, x9                  // buffer
+    // x2 has length
+    mov     x8, #SYS_WRITE
+    svc     #0
+
+    // --- Print decimal point ---
+    ldr     x1, =HTLL_dot
+    mov     x2, #1
+    mov     x0, #1
+    mov     x8, #SYS_WRITE
+    svc     #0
+
+    // --- Print decimal part ---
+    add     x9, sp, #5              // buffer pointer
+    mov     x10, #10                // divisor
+    mov     x11, #6                 // loop counter for 6 decimal places
+.dec_convert_loop:
+    udiv    x12, x20, x10
+    msub    x13, x12, x10, x20
+    add     x13, x13, #'0'
+    strb    w13, [x9], #-1
+    mov     x20, x12
+    sub     x11, x11, #1
+    cmp     x11, #0
+    b.ne    .dec_convert_loop
+
+    mov     x0, #1
+    mov     x1, sp                  // buffer start
+    mov     x2, #6
+    mov     x8, #SYS_WRITE
+    svc     #0
+
+    // Print newline
+    ldr     x1, =HTLL_nl
+    mov     x2, #1
+    mov     x0, #1
+    mov     x8, #SYS_WRITE
+    svc     #0
+
+    ldp     x19, x20, [sp, #16]
+    add     sp, sp, #32
+    ldp     x29, x30, [sp], #32
+    ret
+%%%%print_div%%%%
+$$$$print_number$$$$
+// In: x0 - positive magnitude, x1 - is_negative flag (0 or 1)
+print_number:
+    stp     x29, x30, [sp, #-32]!
+    mov     x29, sp
+    sub     sp, sp, #32             
+    str     x0, [sp, #16]           // Save number magnitude
+    cmp     x1, #0                  // Check is_negative flag
+    b.eq    .skip_sign_print
+    
+    // Print minus sign if needed... (this part is fine)
+    mov     x0, #1
+    ldr     x1, =HTLL_minus_sign
+    mov     x2, #1
+    mov     x8, #SYS_WRITE
+    svc     #0
+
+.skip_sign_print:
+    ldr     x9, [sp, #16]           // Restore number into x9 (x9 = 9, which is correct)
+    
+    // The flawed 'neg' block is GONE. We proceed directly from here.
+    
+    add     x10, sp, #19            // Buffer ptr
+    mov     x11, #10                // Divisor
+.conversion_loop:
+    udiv    x12, x9, x11            // This now correctly divides 9 by 10
+    msub    x13, x12, x11, x9
+    add     x13, x13, #'0'
+    strb    w13, [x10], #-1
+    mov     x9, x12
+    cmp     x9, #0
+    b.ne    .conversion_loop
+
+    add     x10, x10, #1
+    add     x1, sp, #20
+    sub     x2, x1, x10
+    mov     x0, #1
+    mov     x1, x10
+    mov     x8, #SYS_WRITE
+    svc     #0
+
+    // Print newline
+    mov     x0, #1
+    ldr     x1, =HTLL_nl
+    mov     x2, #1
+    mov     x8, #SYS_WRITE
+    svc     #0
+
+    add     sp, sp, #32
+    ldp     x29, x30, [sp], #32
+    ret
+%%%%print_number%%%%
+$$$$print_str$$$$
+// In: x1 (rsi) -> string, x2 (rdx) -> length
+print_str:
+    stp     x29, x30, [sp, #-16]!
+    mov     x29, sp
+    mov     x0, #1              // stdout
+    // x1 and x2 are passed through
+    mov     x8, #SYS_WRITE
+    svc     #0
+    ldp     x29, x30, [sp], #16
+    ret
+%%%%print_str%%%%
+$$$$input$$$$
+// In: x0 -> buffer, x1 -> ptr to store length
+input:
+    stp     x29, x30, [sp, #-32]!
+    mov     x29, sp
+    stp     x19, x20, [sp, #16]
+
+    mov     x19, x0             // Save buffer ptr
+    mov     x20, x1             // Save length ptr
+
+    // sys_read from stdin
+    mov     x0, #0              // stdin fd
+    mov     x1, x19             // buffer
+    mov     x2, #100            // max length
+    mov     x8, #SYS_READ
+    svc     #0
+    // x0 returns bytes read
+
+    cmp     x0, #1
+    b.le    .read_empty
+
+    // Valid input, length is bytes_read - 1
+    sub     x0, x0, #1
+    b       .store_length
+
+.read_empty:
+    mov     x0, xzr             // Set length to 0
+
+.store_length:
+    str     x0, [x20]           // Store final length
+
+    ldp     x19, x20, [sp, #16]
+    ldp     x29, x30, [sp], #32
+    ret
+%%%%input%%%%
+$$$$array_copy$$$$
+// In: x0 -> dest DynamicArray, x1 -> src DynamicArray
+array_copy:
+    stp     x29, x30, [sp, #-32]!
+    mov     x29, sp
+    stp     x19, x20, [sp, #16]
+    mov     x19, x0             // dest
+    mov     x20, x1             // src
+
+    // Step 1: Free dest's old memory
+    ldr     x0, [x19, #DynamicArray_pointer]
+    cmp     x0, #0
+    b.eq    .copy_skip_munmap
+    ldr     x1, [x19, #DynamicArray_capacity]
+    cmp     x1, #0
+    b.eq    .copy_skip_munmap
+    lsl     x1, x1, #3          // capacity * 8
+    mov     x8, #SYS_MUNMAP
+    svc     #0
+
+.copy_skip_munmap:
+    // Step 2: Set new size and capacity
+    ldr     x9, [x20, #DynamicArray_size]
+    str     x9, [x19, #DynamicArray_size]
+    str     x9, [x19, #DynamicArray_capacity]
+
+    // Step 3: Check if new size is 0
+    cmp     x9, #0
+    b.ne    .copy_alloc
+    
+    // If size 0, set pointer to 0 (PREVENTS DANGLING POINTER)
+    str     xzr, [x19, #DynamicArray_pointer]
+    b       .copy_epilogue
+
+.copy_alloc:
+    // Allocate new memory
+    lsl     x1, x9, #3          // new_size * 8
+    stp     x19, x20, [sp, #-16]! // Save regs
+    mov     x0, #0
+    mov     x2, #PROT_READ_WRITE
+    mov     x3, #MAP_PRIVATE_ANONYMOUS
+    mov     x4, #-1
+    mov     x5, #0
+    mov     x8, #SYS_MMAP
+    svc     #0
+    ldp     x19, x20, [sp], #16 // Restore regs
+    
+    cmp     x0, #0
+    b.lt    .copy_epilogue
+    str     x0, [x19, #DynamicArray_pointer]
+
+    // Step 4: Copy the data
+    ldr     x1, [x20, #DynamicArray_pointer]
+    ldr     x0, [x19, #DynamicArray_pointer]
+    ldr     x2, [x20, #DynamicArray_size]
+
+.copy_loop:
+    cmp     x2, #0
+    b.eq    .copy_epilogue
+    ldr     x9, [x1], #8
+    str     x9, [x0], #8
+    sub     x2, x2, #1
+    b       .copy_loop
+
+.copy_epilogue:
+    ldp     x19, x20, [sp, #16]
+    ldp     x29, x30, [sp], #32
+    ret
+%%%%array_copy%%%%
+$$$$array_clear$$$$
+// In: x0 -> DynamicArray struct
+array_clear:
+    stp     x29, x30, [sp, #-16]!
+    mov     x29, sp
+    str     xzr, [x0, #DynamicArray_size] // Set size to 0
+    ldp     x29, x30, [sp], #16
+    ret
+%%%%array_clear%%%%
+$$$$array_append$$$$
+// In: x0 -> DynamicArray, x1 -> value to append
+array_append:
+    stp     x29, x30, [sp, #-48]!
+    mov     x29, sp
+    stp     x19, x20, [sp, #16]
+    stp     x21, x22, [sp, #32]
+    mov     x19, x0             // array
+    mov     x20, x1             // value
+
+    ldr     x9, [x19, #DynamicArray_size]
+    ldr     x10, [x19, #DynamicArray_capacity]
+    cmp     x9, x10
+    b.lt    .has_space
+
+// --- Resize Logic ---
+.resize:
+    ldr     x21, [x19, #DynamicArray_pointer]   // old_ptr
+    mov     x22, x10                            // old_cap
+    
+    cmp     x22, #0
+    b.ne    .double_it
+    mov     x10, #INITIAL_CAPACITY
+    b       .capacity_calculated
+.double_it:
+    lsl     x10, x22, #1                        // new_cap = old_cap * 2
+.capacity_calculated:
+    str     x10, [x19, #DynamicArray_capacity]
+
+    // --- Allocate new memory ---
+    stp     x19, x20, [sp, #-16]!
+    stp     x21, x22, [sp, #-16]!
+
+    lsl     x1, x10, #3                         // new_cap * 8
+    mov     x0, #0
+    mov     x2, #PROT_READ_WRITE
+    mov     x3, #MAP_PRIVATE_ANONYMOUS
+    mov     x4, #-1
+    mov     x5, #0
+    mov     x8, #SYS_MMAP
+    svc     #0
+    mov     x11, x0                             // new_ptr in x11
+
+    ldp     x21, x22, [sp], #16
+    ldp     x19, x20, [sp], #16
+
+    cmp     x11, #0
+    b.lt    .mmap_failed
+
+    // --- Copy old data ---
+    cmp     x21, #0
+    b.eq    .skip_copy
+    mov     x0, x11                             // dest
+    mov     x1, x21                             // src
+    ldr     x2, [x19, #DynamicArray_size]       // count
+.append_copy_loop:
+    cmp     x2, #0
+    b.eq    .append_copy_done
+    ldr     x9, [x1], #8
+    str     x9, [x0], #8
+    sub     x2, x2, #1
+    b       .append_copy_loop
+.append_copy_done:
+
+    // --- Free old memory (FIXED SAFETY CHECK) ---
+    cmp     x21, #0         // Check if old_ptr is NULL
+    b.eq    .skip_free
+    cmp     x22, #0         // Check if old_cap is 0
+    b.eq    .skip_free
+
+    lsl     x1, x22, #3     // old_cap * 8
+    mov     x0, x21         // old_ptr
+    mov     x8, #SYS_MUNMAP
+    svc     #0
+
+.skip_free:
+.skip_copy:
+    str     x11, [x19, #DynamicArray_pointer]
+
+.has_space:
+    ldr     x9, [x19, #DynamicArray_pointer]
+    ldr     x10, [x19, #DynamicArray_size]
+    str     x20, [x9, x10, lsl #3]  // ptr[size] = value
+    add     x10, x10, #1
+    str     x10, [x19, #DynamicArray_size]
+    b       .append_epilogue
+
+.mmap_failed:
+    mov     x0, #1          // exit code 1
+    mov     x8, #SYS_EXIT
+    svc     #0
+
+.append_epilogue:
+    ldp     x21, x22, [sp, #32]
+    ldp     x19, x20, [sp, #16]
+    ldp     x29, x30, [sp], #48
+    ret
+%%%%array_append%%%%
+$$$$array_pop$$$$
+// In: x0 -> DynamicArray
+// Out: x0 = popped value (or 0 if empty)
+array_pop:
+    stp     x29, x30, [sp, #-16]!
+    mov     x29, sp
+
+    ldr     x1, [x0, #DynamicArray_size]
+    cmp     x1, #0
+    b.eq    .pop_empty
+
+    sub     x1, x1, #1
+    str     x1, [x0, #DynamicArray_size]
+    ldr     x2, [x0, #DynamicArray_pointer]
+    ldr     x0, [x2, x1, lsl #3] // x0 = ptr[new_size]
+    b       .pop_done
+
+.pop_empty:
+    mov     x0, xzr
+
+.pop_done:
+    ldp     x29, x30, [sp], #16
+    ret
+%%%%array_pop%%%%
+$$$$print_char$$$$
+// In: x0 (lowest byte) -> char to print
+print_char:
+    stp     x29, x30, [sp, #-16]!
+    mov     x29, sp
+    sub     sp, sp, #16
+    strb    w0, [sp, #15]       // Store byte on stack
+
+    mov     x0, #1              // stdout
+    add     x1, sp, #15         // pointer to char on stack
+    mov     x2, #1
+    mov     x8, #SYS_WRITE
+    svc     #0
+
+    add     sp, sp, #16
+    ldp     x29, x30, [sp], #16
+    ret
+%%%%print_char%%%%
+$$$$sys_read_line$$$$
+// In: x0 -> buffer, x1 -> max bytes
+// Out: x0 = bytes read
+sys_read_line:
+    stp     x29, x30, [sp, #-16]!
+    mov     x29, sp
+    
+    mov     x2, x1              // max bytes
+    mov     x1, x0              // buffer
+    mov     x0, #0              // stdin
+    mov     x8, #SYS_READ
+    svc     #0
+
+    ldp     x29, x30, [sp], #16
+    ret
+%%%%sys_read_line%%%%
+$$$$get_user_input$$$$
+// In: x0 -> dest array, x1 -> prompt array
+get_user_input:
+    stp     x29, x30, [sp, #-48]!
+    stp     x19, x20, [sp, #16]
+    stp     x21, x22, [sp, #32]
+    mov     x29, sp
+    mov     x19, x0             // dest array
+    mov     x20, x1             // prompt array
+
+    // --- Part 1: Print Prompt ---
+    ldr     x9, [x20, #DynamicArray_size]
+    cmp     x9, #0
+    b.eq    .read_from_user
+
+    // Pack prompt array into a temporary byte string
+    mov     x0, x20
+    bl      array_pack_to_bytes
+    mov     x21, x0             // buffer
+    mov     x22, x1             // size
+
+    cmp     x21, #0
+    b.eq    .read_from_user
+
+    // Print the prompt string
+    mov     x0, #1              // stdout
+    mov     x1, x21             // buffer
+    sub     x2, x22, #1         // size - 1 (don't print null terminator)
+    mov     x8, #SYS_WRITE
+    svc     #0
+
+    // Free the temporary string
+    mov     x0, x21
+    mov     x1, x22
+    bl      free_packed_string
+
+    // --- Part 2: Read Input ---
+.read_from_user:
+    ldr     x1, =HTLL_input_buffer
+    mov     x2, #255            // Max chars to read
+    mov     x0, #0              // stdin
+    mov     x8, #SYS_READ
+    svc     #0
+
+    cmp     x0, #1              // Check if read anything (> 1 because of newline)
+    b.le    .done
+
+    sub     x21, x0, #1         // x21 = length (strip newline)
+    ldr     x22, =HTLL_input_buffer  // x22 = ptr to input buffer
+
+.append_char_loop:
+    cmp     x21, #0
+    b.eq    .done
+    ldrb    w1, [x22], #1       // load char from buffer, auto-increment ptr
+    mov     x0, x19             // dest array
+    bl      array_append        // append char
+    // REMOVED EXTRA INCREMENT HERE
+    sub     x21, x21, #1
+    b       .append_char_loop
+
+.done:
+    ldp     x21, x22, [sp, #32]
+    ldp     x19, x20, [sp, #16]
+    ldp     x29, x30, [sp], #48
+    ret
+%%%%get_user_input%%%%
+$$$$fileread_from_ptr$$$$
+// In: x0 -> dest array, x1 -> ptr to filename string
+fileread_from_ptr:
+    stp     x29, x30, [sp, #-64]!   // Increased stack size
+    stp     x19, x20, [sp, #16]
+    stp     x21, x22, [sp, #32]
+    stp     x23, x24, [sp, #48]     // Save x23
+    mov     x29, sp
+    
+    mov     x19, x0             // dest array
+    mov     x20, x1             // filename ptr
+
+    // Open file
+    mov     x0, #AT_FDCWD
+    mov     x1, x20             // filename
+    mov     x2, #O_RDONLY       // flags
+    mov     x3, #0              // mode
+    mov     x8, #SYS_OPENAT
+    svc     #0
+
+    cmp     x0, #0
+    b.lt    .read_error_ptr
+    mov     x21, x0             // x21 = file descriptor
+
+.read_loop_ptr:
+    mov     x0, x21
+    ldr     x1, =HTLL_file_read_buffer
+    mov     x2, #4096
+    mov     x8, #SYS_READ
+    svc     #0
+    
+    cmp     x0, #0
+    b.le    .close_and_exit_ptr // EOF or Error
+    
+    mov     x22, x0             // bytes read count
+    ldr     x23, =HTLL_file_read_buffer // x23 = SAFE buffer read pointer
+
+.append_byte_loop_ptr:
+    cmp     x22, #0
+    b.eq    .read_loop_ptr      // Done with this chunk, read next
+    
+    ldrb    w9, [x23], #1       // Load byte from x23, increment x23
+    
+    mov     x0, x19             // Dest array
+    mov     x1, x9              // Byte value (safe to use x1 now)
+    bl      array_append
+    
+    sub     x22, x22, #1
+    b       .append_byte_loop_ptr
+
+.close_and_exit_ptr:
+    mov     x0, x21
+    mov     x8, #SYS_CLOSE
+    svc     #0
+    b       .read_done_ptr
+
+.read_error_ptr:
+.read_done_ptr:
+    ldp     x23, x24, [sp, #48]
+    ldp     x21, x22, [sp, #32]
+    ldp     x19, x20, [sp, #16]
+    ldp     x29, x30, [sp], #64
+    ret
+%%%%fileread_from_ptr%%%%
+$$$$fileappend_from_ptr$$$$
+// In: x0 -> ptr to filename string, x1 -> src array
+// In: x0 -> ptr to filename string, x1 -> src array
+fileappend_from_ptr:
+    stp     x29, x30, [sp, #-48]!
+    stp     x19, x20, [sp, #16]
+    stp     x21, x22, [sp, #32]
+    mov     x29, sp
+
+    mov     x19, x0             // filename
+    mov     x20, x1             // src array
+
+    // 1. Pack the array into a flat buffer
+    mov     x0, x20
+    bl      array_pack_to_bytes
+    // Returns: x0 = buffer, x1 = size (including null)
+    
+    cmp     x0, #0
+    b.eq    .append_done
+    
+    mov     x21, x0             // buffer
+    mov     x22, x1             // size
+
+    // 2. Open File (O_WRONLY | O_CREAT | O_APPEND)
+    // 0x441 = 01000(O_APPEND) | 0100(O_CREAT) | 01(O_WRONLY)
+    mov     x0, #AT_FDCWD
+    mov     x1, x19
+    mov     x2, #0x441
+    mov     x3, #438            // 0666 permission (rw-rw-rw-)
+    mov     x8, #SYS_OPENAT
+    svc     #0
+    
+    cmp     x0, #0
+    b.lt    .append_free        // Open failed
+
+    mov     x20, x0             // file descriptor (reuse x20)
+
+    // 3. Write to File
+    mov     x0, x20             // fd
+    mov     x1, x21             // buffer
+    sub     x2, x22, #1         // size - 1 (exclude null terminator)
+    mov     x8, #SYS_WRITE
+    svc     #0
+
+    // 4. Close File
+    mov     x0, x20
+    mov     x8, #SYS_CLOSE
+    svc     #0
+
+.append_free:
+    // 5. Free memory
+    mov     x0, x21
+    mov     x1, x22
+    bl      free_packed_string
+
+.append_done:
+    ldp     x21, x22, [sp, #32]
+    ldp     x19, x20, [sp, #16]
+    ldp     x29, x30, [sp], #48
+    ret
+%%%%fileappend_from_ptr%%%%
+$$$$filedelete_from_ptr$$$$
+// In: x0 -> ptr to filename string
+filedelete_from_ptr:
+    stp     x29, x30, [sp, #-16]!
+    mov     x29, sp
+    mov     x1, x0              // pathname
+    mov     x0, #AT_FDCWD       // dirfd
+    mov     x2, xzr             // flags = 0 (THE FIX)
+    mov     x8, #SYS_UNLINKAT
+    svc     #0
+    ldp     x29, x30, [sp], #16
+    ret
+%%%%filedelete_from_ptr%%%%
+$$$$file_read$$$$
+    b       fileread_from_ptr
+%%%%file_read%%%%
+$$$$file_append$$$$
+    b       fileappend_from_ptr
+%%%%file_append%%%%
+$$$$file_delete$$$$
+    b       filedelete_from_ptr
+%%%%file_delete%%%%
+$$$$array_pack_to_bytes$$$$
+// In: x0 -> src array
+// Out: x0 -> new C-string ptr, x1 -> size
+array_pack_to_bytes:
+    stp     x29, x30, [sp, #-32]!
+    stp     x19, x20, [sp, #16]
+    mov     x19, x0
+
+    cmp     x19, #0
+    b.eq    .pack_fail
+    ldr     x9, [x19, #DynamicArray_size]
+    cmp     x9, #0
+    b.eq    .pack_fail
+
+    // Allocate memory (size + 1 for null)
+    add     x1, x9, #1
+    mov     x0, #0
+    mov     x2, #PROT_READ_WRITE
+    mov     x3, #MAP_PRIVATE_ANONYMOUS
+    mov     x4, #-1
+    mov     x5, #0
+    mov     x8, #SYS_MMAP
+    svc     #0
+    cmp     x0, #0
+    b.lt    .pack_fail
+    mov     x20, x0     // new buffer ptr
+
+    // Copy bytes
+    ldr     x1, [x19, #DynamicArray_pointer]
+    mov     x2, #0
+.pack_loop:
+    cmp     x2, x9
+    b.ge    .pack_add_null
+    ldr     x10, [x1, x2, lsl #3]
+    strb    w10, [x20, x2]
+    add     x2, x2, #1
+    b       .pack_loop
+
+.pack_add_null:
+    strb    wzr, [x20, x2] // Store null terminator
+    mov     x0, x20
+    add     x1, x9, #1     // return size
+    b       .pack_done
+
+.pack_fail:
+    mov     x0, xzr
+    mov     x1, xzr
+
+.pack_done:
+    ldp     x19, x20, [sp, #16]
+    ldp     x29, x30, [sp], #32
+    ret
+%%%%array_pack_to_bytes%%%%
+$$$$array_unpack_from_bytes$$$$
+// In: x0 -> dest array, x1 -> src C-string
+array_unpack_from_bytes:
+    stp     x29, x30, [sp, #-32]!
+    stp     x19, x20, [sp, #16]
+    mov     x19, x0     // dest array
+    mov     x20, x1     // src string
+
+    cmp     x20, #0
+    b.eq    .unpack_done
+
+    // Clear dest array first
+    mov     x0, x19
+    bl      array_clear
+
+.unpack_loop:
+    ldrb    w1, [x20], #1
+    cmp     w1, #0
+    b.eq    .unpack_done
+    mov     x0, x19
+    // x1 has char
+    bl      array_append
+    b       .unpack_loop
+
+.unpack_done:
+    ldp     x19, x20, [sp, #16]
+    ldp     x29, x30, [sp], #32
+    ret
+%%%%array_unpack_from_bytes%%%%
+$$$$free_packed_string$$$$
+// In: x0 -> ptr to free, x1 -> size
+free_packed_string:
+    stp     x29, x30, [sp, #-16]!
+    cmp     x0, #0
+    b.eq    .free_done
+    mov     x8, #SYS_MUNMAP
+    svc     #0
+.free_done:
+    ldp     x29, x30, [sp], #16
+    ret
+%%%%free_packed_string%%%%
+$$$$sleep_ms$$$$
+// In: x0 -> milliseconds
+sleep_ms:
+    stp     x29, x30, [sp, #-32]!
+    mov     x29, sp
+    sub     sp, sp, #16             // space for timespec struct
+
+    // Convert ms to seconds and nanoseconds
+    mov     x1, #1000
+    udiv    x2, x0, x1              // x2 = seconds
+    msub    x3, x2, x1, x0          // x3 = remainder ms
+    ldr x1, =1000000
+    mul     x3, x3, x1              // x3 = nanoseconds
+
+    // Store timespec struct on stack
+    str     x2, [sp, #0]            // tv_sec
+    str     x3, [sp, #8]            // tv_nsec
+
+    // Call syscall
+    mov     x0, sp                  // req*
+    mov     x1, xzr                 // rem* (NULL)
+    mov     x8, #SYS_NANOSLEEP
+    svc     #0
+
+    add     sp, sp, #16             // cleanup stack
+    ldp     x29, x30, [sp], #32
+    ret
+%%%%sleep_ms%%%%

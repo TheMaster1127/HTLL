@@ -1,0 +1,503 @@
+
+$$$$_kmalloc$$$$
+
+_kmalloc:
+    push rbx
+    push rdx
+    mov rax, [heap_ptr]
+    mov rdx, rax
+    add rdx, rbx
+    mov [heap_ptr], rdx
+    mov rax, rdx
+    ; Standard bump alloc: Return OLD pointer, increment variable.
+    ; My previous logic was: load ptr, save to RDX, add size, save back.
+    ; This means RAX returned the END of the block? No.
+    
+    ; Correct Bump Alloc Logic:
+    sub rdx, rbx
+    mov rax, rdx
+    
+    pop rdx
+    pop rbx
+    ret
+
+%%%%_kmalloc%%%%
+
+$$$$_kfree$$$$
+; _kfree: No-op in bump allocator
+_kfree:
+    ret
+%%%%_kfree%%%%
+
+$$$$print_str$$$$
+; print_str: Prints string at RSI with length RDX
+; [In] RSI: Pointer to string
+; [In] RDX: Length of string (This is what your compiler provides!)
+print_str:
+    push rsi
+    push rax
+    push rcx
+    
+    mov rcx, rdx
+    cmp rcx, 0
+    je .done
+
+.loop:
+    mov al, [rsi]
+    call print_char
+    inc rsi
+    dec rcx
+    jnz .loop
+
+.done:
+    pop rcx
+    pop rax
+    pop rsi
+    ret
+%%%%print_str%%%%
+
+
+
+
+
+
+
+
+$$$$print_char$$$$
+print_char:
+    ; 1. SAVE ALL REGISTERS
+    ; We must save everything because scrolling uses almost all of them.
+    push rdi
+    push rbx
+    push rcx
+    push rdx 
+    push rax
+    push rsi 
+
+    ; 2. CHECK FOR NEWLINE
+    cmp al, 10
+    je .newline
+
+    ; 3. CALCULATE MEMORY OFFSET
+    ; Offset = (y * 80 + x) * 2
+    mov cl, al  
+    mov rax, [cursor_y]
+    mov rbx, 80
+    mul rbx
+    add rax, [cursor_x]
+    shl rax, 1
+    
+    mov rdi, 0xB8000
+    add rdi, rax
+    
+    ; 4. DRAW CHARACTER
+    mov byte [rdi], cl
+    mov byte [rdi+1], 0x0F
+    
+    ; 5. ADVANCE CURSOR
+    inc qword [cursor_x]
+    
+    ; 6. CHECK LINE WRAP (If x >= 80)
+    cmp qword [cursor_x], 80
+    jl .check_scroll
+    
+.newline:
+    mov qword [cursor_x], 0
+    inc qword [cursor_y]
+
+.check_scroll:
+    cmp qword [cursor_y], 25
+    jl .done
+
+    ; ===========================
+    ; SCROLLING LOGIC
+    ; ===========================
+    
+    ; Move lines 1-24 UP to lines 0-23
+    ; We copy 8 bytes (4 chars) at a time for speed and safety.
+    
+    mov rsi, 0xB80A0
+    mov rdi, 0xB8000
+    mov rcx, 480
+
+.scroll_loop:
+    mov rax, [rsi]
+    mov [rdi], rax
+    add rsi, 8
+    add rdi, 8
+    dec rcx
+    jnz .scroll_loop
+
+    ; Clear the last line (Line 24)
+    mov rdi, 0xB8F00            
+    mov rax, 0x0F200F200F200F20 
+    mov rcx, 20
+
+.clear_loop:
+    mov [rdi], rax
+    add rdi, 8
+    loop .clear_loop
+
+    ; Reset cursor to the start of the last line
+    mov qword [cursor_y], 24
+    mov qword [cursor_x], 0
+
+.done:
+    ; 7. RESTORE ALL REGISTERS
+    ; Must be popped in REVERSE order of push
+    pop rsi
+    pop rax
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rdi
+    ret
+%%%%print_char%%%%
+
+
+
+
+
+
+
+
+
+
+
+
+
+$$$$array_clear$$$$
+; array_clear: Resets the array size to 0.
+; [In] RDI: Pointer to the array struct.
+array_clear:
+    mov qword [rdi + 8], 0
+    ret
+%%%%array_clear%%%%    
+$$$$get_user_input$$$$
+; ==========================================================
+; get_user_input
+; [In] RDI: Destination Array (to store input)
+; [In] RSI: Prompt Array (to print first)
+; ==========================================================
+get_user_input:
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push r12
+    push r13
+
+    mov r12, rdi
+    mov r13, rsi
+
+    ; --- 1. Print Prompt ---
+    ; Check if prompt array has data
+    mov rax, [r13 + 8]
+    cmp rax, 0
+    je .read_start
+
+    ; Print the prompt characters
+    mov rcx, rax
+    mov rbx, [r13]
+    xor rdx, rdx
+.prompt_loop:
+    mov al, [rbx + rdx*8]
+    call print_char
+    inc rdx
+    loop .prompt_loop
+
+.read_start:
+    ; --- 2. Read Loop ---
+.wait_key:
+    ; Read Status
+    in al, 0x64  
+    ; Data ready?
+    test al, 1
+    jz .wait_key
+
+    ; Read Scancode
+    in al, 0x60
+    ; Key release?
+    test al, 0x80
+    jnz .wait_key
+
+    ; Map Scancode
+    lea rdx, [scan_map]
+    and rax, 0xFF
+    mov al, [rdx + rax]
+    
+    cmp al, 0
+    je .wait_key
+
+    ; Enter
+    cmp al, 10
+    je .input_done
+
+    ; Backspace
+    cmp al, 8
+    je .handle_backspace
+
+    ; Valid Char: Echo and Store
+    call print_char
+    
+    ; Append to R12 (Dest Array)
+    mov rdi, r12
+    ; Pass char in RSI (as per our convention)
+    movzx rsi, al
+    call array_append
+    
+    jmp .wait_key
+
+.handle_backspace:
+    ; Check if there is anything to delete
+    ; r12 holds the input_bufferr pointer
+    cmp qword [r12 + 8], 0  
+    ; If buffer is empty, do nothing
+    je .wait_key
+
+    ; Pop the character from our internal buffer first
+    mov rdi, r12
+    call array_pop
+
+    ; Now, move the cursor back on screen
+    dec qword [cursor_x]
+    ; Note: This doesn't handle wrapping to the previous line yet, but works for single lines.
+
+    ; Calculate the video memory address of the character we want to erase
+    mov rax, [cursor_y]
+    mov rbx, 80
+    mul rbx
+    add rax, [cursor_x]
+    shl rax, 1
+    add rax, 0xB8000
+
+    ; Write a black space with white foreground over it
+    mov word [rax+0], 0x0F20
+    
+    jmp .wait_key
+
+.input_done:
+    ; Print newline
+    mov al, 10
+    call print_char
+
+    pop r13
+    pop r12
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    ret
+%%%%get_user_input%%%%
+    
+
+
+
+
+
+
+
+
+
+$$$$print_number$$$$
+; print_number: Prints 64-bit number in RAX
+print_number:
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    
+    cmp rax, 0
+    jne .p_setup
+    mov al, '0'
+    call print_char
+    jmp .p_done
+
+.p_setup:
+    mov rbx, 10
+    ; digit counter
+    xor rcx, rcx
+
+.p_loop:
+    xor rdx, rdx
+    ; rax / 10
+    div rbx
+    ; remainder
+    push rdx
+    inc rcx
+    test rax, rax
+    jnz .p_loop
+
+.p_print:
+    pop rax
+    add al, '0'
+    call print_char
+    loop .p_print
+
+.p_done:
+    ; Print newline
+    mov al, 10
+    call print_char
+
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    ret
+%%%%print_number%%%%
+
+$$$$input$$$$
+; input: Reads line from PS/2 Keyboard into buffer at RDI
+; [In] RDI: Buffer pointer
+; [Out] RAX: Length
+input:
+    push rdi
+    push rbx
+    ; Count
+    mov rbx, 0 
+
+.wait_key:
+    ; Read Status Register
+    in al, 0x64
+    ; Bit 0: Output Buffer Full?
+    test al, 1
+    ; Spin until data exists
+    jz .wait_key
+
+    ; Read Scancode
+    in al, 0x60
+    
+    ; Ignore Key Release (scancodes > 0x80 usually)
+    test al, 0x80
+    jnz .wait_key
+
+    ; Map Scancode to ASCII
+    lea rdx, [scan_map]
+    and rax, 0xFF
+    mov al, [rdx + rax]
+    
+    cmp al, 0
+    ; Unknown key
+    je .wait_key
+
+    ; Enter
+    cmp al, 10
+    je .finish
+
+    ; Backspace
+    cmp al, 8
+    je .handle_backspace
+
+    ; Store Char
+    mov [rdi], al
+    inc rdi
+    inc rbx
+    
+    ; Echo to screen
+    call print_char
+    jmp .wait_key
+
+.handle_backspace:
+    cmp rbx, 0
+    je .wait_key
+    dec rdi
+    dec rbx
+    ; Visual backspace
+    mov al, 8
+    ; (Our print_char logic needs to handle this visually, but for now simple echo)
+    call print_char
+    jmp .wait_key
+
+.finish:
+    ; Null terminate
+    mov byte [rdi], 0
+    
+    ; Print newline
+    mov al, 10
+    call print_char
+
+    mov rax, rbx
+    pop rbx
+    pop rdi
+    ret
+%%%%input%%%%
+
+$$$$array_copy$$$$
+; array_copy: 64-bit
+; [In] rdi: dest struct ptr, rsi: source struct ptr
+array_copy:
+    push rdi
+    push rsi
+    ; Get size
+    ; Offset 8 is size (assuming qword structure)
+    mov rcx, [rsi + 8] 
+    mov [rdi + 8], rcx
+    ; capacity
+    mov [rdi + 16], rcx
+    
+    cmp rcx, 0
+    je .done
+
+    ; Allocate
+    mov rbx, rcx
+    ; * 8 (qwords)
+    shl rbx, 3
+    call _kmalloc
+    ; Store pointer
+    mov [rdi], rax
+    
+    ; Copy
+    mov rdi, rax
+    ; Load source data pointer
+    mov rsi, [rsi]
+    rep movsq
+
+.done:
+    pop rsi
+    pop rdi
+    ret
+%%%%array_copy%%%%
+
+$$$$array_pop$$$$
+
+array_pop:
+    ; [In] RDI: Pointer to the array struct.
+    ; Check if size is already 0
+    cmp qword [rdi + 8], 0  
+    je .done
+    ; Decrement size
+    dec qword [rdi + 8]
+.done:
+    ret
+%%%%array_pop%%%%
+$$$$array_append$$$$
+
+array_append:
+    push rbx
+    push rcx
+    push rax
+
+    mov rcx, [rdi + 8]
+    mov rbx, [rdi]
+
+    cmp rbx, 0
+    jne .store
+
+    mov rbx, 1024 
+    call _kmalloc
+    mov rbx, rax
+    mov [rdi], rbx
+    mov qword [rdi+16], 128
+
+.store:
+    mov [rbx + rcx*8], rsi
+    inc qword [rdi + 8]
+    
+    pop rax
+    pop rcx
+    pop rbx
+    ret
+
+%%%%array_append%%%%

@@ -1,0 +1,124 @@
+;#######################################################
+;# HTLL Minimal Shell
+;# Author: Mr. Compiler's Assistant
+;# Philosophy: Zero Bloat. Manual String Compare.
+;#######################################################
+
+; --- Global Buffers ---
+arr input_bufferr
+arr prompt
+arr cmd_help
+arr cmd_exit
+
+; --- Global Logic Variables ---
+; Remember: No local variables allowed inside functions!
+int is_match := 0
+int input_lenn := 0
+int cmd_len := 0
+int val_input := 0
+int val_cmd := 0
+int i := 0
+
+; --- Setup Helpers ---
+func init_constants()
+    ; Setup the prompt
+    arradd prompt [HTLL-Shell]
+    prompt.add 62 ; ASCII for '>'
+    prompt.add 32 ; ASCII for Space
+
+    ; Setup the 'help' comparison buffer
+    arradd cmd_help help
+
+    ; Setup 'exit' command
+    arradd cmd_exit exit
+funcend
+
+; --- String Comparison Function ---
+; Compares 'input_bufferr' against 'cmd_help'
+; Sets 'is_match' to 1 if equal, 0 if not
+func check_if_help()
+    is_match := 1 ; Assume true initially
+
+    input_bufferr.size
+    input_lenn := rax
+    
+    cmd_help.size
+    cmd_len := rax
+
+    ; 1. optimization: Check length first
+    if (input_lenn != cmd_len)
+        is_match := 0
+        goto end_compare_help
+    ifend
+
+    ; 2. Byte-by-byte comparison
+    Loop, input_lenn
+        i := A_Index
+        
+        input_bufferr.index i
+        val_input := rax
+        
+        cmd_help.index i
+        val_cmd := rax
+
+        if (val_input != val_cmd)
+            is_match := 0
+            goto end_compare_help
+        ifend
+    endloop
+
+    togo end_compare_help
+funcend
+
+; --- Echo Function ---
+func echo_input()
+    print("Echo: ")
+    input_bufferr.size
+    Loop, rax
+        input_bufferr.index A_Index
+        print_rax_as_char
+    endloop
+    print("") ; Newline
+funcend
+
+;#######################################################
+;# MAIN ENTRY
+;#######################################################
+main
+    init_constants()
+    print("Welcome to the Bear Den. Type 'help' or 'exit'.")
+
+    togo shell_loop
+        ; 1. Clear buffer and get input
+        input_bufferr.clear
+        input input_bufferr, prompt
+
+        ; 2. Check for "help"
+        check_if_help()
+        if (is_match = 1)
+            print("--- HELP MENU ---")
+            print("You are running on raw x86-64 assembly.")
+            print("This shell has 0 dependencies.")
+            print("Available commands: help, exit, [any text to echo]")
+            print("-----------------")
+            goto shell_loop
+        ifend
+
+        ; 3. Check for "exit" (Manual check logic reused)
+        ; (Simplified logic here just to break loop for demo)
+        input_bufferr.size
+        if (rax = 4)
+             ; Quick dirty check for 'exit' to allow closing
+             input_bufferr.index 0
+             if (rax = 101) ; 'e'
+                print("Exiting to OS...")
+                goto shell_exit
+             ifend
+        ifend
+
+        ; 4. Default behavior: Echo
+        echo_input()
+        
+    goto shell_loop
+
+    togo shell_exit

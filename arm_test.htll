@@ -1,0 +1,101 @@
+;#######################################################
+;# HTLL All-In-One Demonstration
+;#######################################################
+
+; --- Global Data & Buffers ---
+arr log_content_buffer  ; Shared buffer for logging functions
+arr filename_buffer     ; Holds the filename for I/O operations
+arr number_list         ; Primary data array for sorting
+arr user_input          ; Buffer for stdin
+arr prompt              ; Buffer for user prompt text
+
+int swapped := 0
+int i := 0
+int n := 0
+int item1 := 0
+int item2 := 0
+
+; --- Function to sort the global 'number_list' via Bubble Sort ---
+func sort_number_list()
+    print("--- Sorting List ---")
+    togo sort_start_label
+        swapped := 0
+        number_list.size
+        n := rax
+        n-- ; Adjust for zero-based index
+
+        Loop, n
+            i := A_Index
+            number_list.index i
+            item1 := rax
+
+            i++
+            number_list.index i
+            item2 := rax
+
+            if (item1 > item2)
+                number_list.set A_Index, item2
+                number_list.set i, item1
+                swapped := 1
+            ifend
+        endloop
+        if (swapped = 1)
+            goto sort_start_label
+        ifend
+    print("Sort complete.")
+funcend
+
+; --- Function to append the contents of 'log_content_buffer' to disk ---
+func append_to_log()
+    ; This function uses the agreed-upon global buffers
+    fileappend_arr filename_buffer, log_content_buffer
+    
+    ; Also append a newline for readability
+    log_content_buffer.clear
+    log_content_buffer.add 10
+    fileappend_arr filename_buffer, log_content_buffer
+funcend
+
+;#######################################################
+;# MAIN EXECUTION BLOCK
+;#######################################################
+main
+    ; --- 1. Setup ---
+    arradd filename_buffer demo_output.log
+    filedelete_arr filename_buffer ; Start with a clean file
+
+    ; --- 2. Populate and Sort Data ---
+    number_list.add 42
+    number_list.add 8
+    number_list.add 1991
+    number_list.add 100
+    sort_number_list()
+
+    ; --- 3. Log the Sorted Data ---
+    log_content_buffer.clear
+    arradd log_content_buffer Sorted list written to disk.
+    append_to_log()
+    print("Log updated.")
+
+    ; --- 4. Get User Input and Log It ---
+    print("--- User Input ---")
+    arradd prompt Enter a message:
+    prompt.add 32 ; Add trailing space for prompt
+    input user_input, prompt
+    
+    log_content_buffer.clear
+    log_content_buffer.copy user_input
+    append_to_log()
+    print("User message logged.")
+
+    ; --- 5. Read and Display the Final Log File ---
+    print("--- Final Log Contents ---")
+    log_content_buffer.clear ; Reuse buffer for reading
+    fileread_arr log_content_buffer, filename_buffer
+    
+    log_content_buffer.size
+    Loop, rax
+        log_content_buffer.index A_Index
+        print_rax_as_char
+    endloop
+    
