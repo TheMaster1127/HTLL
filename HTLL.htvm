@@ -1,3 +1,5 @@
+include "HT-Lib.htvm"
+
 str str0 := ""
 str str1 := ""
 str str2 := ""
@@ -21,6 +23,8 @@ str str19 := ""
 str str20 := ""
 int is_arm := 1
 int ring0 := 0
+arr str nintArr
+
 func str SubStrLastChars(str text, int numOfChars) {
     str LastOut := ""
     int NumOfChars := 0
@@ -37,7 +41,51 @@ func str SubStrLastChars(str text, int numOfChars) {
     }
     return LastOut
 }
-arr str nintArr
+
+
+func str HTLL_Lang(str code) {
+str out := ""
+
+code := cleanUpFirst(code)
+code := preserveStrings(code)
+code := handleComments(code)
+code := formatCurlyBracesForParsing(code)
+
+
+Loop, % HT_Lib_theIdNumOfThe34theVar.size() {
+print(HT_Lib_theIdNumOfThe34theVar[A_Index])
+}
+
+Loop, Parse, code, `n, `r {
+
+if (SubStr(A_LoopField, 1, 4) = "str ") {
+str1 := Trim(StringTrimLeft(A_LoopField, 4))
+
+
+
+}
+else {
+out .= A_LoopField . Chr(10)
+}
+}
+
+out := Trim(out)
+out := restoreStrings(out)
+
+return out
+}
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 func bool isNint(str name) {
     Loop, % nintArr.size() {
         if (Trim(name) = Trim(nintArr[A_Index])) {
@@ -47,16 +95,17 @@ func bool isNint(str name) {
     return false
 }
 func str compiler(str code) {
+    code := HTLL_Lang(code)
     str out := ""
     str main_syntax := ""
     if (is_arm = 1) {
-        if (RegExMatch(code, "\bHTLL_args_array\b")) {
+        if (RegExMatch(code, "\bargs_array\b")) {
             main_syntax := "_start:" . Chr(10)
             ; FIXED: Removed parens and comments that confuse the parser
             main_syntax .= "    ldr x19, [sp]" . Chr(10)
             main_syntax .= "    stp x29, x30, [sp, #-32]!" . Chr(10)
             main_syntax .= "    mov x29, sp" . Chr(10)
-            main_syntax .= "    ldr x0, =HTLL_args_array" . Chr(10)
+            main_syntax .= "    ldr x0, =args_array" . Chr(10)
             main_syntax .= "    bl array_clear" . Chr(10)
             main_syntax .= "    add x20, sp, #40" . Chr(10)
             main_syntax .= "    mov x21, #1" . Chr(10)
@@ -69,12 +118,12 @@ func str compiler(str code) {
             main_syntax .= "    ldrb w1, [x22], #1" . Chr(10)
             main_syntax .= "    cmp w1, #0" . Chr(10)
             main_syntax .= "    b.eq .unpack_byte_done" . Chr(10)
-            main_syntax .= "    ldr x0, =HTLL_args_array" . Chr(10)
+            main_syntax .= "    ldr x0, =args_array" . Chr(10)
             main_syntax .= "    bl array_append" . Chr(10)
             main_syntax .= "    b .unpack_byte_loop" . Chr(10)
             main_syntax .= ".unpack_byte_done:" . Chr(10)
             main_syntax .= "    mov x1, #10" . Chr(10)
-            main_syntax .= "    ldr x0, =HTLL_args_array" . Chr(10)
+            main_syntax .= "    ldr x0, =args_array" . Chr(10)
             main_syntax .= "    bl array_append" . Chr(10)
             main_syntax .= "    add x21, x21, #1" . Chr(10)
             main_syntax .= "    b .arg_loop" . Chr(10)
@@ -90,8 +139,8 @@ func str compiler(str code) {
     }
     else {
         ; --- YOUR EXISTING X86 CODE - UNCHANGED AND CORRECT ---
-        if (RegExMatch(code, "\bHTLL_args_array\b")) {
-            main_syntax := Chr(10) . "_start:" . Chr(10) . "push rbp" . Chr(10) . "mov rbp, rsp" . Chr(10) . "and rsp, -16" . Chr(10) . "mov rdi, HTLL_args_array" . Chr(10) . "call array_clear" . Chr(10) . "mov r12, [rbp+8]" . Chr(10) . "lea r13, [rbp+16]" . Chr(10) . "mov r14, 1" . Chr(10) . ".arg_loop:" . Chr(10) . "cmp r14, r12" . Chr(10) . "jge .args_done" . Chr(10) . "mov r15, [r13 + r14*8]" . Chr(10) . ".unpack_byte_loop:" . Chr(10) . "movzx rbx, byte [r15]" . Chr(10) . "cmp rbx, 0" . Chr(10) . "je .unpack_byte_done" . Chr(10) . "mov rdi, HTLL_args_array" . Chr(10) . "mov rsi, rbx" . Chr(10) . "call array_append" . Chr(10) . "inc r15" . Chr(10) . "jmp .unpack_byte_loop" . Chr(10) . ".unpack_byte_done:" . Chr(10) . "mov rdi, HTLL_args_array" . Chr(10) . "mov rsi, 10" . Chr(10) . "call array_append" . Chr(10) . "inc r14" . Chr(10) . "jmp .arg_loop" . Chr(10) . ".args_done:" . Chr(10) . Chr(10)
+        if (RegExMatch(code, "\bargs_array\b")) {
+            main_syntax := Chr(10) . "_start:" . Chr(10) . "push rbp" . Chr(10) . "mov rbp, rsp" . Chr(10) . "and rsp, -16" . Chr(10) . "mov rdi, args_array" . Chr(10) . "call array_clear" . Chr(10) . "mov r12, [rbp+8]" . Chr(10) . "lea r13, [rbp+16]" . Chr(10) . "mov r14, 1" . Chr(10) . ".arg_loop:" . Chr(10) . "cmp r14, r12" . Chr(10) . "jge .args_done" . Chr(10) . "mov r15, [r13 + r14*8]" . Chr(10) . ".unpack_byte_loop:" . Chr(10) . "movzx rbx, byte [r15]" . Chr(10) . "cmp rbx, 0" . Chr(10) . "je .unpack_byte_done" . Chr(10) . "mov rdi, args_array" . Chr(10) . "mov rsi, rbx" . Chr(10) . "call array_append" . Chr(10) . "inc r15" . Chr(10) . "jmp .unpack_byte_loop" . Chr(10) . ".unpack_byte_done:" . Chr(10) . "mov rdi, args_array" . Chr(10) . "mov rsi, 10" . Chr(10) . "call array_append" . Chr(10) . "inc r14" . Chr(10) . "jmp .arg_loop" . Chr(10) . ".args_done:" . Chr(10) . Chr(10)
         }
         else {
             main_syntax := Chr(10) . "_start:" . Chr(10) . "push rbp" . Chr(10) . "mov rbp, rsp" . Chr(10) . "and rsp, -16 " . Chr(10) . Chr(10)
@@ -762,13 +811,6 @@ func str compiler(str code) {
                     }
                 }
             }
-        }
-        else if (SubStr(A_LoopField, 1, 4) = "str ") {
-            str1 := Trim(StringTrimLeft(A_LoopField, 4))
-            str2 := Trim(StrSplit(str1, "[", 2))
-            str2 := Trim(StrSplit(str2, "]", 1))
-            str1 := Trim(StrSplit(str1, "[", 1))
-            dot_bss_str .= str1 . " rb " . str2 . Chr(10)
         }
         else if (InStr(A_LoopField, " := ")) or (InStr(A_LoopField, " += ")) or (InStr(A_LoopField, " -= ")) or (InStr(A_LoopField, " *= ")) {
             if (is_arm = 1) {
@@ -6383,7 +6425,7 @@ func str compiler(str code) {
         upCode .= ".lcomm filename_ptr_size, 8" . Chr(10)
         upCode .= ".lcomm source_ptr, 8" . Chr(10)
         upCode .= ".lcomm source_ptr_size, 8" . Chr(10)
-        upCode .= ".lcomm HTLL_args_array, 24" . Chr(10)
+        upCode .= ".lcomm args_array, 24" . Chr(10)
         upCode .= ".lcomm filename_ptr, 8" . Chr(10)
         upCode .= ".lcomm asm_code_ptr, 8" . Chr(10)
         upCode .= arrBss . dot_bss
@@ -6393,18 +6435,18 @@ func str compiler(str code) {
     else {
         if (isDotCompile = 1) {
             upCode := "section '.data' writeable" . Chr(10) . "    SCALE_FACTOR   dq 1000000" . Chr(10) . "    INITIAL_CAPACITY = 2" . Chr(10) . "    print_buffer   rb 21" . Chr(10) . "    dot            db " . Chr(39) . "." . Chr(39) . Chr(10) . "    minus_sign     db " . Chr(39) . "-" . Chr(39) . " " . Chr(10) . "    nl   db 10" . Chr(10) . dot_data . Chr(10)
-            upCode .= "section '.bss' writeable" . Chr(10) . "    input_buffer rb 256" . Chr(10) . "    file_read_buffer rb 4096" . Chr(10) . "    input_len    rq 1" . Chr(10) . "    filename_ptr_size  rq 1" . Chr(10) . "    source_ptr      rq 1" . Chr(10) . "    source_ptr_size rq 1" . Chr(10) . "    HTLL_args_array rq 3" . Chr(10) . "    filename_ptr      rq 1" . Chr(10) . "    asm_code_ptr    rq 1" . Chr(10) . "    print_buffer_n rb 20" . Chr(10) . arrBss . dot_bss
+            upCode .= "section '.bss' writeable" . Chr(10) . "    input_buffer rb 256" . Chr(10) . "    file_read_buffer rb 4096" . Chr(10) . "    input_len    rq 1" . Chr(10) . "    filename_ptr_size  rq 1" . Chr(10) . "    source_ptr      rq 1" . Chr(10) . "    source_ptr_size rq 1" . Chr(10) . "    args_array rq 3" . Chr(10) . "    filename_ptr      rq 1" . Chr(10) . "    asm_code_ptr    rq 1" . Chr(10) . "    print_buffer_n rb 20" . Chr(10) . arrBss . dot_bss
             upCode .= "section '.text' executable" . Chr(10) . HTLL_Libs_x86_new . Chr(10)
         }
         else {
             if (ring0 = 0) {
                 upCode := "segment readable writeable" . Chr(10) . "    SCALE_FACTOR   dq 1000000" . Chr(10) . "    INITIAL_CAPACITY = 2" . Chr(10) . "    print_buffer   rb 21" . Chr(10) . "    dot            db " . Chr(39) . "." . Chr(39) . "" . Chr(10) . "    minus_sign     db " . Chr(39) . "-" . Chr(39) . "" . Chr(10) . "    nl   db 10" . Chr(10) . dot_data . Chr(10)
-                upCode .= Chr(10) . Chr(10) . "    input_buffer rb 256" . Chr(10) . "    file_read_buffer rb 4096" . Chr(10) . "    input_len    rq 1" . Chr(10) . "    filename_ptr_size  rq 1" . Chr(10) . "    source_ptr      rq 1" . Chr(10) . "    source_ptr_size rq 1" . Chr(10) . "    HTLL_args_array rq 3" . Chr(10) . "    filename_ptr      rq 1" . Chr(10) . "    asm_code_ptr    rq 1" . Chr(10) . "    print_buffer_n rb 20" . Chr(10) . arrBss . dot_bss
+                upCode .= Chr(10) . Chr(10) . "    input_buffer rb 256" . Chr(10) . "    file_read_buffer rb 4096" . Chr(10) . "    input_len    rq 1" . Chr(10) . "    filename_ptr_size  rq 1" . Chr(10) . "    source_ptr      rq 1" . Chr(10) . "    source_ptr_size rq 1" . Chr(10) . "    args_array rq 3" . Chr(10) . "    filename_ptr      rq 1" . Chr(10) . "    asm_code_ptr    rq 1" . Chr(10) . "    print_buffer_n rb 20" . Chr(10) . arrBss . dot_bss
                 upCode .= "segment readable executable" . Chr(10) . HTLL_Libs_x86_new . Chr(10)
             }
             else {
                 upCode := Chr(10) . "    SCALE_FACTOR   dq 1000000" . Chr(10) . "    INITIAL_CAPACITY = 2" . Chr(10) . "    print_buffer   rb 21" . Chr(10) . "    dot            db " . Chr(39) . "." . Chr(39) . "" . Chr(10) . "    minus_sign     db " . Chr(39) . "-" . Chr(39) . "" . Chr(10) . "    nl   db 10" . Chr(10) . dot_data . Chr(10)
-                upCode .= Chr(10) . Chr(10) . "    input_buffer rb 256" . Chr(10) . "    file_read_buffer rb 4096" . Chr(10) . "    input_len    rq 1" . Chr(10) . "    filename_ptr_size  rq 1" . Chr(10) . "    source_ptr      rq 1" . Chr(10) . "    source_ptr_size rq 1" . Chr(10) . "    HTLL_args_array rq 3" . Chr(10) . "    filename_ptr      rq 1" . Chr(10) . "    asm_code_ptr    rq 1" . Chr(10) . "    print_buffer_n rb 20" . Chr(10) . arrBss . dot_bss . Chr(10) . "; Global variables for the 64-bit Runtime" . Chr(10) . "cursor_x dq 0" . Chr(10) . "cursor_y dq 0" . Chr(10) . "heap_ptr dq 0x40000" . Chr(10) . "; Minimal Scancode Map (QWERTY) - You can expand this" . Chr(10) . "scan_map:" . Chr(10) . "db 0,27,'1','2','3','4','5','6','7','8','9','0','-','=',8,9" . Chr(10) . "db 'q','w','e','r','t','y','u','i','o','p','[',']',10,0,'a','s'" . Chr(10) . "db 'd','f','g','h','j','k','l',';',39,'" . Chr(96) . "',0,'\','z','x','c','v'" . Chr(10) . "db 'b','n','m',',','.','/',0,'*',0,32" . Chr(10)
+                upCode .= Chr(10) . Chr(10) . "    input_buffer rb 256" . Chr(10) . "    file_read_buffer rb 4096" . Chr(10) . "    input_len    rq 1" . Chr(10) . "    filename_ptr_size  rq 1" . Chr(10) . "    source_ptr      rq 1" . Chr(10) . "    source_ptr_size rq 1" . Chr(10) . "    args_array rq 3" . Chr(10) . "    filename_ptr      rq 1" . Chr(10) . "    asm_code_ptr    rq 1" . Chr(10) . "    print_buffer_n rb 20" . Chr(10) . arrBss . dot_bss . Chr(10) . "; Global variables for the 64-bit Runtime" . Chr(10) . "cursor_x dq 0" . Chr(10) . "cursor_y dq 0" . Chr(10) . "heap_ptr dq 0x40000" . Chr(10) . "; Minimal Scancode Map (QWERTY) - You can expand this" . Chr(10) . "scan_map:" . Chr(10) . "db 0,27,'1','2','3','4','5','6','7','8','9','0','-','=',8,9" . Chr(10) . "db 'q','w','e','r','t','y','u','i','o','p','[',']',10,0,'a','s'" . Chr(10) . "db 'd','f','g','h','j','k','l',';',39,'" . Chr(96) . "',0,'\','z','x','c','v'" . Chr(10) . "db 'b','n','m',',','.','/',0,'*',0,32" . Chr(10)
                 upCode .= Chr(10) . HTLL_Libs_x86_new . Chr(10)
             }
         }
@@ -6597,7 +6639,7 @@ func str compiler(str code) {
         else if (Trim(A_LoopField) = "source_ptr_size rq 1") and (is_16_optimize = 0) {
             aredy_int := 1
         }
-        else if (Trim(A_LoopField) = "HTLL_args_array rq 3") and (is_17_optimize = 0) {
+        else if (Trim(A_LoopField) = "args_array rq 3") and (is_17_optimize = 0) {
             aredy_int := 1
         }
         else if (Trim(A_LoopField) = "filename_ptr      rq 1") and (is_18_optimize = 0) {
