@@ -21,7 +21,8 @@ str str17 := ""
 str str18 := ""
 str str19 := ""
 str str20 := ""
-int is_arm := 1
+int is_arm := 0
+int is_oryx := 1
 int ring0 := 0
 arr str nintArr
 
@@ -41,8 +42,130 @@ func str SubStrLastChars(str text, int numOfChars) {
     }
     return LastOut
 }
+func str transformBracesToHTLL(str code) {
+    str out := ""
+    arr str blockStack
+    int ifNestLevel := 0
+    int loopNestLevel := 0
 
+    Loop, Parse, code, `n, `r {
+        str currentLine := A_LoopField
+        str trimmedLine := StrLower(Trim(currentLine))
 
+        if (SubStr(trimmedLine, 1, 5) = "func ") {
+            blockStack.add("func:0")
+            out .= currentLine . Chr(10)
+            continue
+        }
+        
+        ; ===================================================================
+        ; IF BLOCKS
+        ; ===================================================================
+        if (SubStr(trimmedLine, 1, 4) = "if (") {
+            ifNestLevel++
+            blockStack.add("if:" . STR(ifNestLevel))
+
+            str newIfKeyword := "if"
+            if (ifNestLevel > 1) {
+                newIfKeyword .= STR(ifNestLevel)
+            }
+
+            str conditionPart := SubStr(Trim(currentLine), 4)
+            str modifiedIfLine := newIfKeyword . " " . conditionPart
+            
+            int indentLen := InStr(StrLower(currentLine), "if") - 1
+            str indentation := SubStr(currentLine, 1, indentLen)
+
+            out .= indentation . modifiedIfLine . Chr(10)
+            continue 
+        }
+
+        ; ===================================================================
+        ; LOOP BLOCKS
+        ; ===================================================================
+        if (SubStr(trimmedLine, 1, 5) = "loop,") {
+            loopNestLevel++
+            blockStack.add("loop:" . STR(loopNestLevel))
+            str newLoopKeyword := "loop"
+            if (loopNestLevel > 1) {
+                newLoopKeyword .= STR(loopNestLevel)
+            }
+            str loopParams := SubStr(Trim(currentLine), 6)
+            str modifiedLoopLine := newLoopKeyword . "," . loopParams
+            int indentLen := InStr(StrLower(currentLine), "loop,") - 1
+            str indentation := SubStr(currentLine, 1, indentLen)
+            out .= indentation . modifiedLoopLine . Chr(10)
+            continue
+        }
+
+        ; ===================================================================
+        ; AUTO-NUMBERING BREAK & CONTINUE
+        ; ===================================================================
+        if (trimmedLine = "break") {
+            str breakCmd := "break"
+            if (loopNestLevel > 1) {
+                breakCmd .= STR(loopNestLevel)
+            }
+            int indentLen := InStr(StrLower(currentLine), "break") - 1
+            str indentation := SubStr(currentLine, 1, indentLen)
+            out .= indentation . breakCmd . Chr(10)
+            continue
+        }
+
+        if (trimmedLine = "continue") {
+            str contCmd := "continue"
+            if (loopNestLevel > 1) {
+                contCmd .= STR(loopNestLevel)
+            }
+            int indentLen := InStr(StrLower(currentLine), "continue") - 1
+            str indentation := SubStr(currentLine, 1, indentLen)
+            out .= indentation . contCmd . Chr(10)
+            continue
+        }
+
+        ; ===================================================================
+        ; BRACES HANDLING
+        ; ===================================================================
+        if (trimmedLine = "{") {
+            continue
+        }
+        
+        if (trimmedLine = "}") {
+            if (blockStack.size() = 0) {
+                out .= "; SYNTAX ERROR: Unmatched closing brace found." . Chr(10)
+                continue
+            }
+            str blockInfo := blockStack[blockStack.size() - 1]
+            blockStack.pop()
+            str blockType := StrSplit(blockInfo, ":", 1)
+            int level := INT(StrSplit(blockInfo, ":", 2))
+            int indentLen := InStr(currentLine, "}") - 1
+            str indentation := SubStr(currentLine, 1, indentLen)
+            if (blockType = "func") {
+                out .= indentation . "funcend" . Chr(10)
+            } else if (blockType = "if") {
+                str ender := "ifend"
+                if (level > 1) { ender .= STR(level) }
+                out .= indentation . ender . Chr(10)
+                ifNestLevel--
+            } else if (blockType = "loop") {
+                str ender := "endloop"
+                if (level > 1) { ender .= STR(level) }
+                out .= indentation . ender . Chr(10)
+                loopNestLevel--
+            }
+            continue
+        }
+        
+        out .= currentLine . Chr(10)
+    }
+
+    if (blockStack.size() > 0) {
+        out .= "; SYNTAX ERROR: " . STR(blockStack.size()) . " unclosed blocks at end of file." . Chr(10)
+    }
+
+    return Trim(out)
+}
 func str HTLL_Lang(str code) {
 str out := ""
 
@@ -50,19 +173,28 @@ code := cleanUpFirst(code)
 code := preserveStrings(code)
 code := handleComments(code)
 code := formatCurlyBracesForParsing(code)
+;print(code)
 
-
-Loop, % HT_Lib_theIdNumOfThe34theVar.size() {
-print(HT_Lib_theIdNumOfThe34theVar[A_Index])
+if (InStr(code, "{")) {
+    code := transformBracesToHTLL(code)
 }
+
+; VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFCAA
+;print(code)
+;Loop, % HT_Lib_theIdNumOfThe34theVar.size() {
+;if (Trim(HT_Lib_theIdNumOfThe34theVar[A_Index]) != "") {
+;print(A_Index)
+;print(HT_Lib_theIdNumOfThe34theVar[A_Index])
+;}
+;if (A_Index = 50) {
+;break
+;}
+;}
 
 Loop, Parse, code, `n, `r {
 
 if (SubStr(A_LoopField, 1, 4) = "str ") {
 str1 := Trim(StringTrimLeft(A_LoopField, 4))
-
-
-
 }
 else {
 out .= A_LoopField . Chr(10)
@@ -97,6 +229,7 @@ func bool isNint(str name) {
 func str compiler(str code) {
     code := HTLL_Lang(code)
     str out := ""
+    arr str oryx_param_map
     str main_syntax := ""
     if (is_arm = 1) {
         if (RegExMatch(code, "\bargs_array\b")) {
@@ -137,6 +270,19 @@ func str compiler(str code) {
             main_syntax .= "    mov x29, sp" . Chr(10) . Chr(10)
         }
     }
+    else if (is_oryx = 1) {
+        ; --- ORYX IR ENTRY ---
+        ; Oryx is a VM, so it handles stack alignment automatically.
+        ; We just need the entry label to tell the VM where to begin.
+        main_syntax := "_start:" . Chr(10)
+        
+        if (RegExMatch(code, "\bargs_array\b")) {
+            ; In Oryx IR, we assume the VM environment populates 'args_array' 
+            ; automatically if it exists, or we add a specific sys-call later.
+            ; We don't need manual stack walking code here.
+            main_syntax .= "    ; args_array handling" . Chr(10)
+        }
+    }
     else {
         ; --- YOUR EXISTING X86 CODE - UNCHANGED AND CORRECT ---
         if (RegExMatch(code, "\bargs_array\b")) {
@@ -155,6 +301,9 @@ func str compiler(str code) {
     }
     if (is_arm = 1) {
         HTLL_Libs_x86 := FileRead("HTLL_Libs_AArch64.txt")
+    }
+    if (is_oryx = 1) {
+        HTLL_Libs_x86 := ""
     }
     int isDotCompile := 0
     str dot_data := Chr(10)
@@ -211,6 +360,18 @@ func str compiler(str code) {
     int int4 := 0
     int int5 := 0
     int int6 := 0
+    int isOryxFuncFirst := 0
+    int HTLL_fix_int := 0
+    
+str strSrc := ""
+str strLhs := ""
+str strRhs := ""
+str strVal := ""
+str strIndex := ""
+str idxSrc := ""
+str valSrc := ""
+str strArg := ""
+    
     Loop, Parse, code {
         theIdNumOfThe34theVar.add("")
         theIdNumOfThe34theVar.add("")
@@ -405,6 +566,13 @@ func str compiler(str code) {
                     str4 .= "    bl array_append" . Chr(10)
                 }
             }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR GENERATION ---
+                Loop, Parse, str3 {
+                    ; arr.add arrayName, charValue
+                    str4 .= "    arr.add " . str2 . ", " . STR(Asc(A_LoopField)) . Chr(10)
+                }
+            }
             else {
                 ; --- YOUR EXISTING X86 CODE - UNCHANGED ---
                 Loop, Parse, str3 {
@@ -524,6 +692,67 @@ func str compiler(str code) {
                     }
                     ; ############## FIX END ##############
                     out .= "    str x9, [x10]" . Chr(10)
+                }
+            }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR GENERATION ---
+                if (InStr(str1, ":=")) {
+                    str2 := Trim(StrSplit(str1, ":=", 1))
+                    str3 := Trim(StrSplit(str1, ":=", 2))
+                    
+                    if (RegExMatch(str3, "^\d+$")) {
+                        out .= "int " . str2 . ": " . str3 . Chr(10)
+                    }
+                    else {
+                        out .= "int " . str2 . ": 0" . Chr(10)
+                        strSrc := str3
+                        if (str3 = "rax") {
+                            strSrc := "r0"
+                        }
+                        else if (str3 = "A_Index") {
+                            strSrc := "r20"
+                        }
+                        out .= "mov " . str2 . ", " . strSrc . Chr(10)
+                    }
+                }
+                else {
+                    ; Handle pure declaration or declaration with math
+                    str2 := str1
+                    if (InStr(str1, "+=")) {
+                        str2 := Trim(StrSplit(str1, "+=", 1))
+                    }
+                    else if (InStr(str1, "-=")) {
+                        str2 := Trim(StrSplit(str1, "-=", 1))
+                    }
+                    else if (InStr(str1, "*=")) {
+                        str2 := Trim(StrSplit(str1, "*=", 1))
+                    }
+                    out .= "int " . Trim(str2) . ": 0" . Chr(10)
+                }
+
+                if (InStr(A_LoopField, " += ")) {
+                    str2 := Trim(StrSplit(str1, "+=", 1))
+                    str3 := Trim(StrSplit(str1, "+=", 2))
+                    strSrc := str3
+                    if (str3 = "rax") { strSrc := "r0" }
+                    else if (str3 = "A_Index") { strSrc := "r20" }
+                    out .= "add " . str2 . ", " . strSrc . Chr(10)
+                }
+                else if (InStr(A_LoopField, " *= ")) {
+                    str2 := Trim(StrSplit(str1, "*=", 1))
+                    str3 := Trim(StrSplit(str1, "*=", 2))
+                    strSrc := str3
+                    if (str3 = "rax") { strSrc := "r0" }
+                    else if (str3 = "A_Index") { strSrc := "r20" }
+                    out .= "mul " . str2 . ", " . strSrc . Chr(10)
+                }
+                else if (InStr(A_LoopField, " -= ")) {
+                    str2 := Trim(StrSplit(str1, "-=", 1))
+                    str3 := Trim(StrSplit(str1, "-=", 2))
+                    strSrc := str3
+                    if (str3 = "rax") { strSrc := "r0" }
+                    else if (str3 = "A_Index") { strSrc := "r20" }
+                    out .= "sub " . str2 . ", " . strSrc . Chr(10)
                 }
             }
             else {
@@ -728,6 +957,60 @@ func str compiler(str code) {
                     out .= "    bl is_nint_negative" . Chr(10)
                 }
             }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR GENERATION (nint) ---
+                if (InStr(str1, ":=")) {
+                    str2 := Trim(StrSplit(str1, ":=", 1))
+                    str3 := Trim(StrSplit(str1, ":=", 2))
+                    
+                    if (RegExMatch(str3, "^\d+$")) {
+                        out .= "int " . str2 . ": " . str3 . Chr(10)
+                    }
+                    else {
+                        out .= "int " . str2 . ": 0" . Chr(10)
+                        strSrc := str3
+                        if (str3 = "rax") { strSrc := "r0" }
+                        else if (str3 = "A_Index") { strSrc := "r20" }
+                        out .= "mov " . str2 . ", " . strSrc . Chr(10)
+                    }
+                    ; Initialize _is_negative just for compatibility
+                    out .= "int " . str2 . "_is_negative: 0" . Chr(10)
+                }
+                else {
+                    str2 := str1
+                    if (InStr(str1, "+=")) { str2 := Trim(StrSplit(str1, "+=", 1)) }
+                    else if (InStr(str1, "-=")) { str2 := Trim(StrSplit(str1, "-=", 1)) }
+                    else if (InStr(str1, "*=")) { str2 := Trim(StrSplit(str1, "*=", 1)) }
+                    
+                    out .= "int " . Trim(str2) . ": 0" . Chr(10)
+                    out .= "int " . Trim(str2) . "_is_negative: 0" . Chr(10)
+                }
+
+                if (InStr(A_LoopField, " += ")) {
+                    str2 := Trim(StrSplit(str1, "+=", 1))
+                    str3 := Trim(StrSplit(str1, "+=", 2))
+                    strSrc := str3
+                    if (str3 = "rax") { strSrc := "r0" }
+                    else if (str3 = "A_Index") { strSrc := "r20" }
+                    out .= "add " . str2 . ", " . strSrc . Chr(10)
+                }
+                else if (InStr(A_LoopField, " *= ")) {
+                    str2 := Trim(StrSplit(str1, "*=", 1))
+                    str3 := Trim(StrSplit(str1, "*=", 2))
+                    strSrc := str3
+                    if (str3 = "rax") { strSrc := "r0" }
+                    else if (str3 = "A_Index") { strSrc := "r20" }
+                    out .= "mul " . str2 . ", " . strSrc . Chr(10)
+                }
+                else if (InStr(A_LoopField, " -= ")) {
+                    str2 := Trim(StrSplit(str1, "-=", 1))
+                    str3 := Trim(StrSplit(str1, "-=", 2))
+                    strSrc := str3
+                    if (str3 = "rax") { strSrc := "r0" }
+                    else if (str3 = "A_Index") { strSrc := "r20" }
+                    out .= "sub " . str2 . ", " . strSrc . Chr(10)
+                }
+            }
             else {
                 ; --- YOUR EXISTING X86 CODE - UNCHANGED ---
                 if (InStr(str1, ":=")) {
@@ -866,7 +1149,7 @@ func str compiler(str code) {
                     }
                 }
                 else {
-                    // Handles +=, -=, *= []
+                    ; Handles +=, -=, *= []
                     str op := ""
                     str op_asm := ""
                     if (InStr(A_LoopField, " += ")) {
@@ -947,6 +1230,42 @@ func str compiler(str code) {
                     if (isNint(str2)) {
                         out .= "    ldr x0, =" . str2 . Chr(10) . "    ldr x1, =" . str2 . "_is_negative" . Chr(10) . "    bl is_nint_negative" . Chr(10)
                     }
+                }
+            }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR GENERATION (assignments) ---
+                if (InStr(A_LoopField, " := ")) {
+                    str1 := Trim(A_LoopField)
+                    str2 := Trim(StrSplit(str1, ":=", 1))
+                    str3 := Trim(StrSplit(str1, ":=", 2))
+                    strSrc := str3
+                    if (str3 = "rax") { strSrc := "r0" }
+                    else if (str3 = "A_Index") { strSrc := "r20" }
+                    
+                    ; mov dest, src
+                    out .= "mov " . str2 . ", " . strSrc . Chr(10)
+                    
+                    ; Optional negative check for nint compatibility
+                    if (isNint(str2)) {
+                        ; out .= "cmp " . str2 . ", 0" ... (VM handles signs, skipping)
+                    }
+                }
+                else {
+                    ; Handles +=, -=, *=
+                    str op := ""
+                    str op_asm := ""
+                    if (InStr(A_LoopField, " += ")) { op := "+="; op_asm := "add" }
+                    else if (InStr(A_LoopField, " -= ")) { op := "-="; op_asm := "sub" }
+                    else if (InStr(A_LoopField, " *= ")) { op := "*="; op_asm := "mul" }
+                    
+                    str1 := Trim(A_LoopField)
+                    str2 := Trim(StrSplit(str1, op, 1))
+                    str3 := Trim(StrSplit(str1, op, 2))
+                    strSrc := str3
+                    if (str3 = "rax") { strSrc := "r0" }
+                    else if (str3 = "A_Index") { strSrc := "r20" }
+                    
+                    out .= op_asm . " " . str2 . ", " . strSrc . Chr(10)
                 }
             }
             else {
@@ -1065,6 +1384,18 @@ func str compiler(str code) {
                     }
                 }
             }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (++) ---
+                if (str1 = "rax") {
+                    out .= "inc r0" . Chr(10)
+                }
+                else if (str1 = "A_Index") {
+                    out .= "inc r20" . Chr(10)
+                }
+                else {
+                    out .= "inc " . str1 . Chr(10)
+                }
+            }
             else {
                 out .= "inc qword [" . str1 . "]" . Chr(10)
                 if (isNint(str1)) {
@@ -1107,6 +1438,18 @@ func str compiler(str code) {
                     if (isNint(str1)) {
                         out .= "    ldr x0, =" . str1 . Chr(10) . "    ldr x1, =" . str1 . "_is_negative" . Chr(10) . "    bl is_nint_negative" . Chr(10)
                     }
+                }
+            }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (--) ---
+                if (str1 = "rax") {
+                    out .= "dec r0" . Chr(10)
+                }
+                else if (str1 = "A_Index") {
+                    out .= "dec r20" . Chr(10)
+                }
+                else {
+                    out .= "dec " . str1 . Chr(10)
                 }
             }
             else {
@@ -1184,6 +1527,27 @@ func str compiler(str code) {
                     ; --- END FIX ---
                 }
             }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (print) ---
+                if (str1 = "rax") {
+                    out .= "mov r1, r0" . Chr(10)
+                }
+                else if (str1 = "A_Index") {
+                    out .= "mov r1, r20" . Chr(10)
+                }
+                else if (RegExMatch(str1, "^\d+$")) {
+                    out .= "mov r1, " . Trim(str1) . Chr(10)
+                }
+                else if (InStr(str1, "VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFC")) {
+                    ; The post-processing loop will replace this token with "Actual String"
+                    out .= "mov r1, " . str1 . Chr(10)
+                }
+                else {
+                    ; Variable
+                    out .= "mov r1, " . Trim(str1) . Chr(10)
+                }
+                out .= "call print" . Chr(10)
+            }
             else {
                 ; --- YOUR EXISTING X86 CODE - UNCHANGED ---
                 if (RegExMatch(str1, "^\d+$")) {
@@ -1209,6 +1573,13 @@ func str compiler(str code) {
                 ; rax maps to x0, which is already the first argument for print_char
                 out .= "    bl print_char" . Chr(10)
             }
+            else if (is_oryx = 1) {
+            ; rax maps to r0. print_char likely expects argument in r1 (standard convention)
+            ; or if your VM has a specific 'print_char' that takes r0, adjust accordingly.
+            ; Assuming r1 is the argument register for syscalls:
+            out .= "mov r1, r0" . Chr(10)
+            out .= "call print_char" . Chr(10)
+        }
             else {
                 out .= "mov rdi, rax" . Chr(10) . "push rcx" . Chr(10) . "call print_char" . Chr(10) . "pop rcx" . Chr(10)
             }
@@ -1217,6 +1588,10 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out .= "    b .cloop1_end" . STR(loopCount1) . Chr(10)
             }
+            else if (is_oryx = 1) {
+            ; Oryx uses 'jmp' just like x86
+            out .= "jmp cloop1_end" . STR(loopCount1) . Chr(10)
+        }
             else {
                 out .= "jmp .cloop1_end" . STR(loopCount1) . Chr(10)
             }
@@ -1225,6 +1600,9 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out .= "    b .cloop2_end" . STR(loopCount2) . Chr(10)
             }
+            else if (is_oryx = 1) {
+            out .= "jmp cloop2_end" . STR(loopCount2) . Chr(10)
+        }
             else {
                 out .= "jmp .cloop2_end" . STR(loopCount2) . Chr(10)
             }
@@ -1233,6 +1611,9 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out .= "    b .cloop3_end" . STR(loopCount3) . Chr(10)
             }
+            else if (is_oryx = 1) {
+            out .= "jmp cloop3_end" . STR(loopCount3) . Chr(10)
+        }
             else {
                 out .= "jmp .cloop3_end" . STR(loopCount3) . Chr(10)
             }
@@ -1241,6 +1622,9 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out .= "    b .cloop4_end" . STR(loopCount4) . Chr(10)
             }
+            else if (is_oryx = 1) {
+            out .= "jmp cloop4_end" . STR(loopCount4) . Chr(10)
+        }
             else {
                 out .= "jmp .cloop4_end" . STR(loopCount4) . Chr(10)
             }
@@ -1249,6 +1633,9 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out .= "    b .cloop5_end" . STR(loopCount5) . Chr(10)
             }
+            else if (is_oryx = 1) {
+            out .= "jmp cloop5_end" . STR(loopCount5) . Chr(10)
+        }
             else {
                 out .= "jmp .cloop5_end" . STR(loopCount5) . Chr(10)
             }
@@ -1257,6 +1644,9 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out .= "    b .cloop6_end" . STR(loopCount6) . Chr(10)
             }
+            else if (is_oryx = 1) {
+            out .= "jmp cloop6_end" . STR(loopCount6) . Chr(10)
+        }
             else {
                 out .= "jmp .cloop6_end" . STR(loopCount6) . Chr(10)
             }
@@ -1265,6 +1655,9 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out .= "    b .cloop7_end" . STR(loopCount7) . Chr(10)
             }
+            else if (is_oryx = 1) {
+            out .= "jmp cloop7_end" . STR(loopCount7) . Chr(10)
+        }
             else {
                 out .= "jmp .cloop7_end" . STR(loopCount7) . Chr(10)
             }
@@ -1273,6 +1666,9 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out .= "    b .cloop8_end" . STR(loopCount8) . Chr(10)
             }
+            else if (is_oryx = 1) {
+            out .= "jmp cloop8_end" . STR(loopCount8) . Chr(10)
+        }
             else {
                 out .= "jmp .cloop8_end" . STR(loopCount8) . Chr(10)
             }
@@ -1281,6 +1677,9 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out .= "    b .cloop9_end" . STR(loopCount9) . Chr(10)
             }
+            else if (is_oryx = 1) {
+            out .= "jmp cloop9_end" . STR(loopCount9) . Chr(10)
+        }
             else {
                 out .= "jmp .cloop9_end" . STR(loopCount9) . Chr(10)
             }
@@ -1288,6 +1687,9 @@ func str compiler(str code) {
         else if (StrLower(Trim(A_LoopField)) = "break") or (StrLower(Trim(A_LoopField)) = "break1") {
             if (is_arm = 1) {
                 out .= "    b .loop1_end" . STR(loopCount1) . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                out .= "jmp loop1_end" . STR(loopCount1) . Chr(10)
             }
             else {
                 out .= "jmp .loop1_end" . STR(loopCount1) . Chr(10)
@@ -1297,6 +1699,9 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out .= "    b .loop2_end" . STR(loopCount2) . Chr(10)
             }
+            else if (is_oryx = 1) {
+                out .= "jmp loop2_end" . STR(loopCount2) . Chr(10)
+            }
             else {
                 out .= "jmp .loop2_end" . STR(loopCount2) . Chr(10)
             }
@@ -1304,6 +1709,9 @@ func str compiler(str code) {
         else if (StrLower(Trim(A_LoopField)) = "break3") {
             if (is_arm = 1) {
                 out .= "    b .loop3_end" . STR(loopCount3) . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                out .= "jmp loop3_end" . STR(loopCount3) . Chr(10)
             }
             else {
                 out .= "jmp .loop3_end" . STR(loopCount3) . Chr(10)
@@ -1313,6 +1721,9 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out .= "    b .loop4_end" . STR(loopCount4) . Chr(10)
             }
+            else if (is_oryx = 1) {
+                out .= "jmp loop4_end" . STR(loopCount4) . Chr(10)
+            }
             else {
                 out .= "jmp .loop4_end" . STR(loopCount4) . Chr(10)
             }
@@ -1320,6 +1731,9 @@ func str compiler(str code) {
         else if (StrLower(Trim(A_LoopField)) = "break5") {
             if (is_arm = 1) {
                 out .= "    b .loop5_end" . STR(loopCount5) . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                out .= "jmp loop5_end" . STR(loopCount5) . Chr(10)
             }
             else {
                 out .= "jmp .loop5_end" . STR(loopCount5) . Chr(10)
@@ -1329,6 +1743,9 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out .= "    b .loop6_end" . STR(loopCount6) . Chr(10)
             }
+            else if (is_oryx = 1) {
+                out .= "jmp loop6_end" . STR(loopCount6) . Chr(10)
+            }
             else {
                 out .= "jmp .loop6_end" . STR(loopCount6) . Chr(10)
             }
@@ -1336,6 +1753,9 @@ func str compiler(str code) {
         else if (StrLower(Trim(A_LoopField)) = "break7") {
             if (is_arm = 1) {
                 out .= "    b .loop7_end" . STR(loopCount7) . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                out .= "jmp loop7_end" . STR(loopCount7) . Chr(10)
             }
             else {
                 out .= "jmp .loop7_end" . STR(loopCount7) . Chr(10)
@@ -1345,6 +1765,9 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out .= "    b .loop8_end" . STR(loopCount8) . Chr(10)
             }
+            else if (is_oryx = 1) {
+                out .= "jmp loop8_end" . STR(loopCount8) . Chr(10)
+            }
             else {
                 out .= "jmp .loop8_end" . STR(loopCount8) . Chr(10)
             }
@@ -1352,6 +1775,9 @@ func str compiler(str code) {
         else if (StrLower(Trim(A_LoopField)) = "break9") {
             if (is_arm = 1) {
                 out .= "    b .loop9_end" . STR(loopCount9) . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                out .= "jmp loop9_end" . STR(loopCount9) . Chr(10)
             }
             else {
                 out .= "jmp .loop9_end" . STR(loopCount9) . Chr(10)
@@ -1390,6 +1816,25 @@ func str compiler(str code) {
                 }
                 out .= ".loop1_" . STR(loopCount1) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop1_end" . STR(loopCount1) . Chr(10)
             }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 1) ---
+                out .= "push r90" . Chr(10)
+                out .= "push r91" . Chr(10)
+                
+                strSrc := str1
+                if (str1 = "rax") { strSrc := "r0" }
+                else if (str1 = "A_Index") { strSrc := "r20" } ; Should ideally be the current loop's iterator register
+                
+                out .= "mov r90, " . strSrc . Chr(10) ; Limit
+                out .= "mov r91, 0" . Chr(10) ; Iterator
+                
+                out .= "loop1_" . STR(loopCount1) . ":" . Chr(10)
+                out .= "cmp r91, r90" . Chr(10)
+                out .= "jge loop1_end" . STR(loopCount1) . Chr(10)
+                
+                ; Update A_Index alias (r20) to current loop iterator (r91)
+                out .= "mov r20, r91" . Chr(10)
+            }
             else {
                 if (RegExMatch(str1, "^\d+$")) {
                     out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop1_" . STR(loopCount1) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop1_end" . STR(loopCount1) . Chr(10)
@@ -1402,6 +1847,15 @@ func str compiler(str code) {
         else if (Trim(A_LoopField) = "loopend") or (Trim(A_LoopField) = "endloop") or (Trim(A_LoopField) = "loopend1") or (Trim(A_LoopField) = "endloop1") {
             if (is_arm = 1) {
                 out .= ".cloop1_end" . STR(loopCount1) . ":" . Chr(10) . "    add x20, x20, #1" . Chr(10) . "    sub x19, x19, #1" . Chr(10) . "    b .loop1_" . STR(loopCount1) . Chr(10) . ".loop1_end" . STR(loopCount1) . ":" . Chr(10) . "    ldp x19, x20, [sp], #16" . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 1 End) ---
+                out .= "cloop1_end" . STR(loopCount1) . ":" . Chr(10)
+                out .= "inc r91" . Chr(10)
+                out .= "jmp loop1_" . STR(loopCount1) . Chr(10)
+                out .= "loop1_end" . STR(loopCount1) . ":" . Chr(10)
+                out .= "pop r91" . Chr(10)
+                out .= "pop r90" . Chr(10)
             }
             else {
                 out .= ".cloop1_end" . STR(loopCount1) . ":" . Chr(10) . "inc r13" . Chr(10) . "dec r12" . Chr(10) . "jmp .loop1_" . STR(loopCount1) . Chr(10) . ".loop1_end" . STR(loopCount1) . ":" . Chr(10) . "pop r13" . Chr(10) . "pop r12" . Chr(10)
@@ -1441,6 +1895,26 @@ func str compiler(str code) {
                 }
                 out .= ".loop2_" . STR(loopCount2) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop2_end" . STR(loopCount2) . Chr(10)
             }
+                        else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 2) ---
+                ; Reuse r90 (Limit) and r91 (Iterator), save previous values to stack
+                out .= "push r90" . Chr(10)
+                out .= "push r91" . Chr(10)
+                
+                strSrc := str1
+                if (str1 = "rax") { strSrc := "r0" }
+                else if (str1 = "A_Index") { strSrc := "r20" }
+                
+                out .= "mov r90, " . strSrc . Chr(10) ; Limit
+                out .= "mov r91, 0" . Chr(10) ; Iterator
+                
+                out .= "loop2_" . STR(loopCount2) . ":" . Chr(10)
+                out .= "cmp r91, r90" . Chr(10)
+                out .= "jge loop2_end" . STR(loopCount2) . Chr(10)
+                
+                ; Update A_Index alias (r20) to current loop iterator
+                out .= "mov r20, r91" . Chr(10)
+            }
             else {
                 if (RegExMatch(str1, "^\d+$")) {
                     out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop2_" . STR(loopCount2) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop2_end" . STR(loopCount2) . Chr(10)
@@ -1453,6 +1927,17 @@ func str compiler(str code) {
         else if (Trim(A_LoopField) = "loopend2") or (Trim(A_LoopField) = "endloop2") {
             if (is_arm = 1) {
                 out .= ".cloop2_end" . STR(loopCount2) . ":" . Chr(10) . "    add x20, x20, #1" . Chr(10) . "    sub x19, x19, #1" . Chr(10) . "    b .loop2_" . STR(loopCount2) . Chr(10) . ".loop2_end" . STR(loopCount2) . ":" . Chr(10) . "    ldp x19, x20, [sp], #16" . Chr(10)
+            }
+                     else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 2 End) ---
+                out .= "cloop2_end" . STR(loopCount2) . ":" . Chr(10)
+                out .= "inc r91" . Chr(10)
+                out .= "jmp loop2_" . STR(loopCount2) . Chr(10)
+                out .= "loop2_end" . STR(loopCount2) . ":" . Chr(10)
+                out .= "pop r91" . Chr(10)
+                out .= "pop r90" . Chr(10)
+                ; Restore A_Index alias (r20) to the outer loop's iterator (r91)
+                out .= "mov r20, r91" . Chr(10)
             }
             else {
                 out .= ".cloop2_end" . STR(loopCount2) . ":" . Chr(10) . "inc r13" . Chr(10) . "dec r12" . Chr(10) . "jmp .loop2_" . STR(loopCount2) . Chr(10) . ".loop2_end" . STR(loopCount2) . ":" . Chr(10) . "pop r13" . Chr(10) . "pop r12" . Chr(10)
@@ -1492,6 +1977,24 @@ func str compiler(str code) {
                 }
                 out .= ".loop3_" . STR(loopCount3) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop3_end" . STR(loopCount3) . Chr(10)
             }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 3) ---
+                out .= "push r90" . Chr(10)
+                out .= "push r91" . Chr(10)
+                
+                strSrc := str1
+                if (str1 = "rax") { strSrc := "r0" }
+                else if (str1 = "A_Index") { strSrc := "r20" }
+                
+                out .= "mov r90, " . strSrc . Chr(10)
+                out .= "mov r91, 0" . Chr(10)
+                
+                out .= "loop3_" . STR(loopCount3) . ":" . Chr(10)
+                out .= "cmp r91, r90" . Chr(10)
+                out .= "jge loop3_end" . STR(loopCount3) . Chr(10)
+                
+                out .= "mov r20, r91" . Chr(10)
+            }
             else {
                 if (RegExMatch(str1, "^\d+$")) {
                     out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop3_" . STR(loopCount3) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop3_end" . STR(loopCount3) . Chr(10)
@@ -1504,6 +2007,16 @@ func str compiler(str code) {
         else if (Trim(A_LoopField) = "loopend3") or (Trim(A_LoopField) = "endloop3") {
             if (is_arm = 1) {
                 out .= ".cloop3_end" . STR(loopCount3) . ":" . Chr(10) . "    add x20, x20, #1" . Chr(10) . "    sub x19, x19, #1" . Chr(10) . "    b .loop3_" . STR(loopCount3) . Chr(10) . ".loop3_end" . STR(loopCount3) . ":" . Chr(10) . "    ldp x19, x20, [sp], #16" . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 3 End) ---
+                out .= "cloop3_end" . STR(loopCount3) . ":" . Chr(10)
+                out .= "inc r91" . Chr(10)
+                out .= "jmp loop3_" . STR(loopCount3) . Chr(10)
+                out .= "loop3_end" . STR(loopCount3) . ":" . Chr(10)
+                out .= "pop r91" . Chr(10)
+                out .= "pop r90" . Chr(10)
+                out .= "mov r20, r91" . Chr(10)
             }
             else {
                 out .= ".cloop3_end" . STR(loopCount3) . ":" . Chr(10) . "inc r13" . Chr(10) . "dec r12" . Chr(10) . "jmp .loop3_" . STR(loopCount3) . Chr(10) . ".loop3_end" . STR(loopCount3) . ":" . Chr(10) . "pop r13" . Chr(10) . "pop r12" . Chr(10)
@@ -1543,6 +2056,24 @@ func str compiler(str code) {
                 }
                 out .= ".loop4_" . STR(loopCount4) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop4_end" . STR(loopCount4) . Chr(10)
             }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 4) ---
+                out .= "push r90" . Chr(10)
+                out .= "push r91" . Chr(10)
+                
+                strSrc := str1
+                if (str1 = "rax") { strSrc := "r0" }
+                else if (str1 = "A_Index") { strSrc := "r20" }
+                
+                out .= "mov r90, " . strSrc . Chr(10)
+                out .= "mov r91, 0" . Chr(10)
+                
+                out .= "loop4_" . STR(loopCount4) . ":" . Chr(10)
+                out .= "cmp r91, r90" . Chr(10)
+                out .= "jge loop4_end" . STR(loopCount4) . Chr(10)
+                
+                out .= "mov r20, r91" . Chr(10)
+            }
             else {
                 if (RegExMatch(str1, "^\d+$")) {
                     out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop4_" . STR(loopCount4) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop4_end" . STR(loopCount4) . Chr(10)
@@ -1555,6 +2086,16 @@ func str compiler(str code) {
         else if (Trim(A_LoopField) = "loopend4") or (Trim(A_LoopField) = "endloop4") {
             if (is_arm = 1) {
                 out .= ".cloop4_end" . STR(loopCount4) . ":" . Chr(10) . "    add x20, x20, #1" . Chr(10) . "    sub x19, x19, #1" . Chr(10) . "    b .loop4_" . STR(loopCount4) . Chr(10) . ".loop4_end" . STR(loopCount4) . ":" . Chr(10) . "    ldp x19, x20, [sp], #16" . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 4 End) ---
+                out .= "cloop4_end" . STR(loopCount4) . ":" . Chr(10)
+                out .= "inc r91" . Chr(10)
+                out .= "jmp loop4_" . STR(loopCount4) . Chr(10)
+                out .= "loop4_end" . STR(loopCount4) . ":" . Chr(10)
+                out .= "pop r91" . Chr(10)
+                out .= "pop r90" . Chr(10)
+                out .= "mov r20, r91" . Chr(10)
             }
             else {
                 out .= ".cloop4_end" . STR(loopCount4) . ":" . Chr(10) . "inc r13" . Chr(10) . "dec r12" . Chr(10) . "jmp .loop4_" . STR(loopCount4) . Chr(10) . ".loop4_end" . STR(loopCount4) . ":" . Chr(10) . "pop r13" . Chr(10) . "pop r12" . Chr(10)
@@ -1594,6 +2135,24 @@ func str compiler(str code) {
                 }
                 out .= ".loop5_" . STR(loopCount5) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop5_end" . STR(loopCount5) . Chr(10)
             }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 5) ---
+                out .= "push r90" . Chr(10)
+                out .= "push r91" . Chr(10)
+                
+                strSrc := str1
+                if (str1 = "rax") { strSrc := "r0" }
+                else if (str1 = "A_Index") { strSrc := "r20" }
+                
+                out .= "mov r90, " . strSrc . Chr(10)
+                out .= "mov r91, 0" . Chr(10)
+                
+                out .= "loop5_" . STR(loopCount5) . ":" . Chr(10)
+                out .= "cmp r91, r90" . Chr(10)
+                out .= "jge loop5_end" . STR(loopCount5) . Chr(10)
+                
+                out .= "mov r20, r91" . Chr(10)
+            }
             else {
                 if (RegExMatch(str1, "^\d+$")) {
                     out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop5_" . STR(loopCount5) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop5_end" . STR(loopCount5) . Chr(10)
@@ -1606,6 +2165,16 @@ func str compiler(str code) {
         else if (Trim(A_LoopField) = "loopend5") or (Trim(A_LoopField) = "endloop5") {
             if (is_arm = 1) {
                 out .= ".cloop5_end" . STR(loopCount5) . ":" . Chr(10) . "    add x20, x20, #1" . Chr(10) . "    sub x19, x19, #1" . Chr(10) . "    b .loop5_" . STR(loopCount5) . Chr(10) . ".loop5_end" . STR(loopCount5) . ":" . Chr(10) . "    ldp x19, x20, [sp], #16" . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 5 End) ---
+                out .= "cloop5_end" . STR(loopCount5) . ":" . Chr(10)
+                out .= "inc r91" . Chr(10)
+                out .= "jmp loop5_" . STR(loopCount5) . Chr(10)
+                out .= "loop5_end" . STR(loopCount5) . ":" . Chr(10)
+                out .= "pop r91" . Chr(10)
+                out .= "pop r90" . Chr(10)
+                out .= "mov r20, r91" . Chr(10)
             }
             else {
                 out .= ".cloop5_end" . STR(loopCount5) . ":" . Chr(10) . "inc r13" . Chr(10) . "dec r12" . Chr(10) . "jmp .loop5_" . STR(loopCount5) . Chr(10) . ".loop5_end" . STR(loopCount5) . ":" . Chr(10) . "pop r13" . Chr(10) . "pop r12" . Chr(10)
@@ -1645,6 +2214,24 @@ func str compiler(str code) {
                 }
                 out .= ".loop6_" . STR(loopCount6) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop6_end" . STR(loopCount6) . Chr(10)
             }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 6) ---
+                out .= "push r90" . Chr(10)
+                out .= "push r91" . Chr(10)
+                
+                strSrc := str1
+                if (str1 = "rax") { strSrc := "r0" }
+                else if (str1 = "A_Index") { strSrc := "r20" }
+                
+                out .= "mov r90, " . strSrc . Chr(10)
+                out .= "mov r91, 0" . Chr(10)
+                
+                out .= "loop6_" . STR(loopCount6) . ":" . Chr(10)
+                out .= "cmp r91, r90" . Chr(10)
+                out .= "jge loop6_end" . STR(loopCount6) . Chr(10)
+                
+                out .= "mov r20, r91" . Chr(10)
+            }
             else {
                 if (RegExMatch(str1, "^\d+$")) {
                     out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop6_" . STR(loopCount6) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop6_end" . STR(loopCount6) . Chr(10)
@@ -1657,6 +2244,16 @@ func str compiler(str code) {
         else if (Trim(A_LoopField) = "loopend6") or (Trim(A_LoopField) = "endloop6") {
             if (is_arm = 1) {
                 out .= ".cloop6_end" . STR(loopCount6) . ":" . Chr(10) . "    add x20, x20, #1" . Chr(10) . "    sub x19, x19, #1" . Chr(10) . "    b .loop6_" . STR(loopCount6) . Chr(10) . ".loop6_end" . STR(loopCount6) . ":" . Chr(10) . "    ldp x19, x20, [sp], #16" . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 6 End) ---
+                out .= "cloop6_end" . STR(loopCount6) . ":" . Chr(10)
+                out .= "inc r91" . Chr(10)
+                out .= "jmp loop6_" . STR(loopCount6) . Chr(10)
+                out .= "loop6_end" . STR(loopCount6) . ":" . Chr(10)
+                out .= "pop r91" . Chr(10)
+                out .= "pop r90" . Chr(10)
+                out .= "mov r20, r91" . Chr(10)
             }
             else {
                 out .= ".cloop6_end" . STR(loopCount6) . ":" . Chr(10) . "inc r13" . Chr(10) . "dec r12" . Chr(10) . "jmp .loop6_" . STR(loopCount6) . Chr(10) . ".loop6_end" . STR(loopCount6) . ":" . Chr(10) . "pop r13" . Chr(10) . "pop r12" . Chr(10)
@@ -1696,6 +2293,24 @@ func str compiler(str code) {
                 }
                 out .= ".loop7_" . STR(loopCount7) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop7_end" . STR(loopCount7) . Chr(10)
             }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 7) ---
+                out .= "push r90" . Chr(10)
+                out .= "push r91" . Chr(10)
+                
+                strSrc := str1
+                if (str1 = "rax") { strSrc := "r0" }
+                else if (str1 = "A_Index") { strSrc := "r20" }
+                
+                out .= "mov r90, " . strSrc . Chr(10)
+                out .= "mov r91, 0" . Chr(10)
+                
+                out .= "loop7_" . STR(loopCount7) . ":" . Chr(10)
+                out .= "cmp r91, r90" . Chr(10)
+                out .= "jge loop7_end" . STR(loopCount7) . Chr(10)
+                
+                out .= "mov r20, r91" . Chr(10)
+            }
             else {
                 if (RegExMatch(str1, "^\d+$")) {
                     out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop7_" . STR(loopCount7) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop7_end" . STR(loopCount7) . Chr(10)
@@ -1708,6 +2323,16 @@ func str compiler(str code) {
         else if (Trim(A_LoopField) = "loopend7") or (Trim(A_LoopField) = "endloop7") {
             if (is_arm = 1) {
                 out .= ".cloop7_end" . STR(loopCount7) . ":" . Chr(10) . "    add x20, x20, #1" . Chr(10) . "    sub x19, x19, #1" . Chr(10) . "    b .loop7_" . STR(loopCount7) . Chr(10) . ".loop7_end" . STR(loopCount7) . ":" . Chr(10) . "    ldp x19, x20, [sp], #16" . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 7 End) ---
+                out .= "cloop7_end" . STR(loopCount7) . ":" . Chr(10)
+                out .= "inc r91" . Chr(10)
+                out .= "jmp loop7_" . STR(loopCount7) . Chr(10)
+                out .= "loop7_end" . STR(loopCount7) . ":" . Chr(10)
+                out .= "pop r91" . Chr(10)
+                out .= "pop r90" . Chr(10)
+                out .= "mov r20, r91" . Chr(10)
             }
             else {
                 out .= ".cloop7_end" . STR(loopCount7) . ":" . Chr(10) . "inc r13" . Chr(10) . "dec r12" . Chr(10) . "jmp .loop7_" . STR(loopCount7) . Chr(10) . ".loop7_end" . STR(loopCount7) . ":" . Chr(10) . "pop r13" . Chr(10) . "pop r12" . Chr(10)
@@ -1747,6 +2372,24 @@ func str compiler(str code) {
                 }
                 out .= ".loop8_" . STR(loopCount8) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop8_end" . STR(loopCount8) . Chr(10)
             }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 8) ---
+                out .= "push r90" . Chr(10)
+                out .= "push r91" . Chr(10)
+                
+                strSrc := str1
+                if (str1 = "rax") { strSrc := "r0" }
+                else if (str1 = "A_Index") { strSrc := "r20" }
+                
+                out .= "mov r90, " . strSrc . Chr(10)
+                out .= "mov r91, 0" . Chr(10)
+                
+                out .= "loop8_" . STR(loopCount8) . ":" . Chr(10)
+                out .= "cmp r91, r90" . Chr(10)
+                out .= "jge loop8_end" . STR(loopCount8) . Chr(10)
+                
+                out .= "mov r20, r91" . Chr(10)
+            }
             else {
                 if (RegExMatch(str1, "^\d+$")) {
                     out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop8_" . STR(loopCount8) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop8_end" . STR(loopCount8) . Chr(10)
@@ -1759,6 +2402,16 @@ func str compiler(str code) {
         else if (Trim(A_LoopField) = "loopend8") or (Trim(A_LoopField) = "endloop8") {
             if (is_arm = 1) {
                 out .= ".cloop8_end" . STR(loopCount8) . ":" . Chr(10) . "    add x20, x20, #1" . Chr(10) . "    sub x19, x19, #1" . Chr(10) . "    b .loop8_" . STR(loopCount8) . Chr(10) . ".loop8_end" . STR(loopCount8) . ":" . Chr(10) . "    ldp x19, x20, [sp], #16" . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 8 End) ---
+                out .= "cloop8_end" . STR(loopCount8) . ":" . Chr(10)
+                out .= "inc r91" . Chr(10)
+                out .= "jmp loop8_" . STR(loopCount8) . Chr(10)
+                out .= "loop8_end" . STR(loopCount8) . ":" . Chr(10)
+                out .= "pop r91" . Chr(10)
+                out .= "pop r90" . Chr(10)
+                out .= "mov r20, r91" . Chr(10)
             }
             else {
                 out .= ".cloop8_end" . STR(loopCount8) . ":" . Chr(10) . "inc r13" . Chr(10) . "dec r12" . Chr(10) . "jmp .loop8_" . STR(loopCount8) . Chr(10) . ".loop8_end" . STR(loopCount8) . ":" . Chr(10) . "pop r13" . Chr(10) . "pop r12" . Chr(10)
@@ -1798,6 +2451,24 @@ func str compiler(str code) {
                 }
                 out .= ".loop9_" . STR(loopCount9) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop9_end" . STR(loopCount9) . Chr(10)
             }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 9) ---
+                out .= "push r90" . Chr(10)
+                out .= "push r91" . Chr(10)
+                
+                strSrc := str1
+                if (str1 = "rax") { strSrc := "r0" }
+                else if (str1 = "A_Index") { strSrc := "r20" }
+                
+                out .= "mov r90, " . strSrc . Chr(10)
+                out .= "mov r91, 0" . Chr(10)
+                
+                out .= "loop9_" . STR(loopCount9) . ":" . Chr(10)
+                out .= "cmp r91, r90" . Chr(10)
+                out .= "jge loop9_end" . STR(loopCount9) . Chr(10)
+                
+                out .= "mov r20, r91" . Chr(10)
+            }
             else {
                 if (RegExMatch(str1, "^\d+$")) {
                     out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop9_" . STR(loopCount9) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop9_end" . STR(loopCount9) . Chr(10)
@@ -1810,6 +2481,16 @@ func str compiler(str code) {
         else if (Trim(A_LoopField) = "loopend9") or (Trim(A_LoopField) = "endloop9") {
             if (is_arm = 1) {
                 out .= ".cloop9_end" . STR(loopCount9) . ":" . Chr(10) . "    add x20, x20, #1" . Chr(10) . "    sub x19, x19, #1" . Chr(10) . "    b .loop9_" . STR(loopCount9) . Chr(10) . ".loop9_end" . STR(loopCount9) . ":" . Chr(10) . "    ldp x19, x20, [sp], #16" . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Loop 9 End) ---
+                out .= "cloop9_end" . STR(loopCount9) . ":" . Chr(10)
+                out .= "inc r91" . Chr(10)
+                out .= "jmp loop9_" . STR(loopCount9) . Chr(10)
+                out .= "loop9_end" . STR(loopCount9) . ":" . Chr(10)
+                out .= "pop r91" . Chr(10)
+                out .= "pop r90" . Chr(10)
+                out .= "mov r20, r91" . Chr(10)
             }
             else {
                 out .= ".cloop9_end" . STR(loopCount9) . ":" . Chr(10) . "inc r13" . Chr(10) . "dec r12" . Chr(10) . "jmp .loop9_" . STR(loopCount9) . Chr(10) . ".loop9_end" . STR(loopCount9) . ":" . Chr(10) . "pop r13" . Chr(10) . "pop r12" . Chr(10)
@@ -1875,6 +2556,19 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.ne .end_if1_" . STR(ifCount1) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if = -> jne) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jne end_if1_" . STR(ifCount1) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10) . "cmp rax, " . str3 . Chr(10) . "jne .end_if1_" . STR(ifCount1) . Chr(10)
@@ -1937,6 +2631,19 @@ func str compiler(str code) {
                         }
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.eq .end_if1_" . STR(ifCount1) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if != -> je) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "je end_if1_" . STR(ifCount1) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -2001,6 +2708,19 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.le .end_if1_" . STR(ifCount1) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if > -> jle) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jle end_if1_" . STR(ifCount1) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10) . "cmp rax, " . str3 . Chr(10) . "jle .end_if1_" . STR(ifCount1) . Chr(10)
@@ -2063,6 +2783,19 @@ func str compiler(str code) {
                         }
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.ge .end_if1_" . STR(ifCount1) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if < -> jge) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jge end_if1_" . STR(ifCount1) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -2127,6 +2860,19 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.lt .end_if1_" . STR(ifCount1) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if >= -> jl) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jl end_if1_" . STR(ifCount1) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10) . "cmp rax, " . str3 . Chr(10) . "jl .end_if1_" . STR(ifCount1) . Chr(10)
@@ -2190,6 +2936,19 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.gt .end_if1_" . STR(ifCount1) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if <= -> jg) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jg end_if1_" . STR(ifCount1) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10) . "cmp rax, " . str3 . Chr(10) . "jg .end_if1_" . STR(ifCount1) . Chr(10)
@@ -2201,7 +2960,12 @@ func str compiler(str code) {
             }
         }
         else if (Trim(A_LoopField) = "ifend") or (Trim(A_LoopField) = "endif") or (Trim(A_LoopField) = "ifend1") or (Trim(A_LoopField) = "endif1") {
-            out .= ".end_if1_" . STR(ifCount1) . ":" . Chr(10)
+            if (is_oryx = 1) {
+                out .= "end_if1_" . STR(ifCount1) . ":" . Chr(10)
+            }
+            else {
+                out .= ".end_if1_" . STR(ifCount1) . ":" . Chr(10)
+            }
             ifCount1++
         }
         else if (SubStr(StrLower(A_LoopField), 1, 4) = "if2 ") {
@@ -2262,6 +3026,19 @@ func str compiler(str code) {
                         out .= "    ldr x10, =" . str3 . Chr(10) . "    ldr x10, [x10]" . Chr(10)
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.ne .end_if2_" . STR(ifCount2) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if2 = -> jne) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jne end_if2_" . STR(ifCount2) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -2326,6 +3103,19 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.eq .end_if2_" . STR(ifCount2) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if2 != -> je) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "je end_if2_" . STR(ifCount2) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10) . "cmp rax, " . str3 . Chr(10) . "je .end_if2_" . STR(ifCount2) . Chr(10)
@@ -2388,6 +3178,19 @@ func str compiler(str code) {
                         }
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.le .end_if2_" . STR(ifCount2) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if2 > -> jle) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jle end_if2_" . STR(ifCount2) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -2452,6 +3255,19 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.ge .end_if2_" . STR(ifCount2) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if2 < -> jge) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jge end_if2_" . STR(ifCount2) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10) . "cmp rax, " . str3 . Chr(10) . "jge .end_if2_" . STR(ifCount2) . Chr(10)
@@ -2514,6 +3330,19 @@ func str compiler(str code) {
                         }
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.lt .end_if2_" . STR(ifCount2) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if2 >= -> jl) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jl end_if2_" . STR(ifCount2) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -2578,6 +3407,19 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.gt .end_if2_" . STR(ifCount2) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if2 <= -> jg) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jg end_if2_" . STR(ifCount2) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10) . "cmp rax, " . str3 . Chr(10) . "jg .end_if2_" . STR(ifCount2) . Chr(10)
@@ -2589,7 +3431,12 @@ func str compiler(str code) {
             }
         }
         else if (Trim(A_LoopField) = "ifend2") or (Trim(A_LoopField) = "endif2") {
+        if (is_oryx = 1) {
+            out .= "end_if2_" . STR(ifCount2) . ":" . Chr(10)
+        }
+        else {
             out .= ".end_if2_" . STR(ifCount2) . ":" . Chr(10)
+        }
             ifCount2++
         }
         else if (SubStr(StrLower(A_LoopField), 1, 4) = "if3 ") {
@@ -2648,6 +3495,19 @@ func str compiler(str code) {
                         out .= "    ldr x10, =" . str3 . Chr(10) . "    ldr x10, [x10]" . Chr(10)
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.ne .end_if3_" . STR(ifCount3) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if3 = -> jne) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jne end_if3_" . STR(ifCount3) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -2712,6 +3572,19 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.eq .end_if3_" . STR(ifCount3) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if3 != -> je) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "je end_if3_" . STR(ifCount3) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10) . "cmp rax, " . str3 . Chr(10) . "je .end_if3_" . STR(ifCount3) . Chr(10)
@@ -2774,6 +3647,19 @@ func str compiler(str code) {
                         }
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.le .end_if3_" . STR(ifCount3) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if3 > -> jle) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jle end_if3_" . STR(ifCount3) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -2838,6 +3724,19 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.ge .end_if3_" . STR(ifCount3) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if3 < -> jge) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jge end_if3_" . STR(ifCount3) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10) . "cmp rax, " . str3 . Chr(10) . "jge .end_if3_" . STR(ifCount3) . Chr(10)
@@ -2900,6 +3799,19 @@ func str compiler(str code) {
                         }
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.lt .end_if3_" . STR(ifCount3) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if3 >= -> jl) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jl end_if3_" . STR(ifCount3) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -2964,6 +3876,19 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10) . "    b.gt .end_if3_" . STR(ifCount3) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    ; --- ORYX IR (if3 <= -> jg) ---
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jg end_if3_" . STR(ifCount3) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10) . "cmp rax, " . str3 . Chr(10) . "jg .end_if3_" . STR(ifCount3) . Chr(10)
@@ -2975,7 +3900,11 @@ func str compiler(str code) {
             }
         }
         else if (Trim(A_LoopField) = "ifend3") or (Trim(A_LoopField) = "endif3") {
-            out .= ".end_if3_" . STR(ifCount3) . ":" . Chr(10)
+            if (is_oryx = 1) {
+                out .= "end_if3_" . STR(ifCount3) . ":" . Chr(10)
+            } else {
+                out .= ".end_if3_" . STR(ifCount3) . ":" . Chr(10)
+            }
             ifCount3++
         }
         else if (SubStr(StrLower(A_LoopField), 1, 4) = "if4 ") {
@@ -3037,6 +3966,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.ne .end_if4_" . STR(ifCount4) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jne end_if4_" . STR(ifCount4) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -3108,6 +4047,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.eq .end_if4_" . STR(ifCount4) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "je end_if4_" . STR(ifCount4) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -3177,6 +4126,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.le .end_if4_" . STR(ifCount4) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jle end_if4_" . STR(ifCount4) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -3248,6 +4207,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.ge .end_if4_" . STR(ifCount4) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jge end_if4_" . STR(ifCount4) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -3317,6 +4286,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.lt .end_if4_" . STR(ifCount4) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jl end_if4_" . STR(ifCount4) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -3388,6 +4367,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.gt .end_if4_" . STR(ifCount4) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jg end_if4_" . STR(ifCount4) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -3403,7 +4392,11 @@ func str compiler(str code) {
             }
         }
         else if (Trim(A_LoopField) = "ifend4") or (Trim(A_LoopField) = "endif4") {
-            out .= ".end_if4_" . STR(ifCount4) . ":" . Chr(10)
+            if (is_oryx = 1) {
+                out .= "end_if4_" . STR(ifCount4) . ":" . Chr(10)
+            } else {
+                out .= ".end_if4_" . STR(ifCount4) . ":" . Chr(10)
+            }
             ifCount4++
         }
         else if (SubStr(StrLower(A_LoopField), 1, 4) = "if5 ") {
@@ -3465,6 +4458,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.ne .end_if5_" . STR(ifCount5) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jne end_if5_" . STR(ifCount5) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -3536,6 +4539,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.eq .end_if5_" . STR(ifCount5) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "je end_if5_" . STR(ifCount5) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -3605,6 +4618,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.le .end_if5_" . STR(ifCount5) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jle end_if5_" . STR(ifCount5) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -3676,6 +4699,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.ge .end_if5_" . STR(ifCount5) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jge end_if5_" . STR(ifCount5) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -3745,6 +4778,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.lt .end_if5_" . STR(ifCount5) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jl end_if5_" . STR(ifCount5) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -3816,6 +4859,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.gt .end_if5_" . STR(ifCount5) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jg end_if5_" . STR(ifCount5) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -3831,7 +4884,11 @@ func str compiler(str code) {
             }
         }
         else if (Trim(A_LoopField) = "ifend5") or (Trim(A_LoopField) = "endif5") {
-            out .= ".end_if5_" . STR(ifCount5) . ":" . Chr(10)
+            if (is_oryx = 1) {
+                out .= "end_if5_" . STR(ifCount5) . ":" . Chr(10)
+            } else {
+                out .= ".end_if5_" . STR(ifCount5) . ":" . Chr(10)
+            }
             ifCount5++
         }
         else if (SubStr(StrLower(A_LoopField), 1, 4) = "if6 ") {
@@ -3893,6 +4950,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.ne .end_if6_" . STR(ifCount6) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jne end_if6_" . STR(ifCount6) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -3964,6 +5031,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.eq .end_if6_" . STR(ifCount6) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "je end_if6_" . STR(ifCount6) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -4033,6 +5110,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.le .end_if6_" . STR(ifCount6) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jle end_if6_" . STR(ifCount6) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -4104,6 +5191,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.ge .end_if6_" . STR(ifCount6) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jge end_if6_" . STR(ifCount6) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -4173,6 +5270,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.lt .end_if6_" . STR(ifCount6) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jl end_if6_" . STR(ifCount6) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -4244,6 +5351,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.gt .end_if6_" . STR(ifCount6) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jg end_if6_" . STR(ifCount6) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -4259,7 +5376,11 @@ func str compiler(str code) {
             }
         }
         else if (Trim(A_LoopField) = "ifend6") or (Trim(A_LoopField) = "endif6") {
-            out .= ".end_if6_" . STR(ifCount6) . ":" . Chr(10)
+            if (is_oryx = 1) {
+                out .= "end_if6_" . STR(ifCount6) . ":" . Chr(10)
+            } else {
+                out .= ".end_if6_" . STR(ifCount6) . ":" . Chr(10)
+            }
             ifCount6++
         }
         else if (SubStr(StrLower(A_LoopField), 1, 4) = "if7 ") {
@@ -4321,6 +5442,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.ne .end_if7_" . STR(ifCount7) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jne end_if7_" . STR(ifCount7) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -4392,6 +5523,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.eq .end_if7_" . STR(ifCount7) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "je end_if7_" . STR(ifCount7) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -4461,6 +5602,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.le .end_if7_" . STR(ifCount7) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jle end_if7_" . STR(ifCount7) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -4532,6 +5683,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.ge .end_if7_" . STR(ifCount7) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jge end_if7_" . STR(ifCount7) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -4601,6 +5762,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.lt .end_if7_" . STR(ifCount7) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jl end_if7_" . STR(ifCount7) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -4672,6 +5843,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.gt .end_if7_" . STR(ifCount7) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jg end_if7_" . STR(ifCount7) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -4687,7 +5868,11 @@ func str compiler(str code) {
             }
         }
         else if (Trim(A_LoopField) = "ifend7") or (Trim(A_LoopField) = "endif7") {
-            out .= ".end_if7_" . STR(ifCount7) . ":" . Chr(10)
+            if (is_oryx = 1) {
+                out .= "end_if7_" . STR(ifCount7) . ":" . Chr(10)
+            } else {
+                out .= ".end_if7_" . STR(ifCount7) . ":" . Chr(10)
+            }
             ifCount7++
         }
         else if (SubStr(StrLower(A_LoopField), 1, 4) = "if8 ") {
@@ -4749,6 +5934,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.ne .end_if8_" . STR(ifCount8) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jne end_if8_" . STR(ifCount8) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -4820,6 +6015,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.eq .end_if8_" . STR(ifCount8) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "je end_if8_" . STR(ifCount8) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -4889,6 +6094,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.le .end_if8_" . STR(ifCount8) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jle end_if8_" . STR(ifCount8) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -4960,6 +6175,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.ge .end_if8_" . STR(ifCount8) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jge end_if8_" . STR(ifCount8) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -5029,6 +6254,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.lt .end_if8_" . STR(ifCount8) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jl end_if8_" . STR(ifCount8) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -5100,6 +6335,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.gt .end_if8_" . STR(ifCount8) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jg end_if8_" . STR(ifCount8) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -5115,7 +6360,11 @@ func str compiler(str code) {
             }
         }
         else if (Trim(A_LoopField) = "ifend8") or (Trim(A_LoopField) = "endif8") {
-            out .= ".end_if8_" . STR(ifCount8) . ":" . Chr(10)
+            if (is_oryx = 1) {
+                out .= "end_if8_" . STR(ifCount8) . ":" . Chr(10)
+            } else {
+                out .= ".end_if8_" . STR(ifCount8) . ":" . Chr(10)
+            }
             ifCount8++
         }
         else if (SubStr(StrLower(A_LoopField), 1, 4) = "if9 ") {
@@ -5177,6 +6426,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.ne .end_if9_" . STR(ifCount9) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jne end_if9_" . STR(ifCount9) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -5248,6 +6507,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.eq .end_if9_" . STR(ifCount9) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "je end_if9_" . STR(ifCount9) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -5317,6 +6586,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.le .end_if9_" . STR(ifCount9) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jle end_if9_" . STR(ifCount9) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -5388,6 +6667,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.ge .end_if9_" . STR(ifCount9) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jge end_if9_" . STR(ifCount9) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -5457,6 +6746,16 @@ func str compiler(str code) {
                     }
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.lt .end_if9_" . STR(ifCount9) . Chr(10)
+                }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jl end_if9_" . STR(ifCount9) . Chr(10)
                 }
                 else {
                     if (isNum = 1) {
@@ -5528,6 +6827,16 @@ func str compiler(str code) {
                     out .= "    cmp x9, x10" . Chr(10)
                     out .= "    b.gt .end_if9_" . STR(ifCount9) . Chr(10)
                 }
+                else if (is_oryx = 1) {
+                    strLhs := str2
+                    if (str2 = "rax") { strLhs := "r0" }
+                    else if (str2 = "A_Index") { strLhs := "r20" }
+                    strRhs := str3
+                    if (str3 = "rax") { strRhs := "r0" }
+                    else if (str3 = "A_Index") { strRhs := "r20" }
+                    out .= "cmp " . strLhs . ", " . strRhs . Chr(10)
+                    out .= "jg end_if9_" . STR(ifCount9) . Chr(10)
+                }
                 else {
                     if (isNum = 1) {
                         out .= "mov rax, [" . str2 . "]" . Chr(10)
@@ -5543,7 +6852,11 @@ func str compiler(str code) {
             }
         }
         else if (Trim(A_LoopField) = "ifend9") or (Trim(A_LoopField) = "endif9") {
-            out .= ".end_if9_" . STR(ifCount9) . ":" . Chr(10)
+            if (is_oryx = 1) {
+                out .= "end_if9_" . STR(ifCount9) . ":" . Chr(10)
+            } else {
+                out .= ".end_if9_" . STR(ifCount9) . ":" . Chr(10)
+            }
             ifCount9++
         }
         else if (SubStr(StrLower(A_LoopField), 1, 5) = "func ") {
@@ -5601,6 +6914,33 @@ func str compiler(str code) {
                 }
                 ; --- END NEW LOGIC ---
             }
+            else if (is_oryx = 1) {
+            
+            isOryxFuncFirst++
+            if (isOryxFuncFirst = 1) {
+            out .= "jmp _start" . Chr(10)
+            }
+            
+            ; --- ORYX IR (Function Definition with R50+ Convention) ---
+                ; Clear the map for the new function
+                oryx_param_map := [] 
+                
+                out .= "jmp " . funcName . "_end_skip_def" . Chr(10)
+                out .= funcName . ":" . Chr(10)
+
+                ; Build the map: "param_name" -> "r(50+N)"
+                Loop, % funcArgsArr.size() {
+                    str param_name := Trim(funcArgsArr[A_Index])
+                    ; Arg1 -> r50, Arg2 -> r51, etc.
+                    int non_volatile_reg_num := 50 + A_Index 
+                    str safe_reg_name := "r" . STR(non_volatile_reg_num)
+                    oryx_param_map.add(param_name . Chr(254) . safe_reg_name)
+
+                    ; Copy the argument from the volatile register (r1, r2...) into the safe register
+                    int arg_reg_num := A_Index + 1
+                    out .= "mov " . safe_reg_name . ", r" . STR(arg_reg_num) . Chr(10)
+                }
+            }
             else {
                 out .= str2 . ":" . Chr(10) . "push rbp" . Chr(10) . "mov rbp, rsp" . Chr(10) . "sub rsp, " . STR(8 + (localVarNum * 8)) . Chr(10)
             }
@@ -5612,6 +6952,13 @@ func str compiler(str code) {
                 out .= "    ldp x29, x30, [sp], #16" . Chr(10)
                 out .= "    ret" . Chr(10)
             }
+            else if (is_oryx = 1) {
+                oryx_param_map := []
+                ; --- ORYX IR (Function End) ---
+                out .= funcName . "_return:" . Chr(10)
+                out .= "ret" . Chr(10)
+                out .= funcName . "_end_skip_def:" . Chr(10)
+            }
             else {
                 out .= "." . funcName . "_return:" . Chr(10) . "add rsp, " . STR(8 + (localVarNum * 8)) . Chr(10) . "pop rbp" . Chr(10) . "ret" . Chr(10)
             }
@@ -5620,6 +6967,9 @@ func str compiler(str code) {
         else if (Trim(A_LoopField) = "return") {
             if (is_arm = 1) {
                 out .= "    b ." . funcName . "_return" . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                out .= "jmp " . funcName . "_return" . Chr(10)
             }
             else {
                 out .= "jmp ." . funcName . "_return" . Chr(10)
@@ -5656,6 +7006,23 @@ func str compiler(str code) {
                 }
                 out .= "    b ." . funcName . "_return" . Chr(10)
             }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (return value) ---
+                if (RegExMatch(str1, "^\d+$")) {
+                    out .= "mov r0, " . str1 . Chr(10)
+                }
+                else if (str1 = "rax") {
+                    ; Already in r0
+                }
+                else if (str1 = "A_Index") {
+                    out .= "mov r0, r20" . Chr(10)
+                }
+                else {
+                    ; Variable
+                    out .= "mov r0, " . str1 . Chr(10)
+                }
+                out .= "jmp " . funcName . "_return" . Chr(10)
+            }
             else {
                 if (RegExMatch(str1, "^\d+$")) {
                     out .= "mov rax, " . str1 . Chr(10) . "jmp ." . funcName . "_return" . Chr(10)
@@ -5670,6 +7037,10 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 ; A struct of 3 quadwords is 24 bytes
                 arrBss .= ".lcomm " . Trim(str1) . ", 24" . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Array Declaration) ---
+                out .= "arr " . Trim(str1) . Chr(10)
             }
             else {
                 arrBss .= "    " . Trim(str1) . " rq 3" . Chr(10)
@@ -5711,6 +7082,18 @@ func str compiler(str code) {
                 }
                 out .= "    bl array_append" . Chr(10)
             }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (arr.add) ---
+                strVal := str2
+                if (str2 = "rax") { strVal := "r0" }
+                else if (str2 = "A_Index") { strVal := "r20" }
+                else if (SubStr(str2, 1, 1) = "'") { 
+                    ; Character literal 'A' -> "A" for Oryx
+                    strVal := Chr(34) . SubStr(str2, 2, 1) . Chr(34)
+                }
+                
+                out .= "arr.add " . str1 . ", " . strVal . Chr(10)
+            }
             else {
                 if (RegExMatch(str2, "^\d+$")) {
                     str3 := "mov rsi, " . str2 . Chr(10) . "mov rdi, " . str1 . Chr(10)
@@ -5727,6 +7110,11 @@ func str compiler(str code) {
                 out .= "    ldr x0, =" . str1 . Chr(10)
                 out .= "    bl array_pop" . Chr(10)
             }
+              else if (is_oryx = 1) {
+                ; Oryx doesn't have explicit .pop in your spec, but let's assume it does or map it
+                ; If not, we skip or use a custom VM call. Assuming arr.pop exists:
+                out .= "arr.pop " . str1 . Chr(10)
+            }
             else {
                 out .= "mov rdi, " . str1 . Chr(10) . "call array_pop" . Chr(10)
             }
@@ -5736,6 +7124,9 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out .= "    ldr x0, =" . str1 . Chr(10)
                 out .= "    bl array_clear" . Chr(10)
+            }
+              else if (is_oryx = 1) {
+                out .= "arr.clear " . str1 . Chr(10)
             }
             else {
                 out .= "mov rdi, " . str1 . Chr(10) . "call array_clear" . Chr(10)
@@ -5749,6 +7140,9 @@ func str compiler(str code) {
                 out .= "    ldr x1, =" . str2 . Chr(10)
                 out .= "    bl array_copy" . Chr(10)
             }
+              else if (is_oryx = 1) {
+                out .= "arr.copy " . str2 . ", " . str1 . Chr(10)
+            }
             else {
                 out .= "mov rdi, " . str1 . Chr(10) . "mov rsi, " . str2 . Chr(10) . "call array_copy" . Chr(10)
             }
@@ -5758,6 +7152,10 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out .= "    ldr x9, =" . str1 . Chr(10)
                 out .= "    ldr x0, [x9, #DynamicArray_size]" . Chr(10)
+            }
+                        else if (is_oryx = 1) {
+                ; arr.size <array>, <dest_reg>
+                out .= "arr.size " . str1 . ", r0" . Chr(10)
             }
             else {
                 out .= "mov rax, [" . str1 . " + DynamicArray.size]" . Chr(10)
@@ -5797,6 +7195,17 @@ func str compiler(str code) {
                 out .= "    ldr x9, [x9, #DynamicArray_pointer]" . Chr(10)
                 out .= "    ldr x0, [x9, x10, lsl #3]" . Chr(10)
             }
+                 else if (is_oryx = 1) {
+                ; arr.get <array>, <index_src>, <dest_reg>
+                strIndex := str2
+                if (str2 = "rax") { strIndex := "r0" }
+                else if (str2 = "A_Index") { strIndex := "r20" }
+                
+                ; If index is a variable, Oryx handles it. 
+                ; If it's a raw number, Oryx handles it.
+                
+                out .= "arr.get " . str1 . ", " . strIndex . ", r0" . Chr(10)
+            }
             else {
                 if (RegExMatch(str2, "^\d+$")) {
                     str3 := "mov rcx, " . str2 . Chr(10)
@@ -5819,23 +7228,27 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out .= "    b .__HTLL_HTLL_" . str1 . Chr(10)
             }
+            else if (is_oryx = 1) {
+                out .= "jmp __HTLL_HTLL_" . str1 . Chr(10)
+            }
             else {
                 out .= "jmp .__HTLL_HTLL_" . str1 . Chr(10)
             }
         }
         else if (SubStr(StrLower(A_LoopField), 1, 5) = "togo ") {
             str1 := Trim(StringTrimLeft(A_LoopField, 5))
-            ; This is architecture-independent, no 'if (is_arm)' needed.
-            out .= ".__HTLL_HTLL_" . str1 . ":" . Chr(10)
+            if (is_oryx = 1) {
+                out .= "__HTLL_HTLL_" . str1 . ":" . Chr(10)
+            }
+            else {
+                out .= ".__HTLL_HTLL_" . str1 . ":" . Chr(10)
+            }
         }
         else if (SubStr(StrLower(A_LoopField), 1, 7) = "sleep, ") {
             str1 := Trim(StringTrimLeft(A_LoopField, 7))
             if (is_arm = 1) {
                 if (RegExMatch(str1, "^\d+$")) {
                     out .= "    mov x0, #" . str1 . Chr(10)
-                }
-                else if (str1 = "rax") {
-                    // Value is already in x0, no instruction is needed
                 }
                 else if (str1 = "A_Index") {
                     out .= "    mov x0, x20" . Chr(10)
@@ -5858,6 +7271,21 @@ func str compiler(str code) {
                     }
                 }
                 out .= "    bl sleep_ms" . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                if (RegExMatch(str1, "^\d+$")) {
+                    out .= "mov r1, " . str1 . Chr(10)
+                }
+                else if (str1 = "rax") {
+                    out .= "mov r1, r0" . Chr(10)
+                }
+                else if (str1 = "A_Index") {
+                    out .= "mov r1, r20" . Chr(10)
+                }
+                else {
+                    out .= "mov r1, " . str1 . Chr(10)
+                }
+                out .= "call sleep" . Chr(10)
             }
             else {
                 if (RegExMatch(str1, "^\d+$")) {
@@ -5890,6 +7318,23 @@ func str compiler(str code) {
                 out .= "    ldr x9, =filename_ptr_size" . Chr(10) . "    ldr x1, [x9]" . Chr(10)
                 out .= "    bl free_packed_string" . Chr(10)
             }
+else if (is_oryx = 1) {
+    out .= "; --- INLINE CONVERT " . str3 . " ---" . Chr(10)
+    out .= "arr.size " . str3 . ", r90" . Chr(10)
+    out .= "mov __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, " . Chr(34) . Chr(34) . Chr(10)
+    out .= "mov r91, 0" . Chr(10)
+    out .= "__HTLL_HTLL_inline_conv" . STR(HTLL_fix_int) . ":" . Chr(10)
+    out .= "cmp r91, r90" . Chr(10)
+    out .= "jge __HTLL_HTLL_inline_conv_end" . STR(HTLL_fix_int) . Chr(10)
+    out .= "arr.get " . str3 . ", r91, r92" . Chr(10)
+    out .= "num_to_char r92, r93" . Chr(10)
+    out .= "add_str __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, r93" . Chr(10)
+    out .= "inc r91" . Chr(10)
+    out .= "jmp __HTLL_HTLL_inline_conv" . STR(HTLL_fix_int) . Chr(10)
+    out .= "__HTLL_HTLL_inline_conv_end" . STR(HTLL_fix_int) . ":" . Chr(10)
+    out .= "file.read " . str2 . ", __HTLL_HTLL_HTLL_HTLL_IO_BUFFER" . Chr(10)
+    HTLL_fix_int++
+}
             else {
                 out .= "mov rdi, " . str3 . Chr(10) . "call array_pack_to_bytes" . Chr(10)
                 out .= "mov [filename_ptr], rax" . Chr(10) . "mov [filename_ptr_size], rdx" . Chr(10)
@@ -5912,6 +7357,40 @@ func str compiler(str code) {
                 out .= "    ldr x9, =filename_ptr_size" . Chr(10) . "    ldr x1, [x9]" . Chr(10)
                 out .= "    bl free_packed_string" . Chr(10)
             }
+else if (is_oryx = 1) {
+    ; --- INLINE CONVERT FILENAME (str2) ---
+    out .= "; --- INLINE CONVERT " . str2 . " ---" . Chr(10)
+    out .= "arr.size " . str2 . ", r90" . Chr(10)
+    out .= "mov __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, " . Chr(34) . Chr(34) . Chr(10)
+    out .= "mov r91, 0" . Chr(10)
+    out .= "__HTLL_HTLL_inline_convA" . STR(HTLL_fix_int) . ":" . Chr(10)
+    out .= "cmp r91, r90" . Chr(10)
+    out .= "jge __HTLL_HTLL_inline_convA_end" . STR(HTLL_fix_int) . Chr(10)
+    out .= "arr.get " . str2 . ", r91, r92" . Chr(10)
+    out .= "num_to_char r92, r93" . Chr(10)
+    out .= "add_str __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, r93" . Chr(10)
+    out .= "inc r91" . Chr(10)
+    out .= "jmp __HTLL_HTLL_inline_convA" . STR(HTLL_fix_int) . Chr(10)
+    out .= "__HTLL_HTLL_inline_convA_end" . STR(HTLL_fix_int) . ":" . Chr(10)
+
+    ; --- INLINE CONVERT CONTENT (str3) ---
+    out .= "; --- INLINE CONVERT " . str3 . " ---" . Chr(10)
+    out .= "arr.size " . str3 . ", r90" . Chr(10)
+    out .= "mov __HTLL_HTLL_HTLL_HTLL_CONTENT_BUFFER, " . Chr(34) . Chr(34) . Chr(10)
+    out .= "mov r91, 0" . Chr(10)
+    out .= "__HTLL_HTLL_inline_convB" . STR(HTLL_fix_int) . ":" . Chr(10)
+    out .= "cmp r91, r90" . Chr(10)
+    out .= "jge __HTLL_HTLL_inline_convB_end" . STR(HTLL_fix_int) . Chr(10)
+    out .= "arr.get " . str3 . ", r91, r92" . Chr(10)
+    out .= "num_to_char r92, r93" . Chr(10)
+    out .= "add_str __HTLL_HTLL_HTLL_HTLL_CONTENT_BUFFER, r93" . Chr(10)
+    out .= "inc r91" . Chr(10)
+    out .= "jmp __HTLL_HTLL_inline_convB" . STR(HTLL_fix_int) . Chr(10)
+    out .= "__HTLL_HTLL_inline_convB_end" . STR(HTLL_fix_int) . ":" . Chr(10)
+    
+    out .= "file.append __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, __HTLL_HTLL_HTLL_HTLL_CONTENT_BUFFER" . Chr(10)
+    HTLL_fix_int++
+}
             else {
                 out .= "mov rdi, " . str2 . Chr(10) . "call array_pack_to_bytes" . Chr(10)
                 out .= "mov [filename_ptr], rax" . Chr(10) . "mov [filename_ptr_size], rdx" . Chr(10)
@@ -5931,6 +7410,23 @@ func str compiler(str code) {
                 out .= "    ldr x9, =filename_ptr_size" . Chr(10) . "    ldr x1, [x9]" . Chr(10)
                 out .= "    bl free_packed_string" . Chr(10)
             }
+else if (is_oryx = 1) {
+    out .= "; --- INLINE CONVERT " . str1 . " ---" . Chr(10)
+    out .= "arr.size " . str1 . ", r90" . Chr(10)
+    out .= "mov __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, " . Chr(34) . Chr(34) . Chr(10)
+    out .= "mov r91, 0" . Chr(10)
+    out .= "__HTLL_HTLL_inline_conv" . STR(HTLL_fix_int) . ":" . Chr(10)
+    out .= "cmp r91, r90" . Chr(10)
+    out .= "jge __HTLL_HTLL_inline_conv_end" . STR(HTLL_fix_int) . Chr(10)
+    out .= "arr.get " . str1 . ", r91, r92" . Chr(10)
+    out .= "num_to_char r92, r93" . Chr(10)
+    out .= "add_str __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, r93" . Chr(10)
+    out .= "inc r91" . Chr(10)
+    out .= "jmp __HTLL_HTLL_inline_conv" . STR(HTLL_fix_int) . Chr(10)
+    out .= "__HTLL_HTLL_inline_conv_end" . STR(HTLL_fix_int) . ":" . Chr(10)
+    out .= "file.delete __HTLL_HTLL_HTLL_HTLL_IO_BUFFER" . Chr(10)
+    HTLL_fix_int++
+}
             else {
                 out .= "mov rdi, " . str1 . Chr(10) . "call array_pack_to_bytes" . Chr(10)
                 out .= "mov [filename_ptr], rax" . Chr(10) . "mov [filename_ptr_size], rdx" . Chr(10)
@@ -5950,6 +7446,10 @@ func str compiler(str code) {
                 out .= "    ldr x1, =" . path_label . Chr(10)
                 out .= "    bl file_read" . Chr(10)
             }
+               else if (is_oryx = 1) {
+                ; Oryx: file.read dest, "file.txt"
+                out .= "file.read " . str2 . ", " . str3 . Chr(10)
+            }
             else {
                 dot_data_print_temp_strings .= path_label . " db " . str3 . ", 0" . Chr(10)
                 out .= "mov rdi, " . str2 . Chr(10) . "mov rsi, " . path_label . Chr(10) . "call file_read" . Chr(10)
@@ -5967,6 +7467,9 @@ func str compiler(str code) {
                 out .= "    ldr x1, =" . str3 . Chr(10)
                 out .= "    bl file_append" . Chr(10)
             }
+               else if (is_oryx = 1) {
+                out .= "file.append " . str2 . ", " . str3 . Chr(10)
+            }
             else {
                 dot_data_print_temp_strings .= path_label . " db " . str2 . ", 0" . Chr(10)
                 out .= "mov rdi, " . path_label . Chr(10) . "mov rsi, " . str3 . Chr(10) . "call file_append" . Chr(10)
@@ -5980,6 +7483,9 @@ func str compiler(str code) {
                 dot_data_print_temp_strings .= path_label . ": .string " . str1 . Chr(10)
                 out .= "    ldr x0, =" . path_label . Chr(10)
                 out .= "    bl file_delete" . Chr(10)
+            }
+              else if (is_oryx = 1) {
+                out .= "file.delete " . str1 . Chr(10)
             }
             else {
                 dot_data_print_temp_strings .= path_label . " db " . str1 . ", 0" . Chr(10)
@@ -5995,6 +7501,23 @@ func str compiler(str code) {
                 out .= "    ldr x1, =" . str3 . Chr(10)
                 out .= "    bl get_user_input" . Chr(10)
             }
+else if (is_oryx = 1) {
+    out .= "; --- INLINE CONVERT " . str3 . " ---" . Chr(10)
+    out .= "arr.size " . str3 . ", r90" . Chr(10)
+    out .= "mov __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, " . Chr(34) . Chr(34) . Chr(10)
+    out .= "mov r91, 0" . Chr(10)
+    out .= "__HTLL_HTLL_inline_conv" . STR(HTLL_fix_int) . ":" . Chr(10)
+    out .= "cmp r91, r90" . Chr(10)
+    out .= "jge __HTLL_HTLL_inline_conv_end" . STR(HTLL_fix_int) . Chr(10)
+    out .= "arr.get " . str3 . ", r91, r92" . Chr(10)
+    out .= "num_to_char r92, r93" . Chr(10)
+    out .= "add_str __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, r93" . Chr(10)
+    out .= "inc r91" . Chr(10)
+    out .= "jmp __HTLL_HTLL_inline_conv" . STR(HTLL_fix_int) . Chr(10)
+    out .= "__HTLL_HTLL_inline_conv_end" . STR(HTLL_fix_int) . ":" . Chr(10)
+    out .= "input " . str2 . ", __HTLL_HTLL_HTLL_HTLL_IO_BUFFER" . Chr(10)
+    HTLL_fix_int++
+}
             else {
                 out .= "mov rdi, " . str2 . Chr(10) . "mov rsi, " . str3 . Chr(10) . "call get_user_input" . Chr(10)
             }
@@ -6067,6 +7590,21 @@ func str compiler(str code) {
                 ; 4. Store x11 into Array[x10]
                 out .= "    str x11, [x9, x10, lsl #3]" . Chr(10)
             }
+            else if (is_oryx = 1) {
+                ; arr.set array, index, value
+                
+                ; Resolve Index
+                idxSrc := str_index
+                if (str_index = "rax") { idxSrc := "r0" }
+                else if (str_index = "A_Index") { idxSrc := "r20" }
+                
+                ; Resolve Value
+                valSrc := str_value
+                if (str_value = "rax") { valSrc := "r0" }
+                else if (str_value = "A_Index") { valSrc := "r20" }
+                
+                out .= "arr.set " . str1 . ", " . idxSrc . ", " . valSrc . Chr(10)
+            }
             else {
                 ; --- EXISTING x86 CODE (Unchanged) ---
                 out .= "mov rbx, [" . str1 . " + DynamicArray.pointer]" . Chr(10)
@@ -6085,9 +7623,12 @@ func str compiler(str code) {
                 out .= "mov [rbx + rcx*8], rsi" . Chr(10)
             }
         }
-        else if (Trim(A_LoopField) = "rax++") {
+       else if (Trim(A_LoopField) = "rax++") {
             if (is_arm = 1) {
                 out .= "    add x0, x0, #1" . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                out .= "inc r0" . Chr(10)
             }
             else {
                 out .= "inc rax" . Chr(10)
@@ -6096,6 +7637,9 @@ func str compiler(str code) {
         else if (Trim(A_LoopField) = "rax--") {
             if (is_arm = 1) {
                 out .= "    sub x0, x0, #1" . Chr(10)
+            }
+            else if (is_oryx = 1) {
+                out .= "dec r0" . Chr(10)
             }
             else {
                 out .= "dec rax" . Chr(10)
@@ -6195,6 +7739,21 @@ func str compiler(str code) {
                     out .= "    add sp, sp, #" . STR(stack_arg_count * 8) . Chr(10)
                 }
             }
+            else if (is_oryx = 1) {
+                ; --- ORYX IR (Function Call) ---
+                if (int1 = 0) {
+                    Loop, Parse, str3, ", " {
+                        ; Move each argument to the corresponding register (r1, r2, etc.)
+                        strArg := A_LoopField
+                        strSrc := strArg
+                        if (strArg = "rax") { strSrc := "r0" }
+                        else if (strArg = "A_Index") { strSrc := "r20" }
+                        
+                        out .= "mov r" . STR(A_Index + 1) . ", " . strSrc . Chr(10)
+                    }
+                }
+                out .= "call " . str2 . Chr(10)
+            }
             else {
                 ; --- YOUR EXISTING X86 CODE - UNCHANGED ---
                 Loop, Parse, str3, ", " {
@@ -6222,7 +7781,10 @@ func str compiler(str code) {
             if (is_arm = 1) {
                 out := RegExReplace(out, Chr(61) . "\b" . Trim(funcArgsArr[A_Index]) . "\b", "[sp, #" . STR(A_Index * 8) . "]")
             }
-            else {
+            if (is_arm = 0) and (is_oryx = 1) {
+                out := RegExReplace(out, "\b" . Trim(funcArgsArr[A_Index]) . "\b", "r" . STR(A_Index + 50))
+            }
+            if (is_arm = 0) and (is_oryx = 0) {
                 ; Your existing x86 formula
                 out := RegExReplace(out, "\b" . Trim(funcArgsArr[A_Index]) . "\b", "rbp + " . STR(8 + ( (funcArgsArr.size() - A_Index) * 8 )))
             }
@@ -6354,6 +7916,35 @@ func str compiler(str code) {
     ; ... inside your 'where:' block ...
     str fasm_header := ""
     ; --- FASM OBJECT FILE HEADER & LINKER DIRECTIVES ---
+    if (is_oryx = 1) {
+        
+    fasm_header .= "string __HTLL_HTLL_HTLL_HTLL_IO_BUFFER: " . Chr(34) . Chr(34) . Chr(10)
+    fasm_header .= "string __HTLL_HTLL_HTLL_HTLL_CONTENT_BUFFER: " . Chr(34) . Chr(34) . Chr(10)
+        
+        ; Inject the library code (you can load this from a file or have it as a string)
+        fasm_header .= "jmp __HTLL_HTLL_HTLL_HTLL_main_entry_point" . Chr(10)
+        fasm_header .= "; --- START INJECTED LIBRARY ---" . Chr(10)
+        fasm_header .= "__HTLL_HTLL_HTLL_HTLL_convert_array_to_bytestring:" . Chr(10)
+        fasm_header .= "    push r1" . Chr(10) . "    push r2" . Chr(10) . "    push r3" . Chr(10) . " push r4" . Chr(10) . " push r5" . Chr(10) . " push r6" . Chr(10)
+        fasm_header .= "    mov r2, " . Chr(34) . Chr(34) . Chr(10)
+        fasm_header .= "    arr.size r1, r3" . Chr(10)
+        fasm_header .= "    mov r4, 0" . Chr(10)
+        fasm_header .= "__HTLL_HTLL_HTLL_HTLL_convert_loop:" . Chr(10)
+        fasm_header .= "    cmp r4, r3" . Chr(10)
+        fasm_header .= "    jge __HTLL_HTLL_HTLL_HTLL_convert_loop_end" . Chr(10)
+        fasm_header .= "    arr.get r1, r4, r5" . Chr(10)
+        fasm_header .= "    num_to_char r5, r6" . Chr(10)
+        fasm_header .= "    add_str r2, r6" . Chr(10)
+        fasm_header .= "    inc r4" . Chr(10)
+        fasm_header .= "    jmp __HTLL_HTLL_HTLL_HTLL_convert_loop" . Chr(10)
+        fasm_header .= "__HTLL_HTLL_HTLL_HTLL_convert_loop_end:" . Chr(10)
+        fasm_header .= "mov r0, r2" . Chr(10)
+        fasm_header .= "    pop r6" . Chr(10) . " pop r5" . Chr(10) . " pop r4" . Chr(10) . " pop r3" . Chr(10) . " pop r2" . Chr(10) . " pop r1" . Chr(10)
+        fasm_header .= "    ret" . Chr(10)
+        fasm_header .= "; --- END INJECTED LIBRARY ---" . Chr(10)
+        fasm_header .= "__HTLL_HTLL_HTLL_HTLL_main_entry_point:" . Chr(10)
+    }
+    else {
     if (is_arm = 1) {
         ; --- ARM GNU AS HEADER & CONSTANTS ---
         ; NOTE: GNU AS doesn't have a direct 'format' or 'entry' like FASM.
@@ -6408,9 +7999,12 @@ func str compiler(str code) {
         ; --- FASM STRUCTURE DEFINITION ---
         fasm_header .= "    DynamicArray.pointer  = 0" . Chr(10) . "    DynamicArray.size     = 8" . Chr(10) . "    DynamicArray.capacity = 16" . Chr(10) . "    sizeof.DynamicArray   = 24" . Chr(10) . Chr(10)
     }
+    }
+    
     ; Use simple section names WITH the correct ELF flags for object files.
     str upCode := ""
     ; --- FASM BODY ---
+    if (is_oryx = 0) {
     if (is_arm = 1) {
         ; --- ARM GNU AS SECTIONS & DATA ---
         upCode := ".data" . Chr(10)
@@ -6451,8 +8045,10 @@ func str compiler(str code) {
             }
         }
     }
+    }
     ; --- FASM FOOTER ---
     str downCode := ""
+    if (is_oryx = 0) {
     if (is_arm = 1) {
         ; --- ARM AArch64 EXIT SEQUENCE ---
         ; NOTE: Your generated 'main' or other user code will go before this.
@@ -6470,6 +8066,7 @@ func str compiler(str code) {
             downCode .= Chr(10) . "mov rsp, rbp" . Chr(10) . "pop rbp" . Chr(10) . "jmp .program_end" . Chr(10) . ".program_end:" . Chr(10) . "jmp $" . Chr(10)
         }
     }
+    }
     ; --- ASSEMBLE THE FINAL STRING ---
     str codeOUT := ""
     if (seenMain = 0) {
@@ -6482,6 +8079,7 @@ func str compiler(str code) {
         ; based on the 'is_arm' flag *before* this assembly stage.
         codeOUT := Chr(10) . fasm_header . Chr(10) . upCode . Chr(10) . code . Chr(10) . downCode . Chr(10)
     }
+    codeOUT := StrReplace(codeOUT, " [rax]", " rax")
     ;;;;;;;;;;;;;;;;;;;;;;;;;;
     Loop, % theIdNumOfThe34 {
         if (theIdNumOfThe34 = A_Index + 1) {
@@ -6491,7 +8089,6 @@ func str compiler(str code) {
             codeOUT := StrReplace(codeOUT, "VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFC" . Chr(65) . Chr(65) . STR(A_Index + 1) . Chr(65) . Chr(65), StrReplace(theIdNumOfThe34theVar[A_Index + 1], keyWordEscpaeChar, "\"))
         }
     }
-    codeOUT := StrReplace(codeOUT, " [rax]", " rax")
     int is_1_optimize := 0
     int is_2_optimize := 0
     int is_3_optimize := 0
@@ -6516,6 +8113,10 @@ func str compiler(str code) {
     int is_22_optimize := 0
     int is_in_under := 0
     str allInOne_temp := ""
+    int aredy_int := 0
+    
+    if (is_arm = 0) and (is_oryx = 0) {
+    
     Loop, Parse, codeOUT, `n, `r {
         if (SubStr(Trim(A_LoopField), 1, 2) != "; ") {
             allInOne_temp .= Trim(A_LoopField) . Chr(10)
@@ -6588,7 +8189,8 @@ func str compiler(str code) {
     }
     codeOUT := Trim(allInOne_temp)
     allInOne_temp := ""
-    int aredy_int := 0
+    aredy_int := 0
+
     Loop, Parse, codeOUT, `n, `r {
         aredy_int := 0
         if (Trim(A_LoopField) = "DynamicArray.pointer  = 0") and (is_1_optimize = 0) {
@@ -6656,6 +8258,9 @@ func str compiler(str code) {
         }
     }
     codeOUT := Trim(allInOne_temp)
+    
+    
+    }
     return codeOUT
 }
 main

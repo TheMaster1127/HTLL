@@ -1,0 +1,34 @@
+
+Loop, 1 {
+Loop, 5 {
+if (A_Index = 3) {
+if (A_Index = 3) {
+print("ahahhaha")
+}
+if (A_Index = 3) {
+print("ahahhaha")
+}
+if (A_Index = 3) {
+print("ahahhaha")
+if (A_Index = 3) {
+print("ahahhaha")
+}
+}
+if (A_Index = 3) {
+print("ahahhaha")
+}
+if (A_Index = 3) {
+print("ahahhaha")
+}
+print("ahahhaha")
+}
+
+
+
+if (A_Index != 3) {
+print(A_Index)
+}
+}
+
+
+}

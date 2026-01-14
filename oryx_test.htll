@@ -1,0 +1,20 @@
+; To run from terminal: ./my_program arg1 "second arg" third
+
+main
+    print("--- Arguments Received ---")
+    args_array.size
+    if (rax = 0)
+        print("None.")
+        goto args_done
+    ifend
+        
+    Loop, rax
+        args_array.index A_Index
+        if (rax = 10)
+            print("") ; A newline separates each argument
+            continue
+        ifend
+        print_rax_as_char
+    endloop
+    
+    togo args_done

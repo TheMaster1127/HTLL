@@ -18,7 +18,6 @@ rm -f "$ASM_OUTPUT_FILE"
 echo "--- Compiling $HTLL_SOURCE_FILE with HTLL..."
 ./HTLL "$HTLL_SOURCE_FILE"
 
-echo "--- Copying generated assembly to clipboard..."
-cat "$ASM_OUTPUT_FILE" | wl-copy
-
-echo "--- Done. Assembly code is in your clipboard."
+echo "--- Done ---"
+echo "--- Done ---"
+echo "--- Done ---"
