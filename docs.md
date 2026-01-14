@@ -405,7 +405,7 @@ print("Step 2")
 
 *   **Block Enders:** Blocks can be closed with two styles. They are interchangeable.
     *   `if` -> `ifend` or `endif`
-    *   `loop` -> `endloop` or `end loop`
+    *   `loop` -> `endloop` or `loopend`
     *   `func` -> `funcend` or `endfunc`
 *   **Nesting Limit:** Loops and conditionals can be nested up to 9 levels deep.
 *   **Loop Iterator:** The loop variable is **always** `A_Index`.
