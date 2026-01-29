@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Oryx IR Visual Debugger - Ultimate Edition</title>
+    <style>
+        :root { --bg: #0d1117; --panel: #161b22; --border: #30363d; --text: #c9d1d9; --accent: #58a6ff; --highlight: #2f3542; --pc: #1f6feb; --breakpoint: #da3633; }
+        body { font-family: 'Consolas', 'Monaco', monospace; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* Layout */
+        header { background: var(--panel); padding: 10px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+        .main-area { display: flex; flex: 1; overflow: hidden; }
+        .column { display: flex; flex-direction: column; padding: 10px; overflow: hidden; position: relative; }
+        .col-left { flex: 2; border-right: 1px solid var(--border); }
+        .col-mid { flex: 1; border-right: 1px solid var(--border); }
+        .col-right { flex: 1; }
+
+        /* Components */
+        h3 { margin: 0 0 10px 0; color: var(--accent); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* Code Viewer */
+        #code-viewer { flex: 1; background: var(--bg); border: 1px solid var(--border); overflow-y: auto; white-space: pre; font-size: 13px; cursor: text; }
+        .line { padding: 0 5px; height: 18px; line-height: 18px; display: flex; }
+        .line:hover { background-color: #1c2128; }
+        
+        .line-num { width: 40px; color: #484f58; text-align: right; margin-right: 10px; user-select: none; cursor: pointer; }
+        .line-num:hover { color: var(--text); }
+        .line-num.has-breakpoint { color: var(--breakpoint); font-weight: bold; }
+        .line-num.has-breakpoint::before { content: '●'; margin-right: 2px; }
+
+        .line-content { flex: 1; }
+        
+        /* Highlighting */
+        .line.pc { background-color: #1f6feb33; border-left: 3px solid #1f6feb; }
+        .line.breakpoint-active { background-color: #da363333; }
+        
+        /* Variable Interaction */
+        .var-token { cursor: pointer; border-bottom: 1px dotted #666; }
+        .var-token:hover { background-color: #1f6feb; color: white; border-bottom: none; }
+
+        /* Tooltip */
+        #var-tooltip {
+            position: absolute; display: none; background: #2d333b; border: 1px solid #444c56; 
+            padding: 5px 10px; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
+            z-index: 1000; font-size: 12px; pointer-events: none; white-space: pre-wrap; max-width: 300px;
+        }
+
+        #source-input { display: none; width: 100%; height: 100%; background: var(--bg); color: var(--text); border: none; resize: none; font-family: inherit; }
+
+        /* Tables */
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .data-table td, .data-table th { text-align: left; padding: 4px; border-bottom: 1px solid var(--border); }
+        .data-table th { color: var(--accent); }
+
+        /* Console & Input */
+        #console-output { flex: 1; background: black; border: 1px solid var(--border); padding: 5px; font-family: 'Courier New', monospace; overflow-y: auto; color: #00ff00; white-space: pre-wrap; margin-bottom: 5px; }
+        #vm-input-field { background: #0d1117; border: 1px solid var(--accent); color: white; padding: 5px; font-family: inherit; width: 100%; box-sizing: border-box; }
+
+        /* Buttons */
+        button { background: #21262d; border: 1px solid var(--border); color: var(--text); padding: 5px 15px; cursor: pointer; border-radius: 4px; font-family: inherit; font-weight: bold; font-size: 12px; }
+        button:hover { background: #30363d; border-color: #8b949e; }
+        button.primary { background: #238636; border-color: #2ea043; color: white; }
+        button.primary:hover { background: #2ea043; }
+        button.danger { background: #da3633; border-color: #d94e4b; color: white; }
+        button.danger:hover { background: #d94e4b; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Layout Utils */
+        .btn-group { display: flex; gap: 5px; }
+        .spacer { width: 20px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="btn-group">
+        <button onclick="toggleEditMode()" id="btn-edit">Edit Source</button>
+        <button onclick="loadAndReset()" class="primary">Load & Reset</button>
+        <button onclick="toggleViewMode()" id="btn-view-mode">Show IR Code</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="btn-group">
+        <button onclick="stepBack()" id="btn-back" disabled>Reverse (F9)</button>
+        <button onclick="step()" id="btn-step" disabled>Step (F10)</button>
+        <button onclick="run()" id="btn-run" disabled>Run</button>
+        <button onclick="stop()" id="btn-stop" disabled class="danger">Stop</button>
+    </div>
+    <span style="margin-left:auto; font-size: 12px; color: #666;">Oryx IR Debugger v3.0 (Time Travel)</span>
+</header>
+
+<div class="main-area">
+    <!-- Left: Code -->
+    <div class="column col-left">
+        <h3>Code Viewer</h3>
+        <textarea id="source-input" spellcheck="false"></textarea>
+        <div id="code-viewer"></div>
+        <div id="var-tooltip"></div>
+    </div>
+
+    <!-- Middle: State -->
+    <div class="column col-mid">
+        <div style="flex: 1; overflow-y: auto; border-bottom: 1px solid var(--border); margin-bottom: 10px;">
+            <h3>Registers</h3>
+            <table class="data-table">
+                <thead><tr><th>Reg</th><th>Value (Raw)</th><th>Value (Int)</th></tr></thead>
+                <tbody id="reg-table-body"></tbody>
+            </table>
+        </div>
+        <div style="height: 150px;">
+            <h3>Flags & Stack</h3>
+            <div id="flags-display" style="font-size: 12px; margin-bottom: 5px;">Zero: 0 | Sign: 0</div>
+            <div style="font-size: 12px; color: #888;">Call Stack: <span id="call-stack-depth">0</span> | Main Stack: <span id="main-stack-depth">0</span></div>
+            <div style="font-size: 12px; color: #888; margin-top:5px;">Steps History: <span id="history-depth">0</span></div>
+        </div>
+    </div>
+
+    <!-- Right: Vars & Console -->
+    <div class="column col-right">
+        <div style="flex: 1; overflow-y: auto; margin-bottom: 10px;">
+            <h3>Variables</h3>
+            <table class="data-table">
+                <thead><tr><th>Name</th><th>Type</th><th>Value</th></tr></thead>
+                <tbody id="symbol-table-body"></tbody>
+            </table>
+        </div>
+        <h3>Console I/O</h3>
+        <div id="console-output"></div>
+        <input type="text" id="vm-input-field" placeholder="Type input here and press Enter when VM requests..." onkeydown="handleInputEnter(event)">
+    </div>
+</div>
+
+<script>
+/* ==================================================================================
+   SECTION 1: STATE & CORE
+   ================================================================================== */
+
+let viewMode = 'source'; // 'source' or 'ir'
+let inputBuffer = "";    // Stores user input from the text field
+let waitingForInput = false; // Flag to pause VM
+
+// The VM State
+let VM = {
+    pc: 0,
+    instructions: [],
+    labels: [],
+    regs: new Array(100).fill(""),
+    symbols: [],
+    callStack: [],
+    mainStack: [],
+    flags: { zero: 0, sign: 0 },
+    running: false,
+    interval: null,
+    
+    // Maps & Source
+    sourceLines: [],
+    irToSourceMap: [], // Index=IR Line, Value=Source Line
+    sourceToIrMap: [], // Index=Source Line, Value=Start IR Line
+    
+    // Debugging Features
+    history: [],      // Array of snapshots for time travel
+    breakpoints: new Set(), // Set of Line Numbers (Source or IR depending on view, normalized to IR internally)
+};
+
+// --- INITIALIZATION ---
+
+function loadAndReset() {
+    stop();
+    const source = document.getElementById('source-input').value;
+    
+    VM.instructions = source.split(/\r?\n/);
+    VM.pc = 0;
+    VM.regs = new Array(100).fill("");
+    VM.symbols = [];
+    VM.callStack = [];
+    VM.mainStack = [];
+    VM.flags = { zero: 0, sign: 0 };
+    VM.labels = [];
+    VM.history = [];
+    VM.breakpoints = new Set();
+    
+    // Parse Mapping
+    VM.sourceLines = [];
+    VM.irToSourceMap = new Array(VM.instructions.length).fill(-1);
+    VM.sourceToIrMap = [];
+    
+    let currentSourceIndex = -1;
+    
+    for(let i=0; i<VM.instructions.length; i++) {
+        let line = Trim(VM.instructions[i]);
+        
+        // Labels
+        if(SubStr(line, -1) == ":") {
+            let labelName = StringTrimRight(line, 1);
+            HTVM_Append(VM.labels, labelName + Chr(254) + STR(i));
+        }
+        
+        // Meta mapping
+        if (SubStr(line, 1, 5) == "meta ") {
+            let sourceCode = StringTrimLeft(line, 5);
+            VM.sourceLines.push(sourceCode);
+            currentSourceIndex = VM.sourceLines.length - 1;
+            // Record the first IR instruction for this source line
+            if (VM.sourceToIrMap[currentSourceIndex] === undefined) {
+                VM.sourceToIrMap[currentSourceIndex] = i; 
+            }
+        } 
+        
+        // Map this IR instruction to the current source line
+        // If we haven't seen a meta tag yet, map to -1
+        VM.irToSourceMap[i] = currentSourceIndex;
+        
+        // Fallback: if we just mapped this IR to a source line, verify sourceToIrMap has it
+        if (currentSourceIndex >= 0 && VM.sourceToIrMap[currentSourceIndex] === undefined) {
+             VM.sourceToIrMap[currentSourceIndex] = i;
+        }
+    }
+    
+    HTVM_Append(VM.symbols, "args_array" + Chr(254) + "arr" + Chr(254) + "");
+
+    document.getElementById('console-output').innerHTML = "Debugger Ready.\n";
+    document.getElementById('btn-step').disabled = false;
+    document.getElementById('btn-back').disabled = false;
+    document.getElementById('btn-run').disabled = false;
+    
+    renderCurrentView();
+    updateUI();
+}
+
+/* ==================================================================================
+   SECTION 2: TIME TRAVEL & EXECUTION
+   ================================================================================== */
+
+function saveState() {
+    // Deep copy current state. 
+    // Optimization: Don't clone instructions/maps as they are static.
+    if (VM.history.length > 2000) VM.history.shift(); // Max 2000 steps back
+    
+    VM.history.push(JSON.stringify({
+        pc: VM.pc,
+        regs: VM.regs,
+        symbols: VM.symbols, 
+        callStack: VM.callStack,
+        mainStack: VM.mainStack,
+        flags: VM.flags
+    }));
+}
+
+function restoreState() {
+    if (VM.history.length === 0) return;
+    const snapshot = JSON.parse(VM.history.pop());
+    
+    VM.pc = snapshot.pc;
+    VM.regs = snapshot.regs;
+    VM.symbols = snapshot.symbols;
+    VM.callStack = snapshot.callStack;
+    VM.mainStack = snapshot.mainStack;
+    VM.flags = snapshot.flags;
+}
+
+function stepBack() {
+    if (VM.history.length === 0) return;
+    stop(); // Pause if running
+    
+    if (viewMode === 'ir') {
+        restoreState();
+    } else {
+        // Source Mode Reverse: Keep restoring states until source line changes
+        let startSourceLine = (VM.irToSourceMap[VM.pc] !== undefined) ? VM.irToSourceMap[VM.pc] : -1;
+        let currentSourceLine = startSourceLine;
+        
+        while (VM.history.length > 0 && currentSourceLine === startSourceLine) {
+            restoreState();
+            currentSourceLine = (VM.irToSourceMap[VM.pc] !== undefined) ? VM.irToSourceMap[VM.pc] : -1;
+        }
+    }
+    updateUI();
+}
+
+function step() {
+    if (waitingForInput) {
+        alert("VM is waiting for input! Type in the input box and press Enter.");
+        return;
+    }
+
+    // BREAKPOINT CHECK (Before Execution)
+    // We only check breakpoints if we are NOT stepping over one we just hit.
+    // Ideally the UI prevents stepping unless we explicitly allow it.
+    // For simplicity: `step()` forces execution of at least one instruction regardless of breakpoints.
+    
+    if (viewMode === 'ir') {
+        saveState();
+        executeSingleInstruction();
+    } else {
+        // Source Mode Step:
+        // Execute instructions until the mapping changes to a NEW source line index
+        let startSourceLine = (VM.irToSourceMap[VM.pc] !== undefined) ? VM.irToSourceMap[VM.pc] : -1;
+        let currentSourceLine = startSourceLine;
+        
+        // Safety counter to prevent infinite loops in one source line
+        let ops = 0;
+        
+        // We must execute at least once
+        saveState();
+        executeSingleInstruction();
+        currentSourceLine = (VM.irToSourceMap[VM.pc] !== undefined) ? VM.irToSourceMap[VM.pc] : -1;
+
+        while (currentSourceLine === startSourceLine && VM.pc < VM.instructions.length && ops < 1000 && !waitingForInput) {
+            // Check for breakpoints internally during the source step
+            if (VM.breakpoints.has(VM.pc)) {
+                logToConsole("[Breakpoint Hit at IR line " + VM.pc + "]");
+                stop();
+                break;
+            }
+            
+            saveState();
+            executeSingleInstruction();
+            currentSourceLine = (VM.irToSourceMap[VM.pc] !== undefined) ? VM.irToSourceMap[VM.pc] : -1;
+            ops++;
+        }
+    }
+    updateUI();
+}
+
+function run() {
+    if (waitingForInput) return;
+    document.getElementById('btn-run').disabled = true;
+    document.getElementById('btn-step').disabled = true;
+    document.getElementById('btn-back').disabled = true;
+    document.getElementById('btn-stop').disabled = false;
+    
+    VM.running = true;
+    VM.interval = setInterval(() => {
+        // High speed loop
+        for(let i=0; i<50; i++) {
+            if(!VM.running) break;
+            if(VM.pc >= VM.instructions.length) { stop(); break; }
+            if(waitingForInput) { stop(); break; } // Input pause
+            
+            // Check Breakpoint
+            if (VM.breakpoints.has(VM.pc)) {
+                logToConsole("[Breakpoint Hit]");
+                stop();
+                break;
+            }
+
+            saveState();
+            executeSingleInstruction();
+        }
+        updateUI(); // Update UI less frequently (every 50 ops)
+    }, 10);
+}
+
+function stop() {
+    VM.running = false;
+    clearInterval(VM.interval);
+    document.getElementById('btn-run').disabled = false;
+    document.getElementById('btn-step').disabled = false;
+    document.getElementById('btn-back').disabled = false;
+    document.getElementById('btn-stop').disabled = true;
+    updateUI();
+}
+
+// --- CORE EXECUTION ---
+
+function executeSingleInstruction() {
+    if (VM.pc >= VM.instructions.length) return;
+
+    let current_line = Trim(VM.instructions[VM.pc]);
+    let pc_was_modified = false;
+
+    // Fast skip comments/labels/empty
+    if (current_line == "" || SubStr(current_line, -1) == ":" || SubStr(current_line, 1, 5) == "meta ") {
+        VM.pc++;
+        return;
+    }
+
+    // --- PARSER ---
+    let str1, str2, str3;
+    
+    if (SubStr(current_line, 1, 7) == "string ") {
+        str1 = StringTrimLeft(current_line, 7);
+        let first_colon = InStr(str1, ":");
+        str2 = Trim(SubStr(str1, 1, first_colon - 1));
+        str3 = Trim(SubStr(str1, first_colon + 1));
+        str3 = StringTrimLeft(str3, 1);
+        str3 = StringTrimRight(str3, 1);
+        str3 = StrReplace(str3, "\\n", Chr(10));
+        str3 = StrReplace(str3, "\\r", Chr(13));
+        str3 = StrReplace(str3, "\\t", Chr(9));
+        HTVM_Append(VM.symbols, str2 + Chr(254) + "string" + Chr(254) + str3);
+    }
+    else if (SubStr(current_line, 1, 4) == "int ") {
+        str1 = StringTrimLeft(current_line, 4);
+        let first_colon = InStr(str1, ":");
+        str2 = Trim(SubStr(str1, 1, first_colon - 1));
+        str3 = Trim(SubStr(str1, first_colon + 1));
+        HTVM_Append(VM.symbols, str2 + Chr(254) + "int" + Chr(254) + str3);
+    }
+    else if (SubStr(current_line, 1, 4) == "arr ") {
+        str1 = StringTrimLeft(current_line, 4);
+        HTVM_Append(VM.symbols, str1 + Chr(254) + "arr" + Chr(254) + "");
+    }
+    else if (SubStr(current_line, 1, 4) == "mov ") {
+        str1 = StringTrimLeft(current_line, 4);
+        let op1="", op2="";
+        let first_comma = InStr(str1, ",");
+        if (first_comma > 0) {
+            op1 = Trim(SubStr(str1, 1, first_comma - 1));
+            op2 = Trim(SubStr(str1, first_comma + 1));
+        } else { op1 = Trim(str1); }
+        if (op2 != "") set_value_type_aware(op1, get_value(op2));
+    }
+    else if (SubStr(current_line, 1, 4) == "add ") {
+        str1 = StringTrimLeft(current_line, 4);
+        let op1 = Trim(get_token(str1, ",", 1));
+        let op2 = Trim(get_token(str1, ",", 2));
+        set_value(op1, STR(FLOAT(get_value(op1)) + FLOAT(get_value(op2))));
+    }
+    else if (SubStr(current_line, 1, 4) == "sub ") {
+        str1 = StringTrimLeft(current_line, 4);
+        let op1 = Trim(get_token(str1, ",", 1));
+        let op2 = Trim(get_token(str1, ",", 2));
+        set_value(op1, STR(FLOAT(get_value(op1)) - FLOAT(get_value(op2))));
+    }
+    else if (SubStr(current_line, 1, 4) == "mul ") {
+        str1 = StringTrimLeft(current_line, 4);
+        let op1 = Trim(get_token(str1, ",", 1));
+        let op2 = Trim(get_token(str1, ",", 2));
+        set_value(op1, STR(FLOAT(get_value(op1)) * FLOAT(get_value(op2))));
+    }
+    else if (SubStr(current_line, 1, 4) == "div ") {
+        str1 = StringTrimLeft(current_line, 4);
+        let op1 = Trim(get_token(str1, ",", 1));
+        let op2 = Trim(get_token(str1, ",", 2));
+        set_value(op1, STR(FLOAT(get_value(op1)) / FLOAT(get_value(op2))));
+    }
+    else if (SubStr(current_line, 1, 8) == "add_str ") {
+        str1 = StringTrimLeft(current_line, 8);
+        let op1="", op2="";
+        let first_comma = InStr(str1, ",");
+        if (first_comma > 0) {
+            op1 = Trim(SubStr(str1, 1, first_comma - 1));
+            op2 = Trim(SubStr(str1, first_comma + 1));
+        } else { op1 = Trim(str1); }
+        if (op2 != "") set_value(op1, get_value(op1) + get_value(op2));
+    }
+    else if (SubStr(current_line, 1, 4) == "inc ") {
+        let op1 = Trim(StringTrimLeft(current_line, 4));
+        set_value(op1, STR(FLOAT(get_value(op1)) + 1));
+    }
+    else if (SubStr(current_line, 1, 4) == "dec ") {
+        let op1 = Trim(StringTrimLeft(current_line, 4));
+        set_value(op1, STR(FLOAT(get_value(op1)) - 1));
+    }
+    else if (SubStr(current_line, 1, 4) == "cmp ") {
+        str1 = StringTrimLeft(current_line, 4);
+        let op1_str = "", op2_str = "";
+        let first_comma = InStr(str1, ",");
+        if (first_comma > 0) {
+            op1_str = Trim(SubStr(str1, 1, first_comma - 1));
+            op2_str = Trim(SubStr(str1, first_comma + 1));
+        } else { op1_str = Trim(str1); }
+        let s_val1 = get_value(op1_str);
+        let s_val2 = get_value(op2_str);
+        
+        if (RegExMatch(s_val1, "^-?\\d+(\\.\\d+)?$") && RegExMatch(s_val2, "^-?\\d+(\\.\\d+)?$")) {
+            let val1 = FLOAT(s_val1); let val2 = FLOAT(s_val2);
+            VM.flags.zero = (val1 == val2) ? 1 : 0;
+            VM.flags.sign = (val1 < val2) ? 1 : 0;
+        } else {
+            VM.flags.zero = (s_val1 == s_val2) ? 1 : 0;
+            VM.flags.sign = (s_val1 < s_val2) ? 1 : 0;
+        }
+    }
+    else if (SubStr(current_line, 1, 4) == "jmp ") {
+        pc_was_modified = true;
+        jumpToLabel(Trim(StringTrimLeft(current_line, 4)));
+    }
+    else if (SubStr(current_line, 1, 3) == "je ") {
+        if (VM.flags.zero == 1) { pc_was_modified = true; jumpToLabel(Trim(StringTrimLeft(current_line, 3))); }
+    }
+    else if (SubStr(current_line, 1, 4) == "jne ") {
+        if (VM.flags.zero == 0) { pc_was_modified = true; jumpToLabel(Trim(StringTrimLeft(current_line, 4))); }
+    }
+    else if (SubStr(current_line, 1, 3) == "jg ") {
+        if (VM.flags.sign == 0 && VM.flags.zero == 0) { pc_was_modified = true; jumpToLabel(Trim(StringTrimLeft(current_line, 3))); }
+    }
+    else if (SubStr(current_line, 1, 3) == "jl ") {
+        if (VM.flags.sign == 1) { pc_was_modified = true; jumpToLabel(Trim(StringTrimLeft(current_line, 3))); }
+    }
+    else if (SubStr(current_line, 1, 4) == "jge ") {
+        if (VM.flags.sign == 0) { pc_was_modified = true; jumpToLabel(Trim(StringTrimLeft(current_line, 4))); }
+    }
+    else if (SubStr(current_line, 1, 4) == "jle ") {
+        if (VM.flags.sign == 1 || VM.flags.zero == 1) { pc_was_modified = true; jumpToLabel(Trim(StringTrimLeft(current_line, 4))); }
+    }
+    else if (SubStr(current_line, 1, 6) == "input ") {
+        // NON-BLOCKING INPUT
+        str1 = StringTrimLeft(current_line, 6);
+        let dest="", prompt_source="";
+        let first_comma = InStr(str1, ",");
+        if (first_comma > 0) {
+            dest = Trim(SubStr(str1, 1, first_comma - 1));
+            prompt_source = Trim(SubStr(str1, first_comma + 1));
+        } else { dest = Trim(str1); }
+        
+        let prompt_msg = get_value(prompt_source);
+        
+        if (inputBuffer.length > 0) {
+            // Read from buffer
+            logToConsole("Input Read: " + inputBuffer);
+            set_value_type_aware(dest, inputBuffer);
+            inputBuffer = ""; // consume buffer
+            waitingForInput = false;
+        } else {
+            // Buffer empty? Pause VM and ask user
+            logToConsole("VM Requesting Input: " + prompt_msg);
+            logToConsole(">> Please type in the input box below and press Enter.");
+            waitingForInput = true;
+            pc_was_modified = true; // prevent PC increment so we retry this instruction
+        }
+    }
+    else if (SubStr(current_line, 1, 12) == "num_to_char ") {
+        str1 = StringTrimLeft(current_line, 12);
+        let src_reg = Trim(get_token(str1, ",", 1));
+        let dest_reg = Trim(get_token(str1, ",", 2));
+        set_value(dest_reg, Chr(INT(get_value(src_reg))));
+    }
+    else if (SubStr(current_line, 1, 5) == "call ") {
+        str1 = Trim(StringTrimLeft(current_line, 5));
+        if (str1 == "print") {
+            logToConsole(VM.regs[1]);
+        }
+        else if (str1 == "print_char") {
+            logToConsole(Chr(INT(VM.regs[1])), true); 
+        }
+        else if (str1 == "sleep") {
+            // Skip sleep in JS VM for performance
+        } else {
+            pc_was_modified = true;
+            HTVM_Append(VM.callStack, VM.pc + 1);
+            jumpToLabel(str1);
+        }
+    }
+    else if (current_line == "ret") {
+        if (VM.callStack.length == 0) {
+            logToConsole("FATAL ERROR: Ret empty stack");
+            stop();
+            return;
+        }
+        pc_was_modified = true;
+        VM.pc = VM.callStack.pop();
+    }
+    else if (SubStr(current_line, 1, 5) == "push ") {
+        let op1 = Trim(StringTrimLeft(current_line, 5));
+        HTVM_Append(VM.mainStack, op1 + Chr(254) + get_value(op1));
+    }
+    else if (SubStr(current_line, 1, 4) == "pop ") {
+        let op1 = Trim(StringTrimLeft(current_line, 4));
+        let target_prefix = op1 + Chr(254);
+        let found_index = -1, found_val = "";
+        for(let k = VM.mainStack.length - 1; k >= 0; k--) {
+            let entry = VM.mainStack[k];
+            if (SubStr(entry, 1, StrLen(target_prefix)) == target_prefix) {
+                found_index = k;
+                found_val = StringTrimLeft(entry, StrLen(target_prefix));
+                break;
+            }
+        }
+        if (found_index != -1) {
+            let reg_idx = INT(StringTrimLeft(op1, 1));
+            VM.regs[reg_idx] = found_val;
+            HTVM_Remove(VM.mainStack, found_index);
+        }
+    }
+    // Arrays
+    else if (SubStr(current_line, 1, 8) == "arr.add ") {
+        str1 = StringTrimLeft(current_line, 8);
+        let arr_name = Trim(get_token(str1, ",", 1));
+        let val = get_value(Trim(get_token(str1, ",", 2)));
+        for(let k=0; k<VM.symbols.length; k++) {
+            if(get_token(VM.symbols[k], Chr(254), 1) == arr_name) {
+                let content = get_token(VM.symbols[k], Chr(254), 3);
+                content = (content == "") ? val : content + Chr(253) + val;
+                VM.symbols[k] = arr_name + Chr(254) + "arr" + Chr(254) + content;
+                break;
+            }
+        }
+    }
+    else if (SubStr(current_line, 1, 10) == "arr.clear ") {
+        let arr_name = Trim(StringTrimLeft(current_line, 10));
+        for(let k=0; k<VM.symbols.length; k++) {
+            if(get_token(VM.symbols[k], Chr(254), 1) == arr_name) {
+                VM.symbols[k] = arr_name + Chr(254) + "arr" + Chr(254) + "";
+                break;
+            }
+        }
+    }
+    else if (SubStr(current_line, 1, 9) == "arr.size ") {
+        str1 = StringTrimLeft(current_line, 9);
+        let arr_name = Trim(get_token(str1, ",", 1));
+        let dest_reg = INT(StringTrimLeft(Trim(get_token(str1, ",", 2)), 1));
+        for(let k=0; k<VM.symbols.length; k++) {
+            if(get_token(VM.symbols[k], Chr(254), 1) == arr_name) {
+                let content = get_token(VM.symbols[k], Chr(254), 3);
+                let size = (content == "") ? 0 : LoopParseFunc(content, Chr(253)).length;
+                VM.regs[dest_reg] = STR(size);
+                break;
+            }
+        }
+    }
+    else if (SubStr(current_line, 1, 8) == "arr.get ") {
+        str1 = StringTrimLeft(current_line, 8);
+        let arr_name = Trim(get_token(str1, ",", 1));
+        let index = INT(get_value(Trim(get_token(str1, ",", 2))));
+        let dest_reg = INT(StringTrimLeft(Trim(get_token(str1, ",", 3)), 1));
+        for(let k=0; k<VM.symbols.length; k++) {
+            if(get_token(VM.symbols[k], Chr(254), 1) == arr_name) {
+                let content = get_token(VM.symbols[k], Chr(254), 3);
+                let val = get_token(content, Chr(253), index + 1);
+                VM.regs[dest_reg] = val;
+                break;
+            }
+        }
+    }
+
+    if (!pc_was_modified) VM.pc++;
+}
+
+/* ==================================================================================
+   SECTION 3: UI & INTERACTION
+   ================================================================================== */
+
+function toggleViewMode() {
+    viewMode = (viewMode === 'source') ? 'ir' : 'source';
+    document.getElementById('btn-view-mode').textContent = (viewMode === 'source') ? "Show IR Code" : "Show Source Code";
+    renderCurrentView();
+    updateUI();
+}
+
+function renderCurrentView() {
+    const content = (viewMode === 'source') ? VM.sourceLines : VM.instructions;
+    const viewer = document.getElementById('code-viewer');
+    viewer.innerHTML = '';
+    
+    content.forEach((lineText, i) => {
+        const div = document.createElement('div');
+        div.className = 'line';
+        div.id = 'line-' + i;
+        
+        // Breakpoint Handler
+        const gutter = document.createElement('div');
+        gutter.className = 'line-num';
+        gutter.textContent = i;
+        gutter.onclick = (e) => toggleBreakpoint(i);
+        
+        // Content with Variable Tokens
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'line-content';
+        
+        // Regex to wrap variable-like tokens
+        // Matches identifiers starting with letter, containing alphanum or underscore
+        const tokenized = escapeHtml(lineText).replace(/([a-zA-Z_][a-zA-Z0-9_]*)/g, 
+            '<span class="var-token" onmouseover="showTooltip(this, \'$1\')" onmouseout="hideTooltip()" onclick="editVariable(\'$1\')">$1</span>');
+        
+        contentDiv.innerHTML = tokenized;
+        
+        div.appendChild(gutter);
+        div.appendChild(contentDiv);
+        viewer.appendChild(div);
+    });
+    
+    restoreBreakpointsUI();
+}
+
+function toggleBreakpoint(lineIndex) {
+    // Convert view index to IR index
+    let irIndex = -1;
+    if (viewMode === 'ir') {
+        irIndex = lineIndex;
+    } else {
+        irIndex = VM.sourceToIrMap[lineIndex];
+        if (irIndex === undefined) return; // No code here
+    }
+
+    if (VM.breakpoints.has(irIndex)) {
+        VM.breakpoints.delete(irIndex);
+    } else {
+        VM.breakpoints.add(irIndex);
+    }
+    updateUI();
+}
+
+function restoreBreakpointsUI() {
+    // Visual update only
+    const lines = document.querySelectorAll('.line-num');
+    lines.forEach(el => el.classList.remove('has-breakpoint'));
+    
+    VM.breakpoints.forEach(irIndex => {
+        let viewIndex = -1;
+        if (viewMode === 'ir') viewIndex = irIndex;
+        else viewIndex = VM.irToSourceMap[irIndex];
+        
+        if (viewIndex >= 0) {
+            const el = document.querySelector(`#line-${viewIndex} .line-num`);
+            if(el) el.classList.add('has-breakpoint');
+        }
+    });
+}
+
+// --- Variable Interaction ---
+
+function getVarValue(name) {
+    for (let k = 0; k < VM.symbols.length; k++) {
+        if (get_token(VM.symbols[k], Chr(254), 1) == name) {
+            let type = get_token(VM.symbols[k], Chr(254), 2);
+            let val = get_token(VM.symbols[k], Chr(254), 3);
+            if(type === 'arr') return `[Array Size: ${val ? val.split(Chr(253)).length : 0}]`;
+            return val;
+        }
+    }
+    // Also check Registers
+    if(/^r\d+$/.test(name)) {
+        let idx = parseInt(name.substring(1));
+        return VM.regs[idx];
+    }
+    return null;
+}
+
+function showTooltip(el, name) {
+    const val = getVarValue(name);
+    if (val === null) return;
+    
+    const tooltip = document.getElementById('var-tooltip');
+    tooltip.textContent = `${name} = ${val}`;
+    tooltip.style.display = 'block';
+    
+    const rect = el.getBoundingClientRect();
+    const container = document.getElementById('code-viewer').getBoundingClientRect();
+    
+    tooltip.style.left = (rect.left - container.left) + 'px';
+    tooltip.style.top = (rect.bottom - container.top) + 'px';
+}
+
+function hideTooltip() {
+    document.getElementById('var-tooltip').style.display = 'none';
+}
+
+function editVariable(name) {
+    const current = getVarValue(name);
+    if (current === null) return;
+    
+    const newVal = prompt(`Edit value for ${name}:`, current);
+    if (newVal !== null) {
+        set_value_type_aware(name, newVal);
+        updateUI();
+    }
+}
+
+// --- INPUT FIELD ---
+function handleInputEnter(e) {
+    if (e.key === 'Enter') {
+        inputBuffer = e.target.value;
+        e.target.value = "";
+        if (waitingForInput) {
+            waitingForInput = false; // unblock VM
+            step(); // Resume immediately
+        }
+    }
+}
+
+// --- Standard Helpers ---
+function updateUI() {
+    // Highlight Line
+    document.querySelectorAll('.line').forEach(el => el.classList.remove('pc'));
+    let highlightIndex = (viewMode === 'ir') ? VM.pc : VM.irToSourceMap[VM.pc];
+    
+    if (highlightIndex >= 0) {
+        const activeLine = document.getElementById('line-' + highlightIndex);
+        if (activeLine) {
+            activeLine.classList.add('pc');
+            activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    // Breakpoints Visuals
+    restoreBreakpointsUI();
+
+    // Registers
+    const regBody = document.getElementById('reg-table-body');
+    regBody.innerHTML = '';
+    [0,1,2,3,4,5,6,90,91,92,93].forEach(i => {
+        const val = VM.regs[i];
+        if (val !== "" && val !== 0 && val !== "0") {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>r${i}</td><td>${escapeHtml(String(val))}</td><td>${INT(val)}</td>`;
+            regBody.appendChild(row);
+        }
+    });
+
+    document.getElementById('flags-display').innerHTML = `Zero: ${VM.flags.zero} <span style="color:#666">|</span> Sign: ${VM.flags.sign}`;
+    document.getElementById('call-stack-depth').textContent = VM.callStack.length;
+    document.getElementById('main-stack-depth').textContent = VM.mainStack.length;
+    document.getElementById('history-depth').textContent = VM.history.length;
+
+    const symBody = document.getElementById('symbol-table-body');
+    symBody.innerHTML = '';
+    VM.symbols.forEach(sym => {
+        let parts = sym.split(Chr(254));
+        let type = parts[1];
+        let val = parts[2];
+        let displayVal = (type === 'arr') ? `[Array Size: ${val ? val.split(Chr(253)).length : 0}]` : (val.length > 20 ? val.substring(0,20)+"..." : val);
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${escapeHtml(parts[0])}</td><td style="color:#888">${type}</td><td>${escapeHtml(displayVal)}</td>`;
+        symBody.appendChild(row);
+    });
+}
+
+function logToConsole(text, appendLine = false) {
+    const consoleDiv = document.getElementById('console-output');
+    if (appendLine) consoleDiv.innerText += text;
+    else consoleDiv.innerText += text + "\n";
+    consoleDiv.scrollTop = consoleDiv.scrollHeight;
+}
+
+function toggleEditMode() {
+    const editor = document.getElementById('source-input');
+    const viewer = document.getElementById('code-viewer');
+    const btn = document.getElementById('btn-edit');
+    if (editor.style.display === 'none') {
+        editor.style.display = 'block'; viewer.style.display = 'none'; btn.textContent = "View Mode";
+    } else {
+        editor.style.display = 'none'; viewer.style.display = 'block'; btn.textContent = "Edit Source";
+        loadAndReset(); // Reload to apply changes
+    }
+}
+
+function escapeHtml(text) { return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function LoopParseFunc(varString, delimiter1="", delimiter2="") {
+    if (!delimiter1 && !delimiter2) return [...varString];
+    let pattern = new RegExp('[' + delimiter1.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + delimiter2.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ']+');
+    return varString.split(pattern);
+}
+function STR(v) { if (v === null || v === undefined) return ""; return String(v); }
+function INT(v) { const i = parseInt(v, 10); return Number.isNaN(i) ? 0 : i; }
+function FLOAT(v) { return parseFloat(v); }
+function InStr(h, n) { const pos = h.indexOf(n); return (pos !== -1) ? pos + 1 : 0; }
+function StrLen(s) { return s.length; }
+function Chr(n) { return (n >= 0 && n <= 0x10FFFF) ? String.fromCharCode(n) : ""; }
+function Asc(s) { return s.length > 0 ? s.charCodeAt(0) : -1; }
+function SubStr(str, startPos, length = -1) {
+    if (startPos < 0) startPos = str.length + startPos; else startPos -= 1;
+    if (startPos < 0) startPos = 0;
+    if (length < 0) length = str.length - startPos;
+    return str.substr(startPos, length);
+}
+function Trim(s) { return s ? s.trim() : ""; }
+function StrReplace(s, f, r) { return s.split(f).join(r); }
+function StringTrimLeft(i, n) { return i.substring(n); }
+function StringTrimRight(i, n) { return i.substring(0, i.length - n); }
+function HTVM_Append(a, v) { a.push(v); }
+function HTVM_Remove(a, i) { a.splice(i, 1); }
+function RegExMatch(h, n) { const m = h.match(new RegExp(n)); return m ? m.index + 1 : 0; }
+function get_token(i, d, x) { let arr = LoopParseFunc(i, d); return arr[x-1] || ""; }
+function get_value(op) {
+    if (/^r\d+$/.test(op)) return VM.regs[parseInt(op.substring(1))];
+    if (/^-?\d+(\.\d+)?$/.test(op)) return op;
+    if (op.startsWith('"')) return JSON.parse('"' + op.substring(1, op.length-1).replace(/\\n/g,'\\n') + '"'); 
+    for(let k=0; k<VM.symbols.length; k++) if(get_token(VM.symbols[k],Chr(254),1)==op) return get_token(VM.symbols[k],Chr(254),3);
+    return "";
+}
+function set_value(dest, val) {
+    if (/^r\d+$/.test(dest)) { VM.regs[parseInt(dest.substring(1))] = val; return; }
+    for(let k=0; k<VM.symbols.length; k++) {
+        let n = get_token(VM.symbols[k],Chr(254),1);
+        if(n==dest) { VM.symbols[k] = n+Chr(254)+get_token(VM.symbols[k],Chr(254),2)+Chr(254)+val; return; }
+    }
+}
+function set_value_type_aware(dest, val) {
+    if (/^r\d+$/.test(dest)) { VM.regs[parseInt(dest.substring(1))] = val; return; }
+    let type=""; 
+    for(let k=0; k<VM.symbols.length; k++) if(get_token(VM.symbols[k],Chr(254),1)==dest) { type=get_token(VM.symbols[k],Chr(254),2); break; }
+    if(type=="arr") {
+        let nc = ""; for(let c of val) { if(nc!="") nc+=Chr(253); nc+=STR(Asc(c)); }
+        set_value(dest, nc);
+    } else set_value(dest, val);
+}
+function jumpToLabel(l) { for(let k=0; k<VM.labels.length; k++) if(get_token(VM.labels[k],Chr(254),1)==l) { VM.pc=INT(get_token(VM.labels[k],Chr(254),2)); return; } stop(); }
+
+// Shortcuts
+document.addEventListener('keydown', (e) => {
+    if (e.key === "F10") { e.preventDefault(); if(!document.getElementById('btn-step').disabled) step(); }
+    if (e.key === "F9") { e.preventDefault(); if(!document.getElementById('btn-back').disabled) stepBack(); }
+});
+
+// Initial Load
+const startCode = `
+string __HTLL_HTLL_HTLL_HTLL_IO_BUFFER: ""
+string __HTLL_HTLL_HTLL_HTLL_CONTENT_BUFFER: ""
+jmp __HTLL_HTLL_HTLL_HTLL_main_entry_point
+; --- START INJECTED LIBRARY ---
+__HTLL_HTLL_HTLL_HTLL_convert_array_to_bytestring:
+    push r1
+    push r2
+    push r3
+ push r4
+ push r5
+ push r6
+    mov r2, ""
+    arr.size r1, r3
+    mov r4, 0
+__HTLL_HTLL_HTLL_HTLL_convert_loop:
+    cmp r4, r3
+    jge __HTLL_HTLL_HTLL_HTLL_convert_loop_end
+    arr.get r1, r4, r5
+    num_to_char r5, r6
+    add_str r2, r6
+    inc r4
+    jmp __HTLL_HTLL_HTLL_HTLL_convert_loop
+__HTLL_HTLL_HTLL_HTLL_convert_loop_end:
+mov r0, r2
+    pop r6
+ pop r5
+ pop r4
+ pop r3
+ pop r2
+ pop r1
+    ret
+; --- END INJECTED LIBRARY ---
+__HTLL_HTLL_HTLL_HTLL_main_entry_point:
+
+
+meta arr input_buffer
+arr input_buffer
+meta arr prompt
+arr prompt
+meta arr cmd_help
+arr cmd_help
+meta arr cmd_exit
+arr cmd_exit
+meta int is_match := 0
+int is_match: 0
+meta int input_len := 0
+int input_len: 0
+meta int cmd_len := 0
+int cmd_len: 0
+meta int val_input := 0
+int val_input: 0
+meta int val_cmd := 0
+int val_cmd: 0
+meta int i := 0
+int i: 0
+meta func init_constants()
+jmp _start
+jmp init_constants_end_skip_def
+init_constants:
+meta arradd prompt [HTLL-Shell]
+    arr.add prompt, 91
+    arr.add prompt, 72
+    arr.add prompt, 84
+    arr.add prompt, 76
+    arr.add prompt, 76
+    arr.add prompt, 45
+    arr.add prompt, 83
+    arr.add prompt, 104
+    arr.add prompt, 101
+    arr.add prompt, 108
+    arr.add prompt, 108
+    arr.add prompt, 93
+
+meta prompt.add 62
+arr.add prompt, 62
+meta prompt.add 32
+arr.add prompt, 32
+meta arradd cmd_help help
+    arr.add cmd_help, 104
+    arr.add cmd_help, 101
+    arr.add cmd_help, 108
+    arr.add cmd_help, 112
+
+meta arradd cmd_exit exit
+    arr.add cmd_exit, 101
+    arr.add cmd_exit, 120
+    arr.add cmd_exit, 105
+    arr.add cmd_exit, 116
+
+meta funcend
+init_constants_return:
+ret
+init_constants_end_skip_def:
+meta func check_if_help()
+jmp check_if_help_end_skip_def
+check_if_help:
+meta is_match := 1
+mov is_match, 1
+meta input_buffer.size
+arr.size input_buffer, r0
+meta input_len := rax
+mov input_len, r0
+meta cmd_help.size
+arr.size cmd_help, r0
+meta cmd_len := rax
+mov cmd_len, r0
+meta if (input_len != cmd_len)
+cmp input_len, cmd_len
+je end_if1_0
+meta is_match := 0
+mov is_match, 0
+meta goto end_compare_help
+jmp __HTLL_HTLL_end_compare_help
+meta ifend
+end_if1_0:
+meta Loop, input_len
+push r90
+push r91
+mov r90, input_len
+mov r91, 0
+loop1_0:
+cmp r91, r90
+jge loop1_end0
+mov r20, r91
+meta i := A_Index
+mov i, r20
+meta input_buffer.index i
+arr.get input_buffer, i, r0
+meta val_input := rax
+mov val_input, r0
+meta cmd_help.index i
+arr.get cmd_help, i, r0
+meta val_cmd := rax
+mov val_cmd, r0
+meta if (val_input != val_cmd)
+cmp val_input, val_cmd
+je end_if1_1
+meta is_match := 0
+mov is_match, 0
+meta goto end_compare_help
+jmp __HTLL_HTLL_end_compare_help
+meta ifend
+end_if1_1:
+meta endloop
+cloop1_end0:
+inc r91
+jmp loop1_0
+loop1_end0:
+pop r91
+pop r90
+meta togo end_compare_help
+__HTLL_HTLL_end_compare_help:
+meta funcend
+check_if_help_return:
+ret
+check_if_help_end_skip_def:
+meta func echo_input()
+jmp echo_input_end_skip_def
+echo_input:
+meta print("Echo: ")
+mov r1, "Echo: "
+call print
+meta input_buffer.size
+arr.size input_buffer, r0
+meta Loop, rax
+push r90
+push r91
+mov r90, r0
+mov r91, 0
+loop1_1:
+cmp r91, r90
+jge loop1_end1
+mov r20, r91
+meta input_buffer.index A_Index
+arr.get input_buffer, r20, r0
+meta print_rax_as_char
+mov r1, r0
+call print_char
+meta endloop
+cloop1_end1:
+inc r91
+jmp loop1_1
+loop1_end1:
+pop r91
+pop r90
+meta print("")
+mov r1, ""
+call print
+meta funcend
+echo_input_return:
+ret
+echo_input_end_skip_def:
+_start:
+meta init_constants()
+call init_constants
+meta print("Welcome to the Bear Den. Type 'help' or 'exit'.")
+mov r1, "Welcome to the Bear Den. Type 'help' or 'exit'."
+call print
+meta togo shell_loop
+__HTLL_HTLL_shell_loop:
+meta input_buffer.clear
+arr.clear input_buffer
+meta input input_buffer, prompt
+; --- INLINE CONVERT prompt ---
+arr.size prompt, r90
+mov __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, ""
+mov r91, 0
+__HTLL_HTLL_inline_conv0:
+cmp r91, r90
+jge __HTLL_HTLL_inline_conv_end0
+arr.get prompt, r91, r92
+num_to_char r92, r93
+add_str __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, r93
+inc r91
+jmp __HTLL_HTLL_inline_conv0
+__HTLL_HTLL_inline_conv_end0:
+input input_buffer, __HTLL_HTLL_HTLL_HTLL_IO_BUFFER
+meta check_if_help()
+call check_if_help
+meta if (is_match = 1)
+cmp is_match, 1
+jne end_if1_2
+meta print("--- HELP MENU ---")
+mov r1, "--- HELP MENU ---"
+call print
+meta print("You are running on raw x86-64 assembly.")
+mov r1, "You are running on raw x86-64 assembly."
+call print
+meta print("This shell has 0 dependencies.")
+mov r1, "This shell has 0 dependencies."
+call print
+meta print("Available commands: help, exit, [any text to echo]")
+mov r1, "Available commands: help, exit, [any text to echo]"
+call print
+meta print("-----------------")
+mov r1, "-----------------"
+call print
+meta goto shell_loop
+jmp __HTLL_HTLL_shell_loop
+meta ifend
+end_if1_2:
+meta input_buffer.size
+arr.size input_buffer, r0
+meta if (rax = 4)
+cmp r0, 4
+jne end_if1_3
+meta input_buffer.index 0
+arr.get input_buffer, 0, r0
+meta if (rax = 101)
+cmp r0, 101
+jne end_if1_3
+meta print("Exiting to OS...")
+mov r1, "Exiting to OS..."
+call print
+meta goto shell_exit
+jmp __HTLL_HTLL_shell_exit
+meta ifend
+end_if1_3:
+meta ifend
+end_if1_4:
+meta echo_input()
+call echo_input
+meta goto shell_loop
+jmp __HTLL_HTLL_shell_loop
+meta togo shell_exit
+__HTLL_HTLL_shell_exit:
+`;
+document.getElementById('source-input').value = startCode;
+loadAndReset();
+</script>
+</body>
+</html>

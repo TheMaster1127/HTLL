@@ -741,7 +741,7 @@ std::string str18 = "";
 std::string str19 = "";
 std::string str20 = "";
 int is_arm = 0;
-int is_oryx = 1;
+int is_oryx = 0;
 int ring0 = 0;
 std::vector<std::string> nintArr;
 std::string SubStrLastChars(std::string text, int numOfChars) {
@@ -1280,6 +1280,7 @@ std::string compiler(std::string code) {
                 }
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR GENERATION ---
                 std::vector<std::string> items41 = LoopParseFunc(str3);
                 for (size_t A_Index41 = 0; A_Index41 < items41.size(); A_Index41++) {
@@ -1405,6 +1406,7 @@ std::string compiler(std::string code) {
                 }
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR GENERATION ---
                 if (InStr(str1, ":=")) {
                     str2 = Trim(StrSplit(str1, ":=", 1));
@@ -1663,6 +1665,7 @@ std::string compiler(std::string code) {
                 }
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR GENERATION (nint) ---
                 if (InStr(str1, ":=")) {
                     str2 = Trim(StrSplit(str1, ":=", 1));
@@ -1940,6 +1943,7 @@ std::string compiler(std::string code) {
                 }
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR GENERATION (assignments) ---
                 if (InStr(A_LoopField39, " := ")) {
                     str1 = Trim(A_LoopField39);
@@ -2097,6 +2101,7 @@ std::string compiler(std::string code) {
                 }
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (++) ---
                 if (str1 == "rax") {
                     out += "inc r0" + Chr(10);
@@ -2149,6 +2154,7 @@ std::string compiler(std::string code) {
                 }
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (--) ---
                 if (str1 == "rax") {
                     out += "dec r0" + Chr(10);
@@ -2231,6 +2237,7 @@ std::string compiler(std::string code) {
                 }
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (print) ---
                 if (str1 == "rax") {
                     out += "mov r1, r0" + Chr(10);
@@ -2273,6 +2280,7 @@ std::string compiler(std::string code) {
                 out += "    bl print_char" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // rax maps to r0. print_char likely expects argument in r1 (standard convention)
                 // or if your VM has a specific 'print_char' that takes r0, adjust accordingly.
                 // Assuming r1 is the argument register for syscalls:
@@ -2287,6 +2295,7 @@ std::string compiler(std::string code) {
                 out += "    b .cloop1_end" + STR(loopCount1) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // Oryx uses 'jmp' just like x86
                 out += "jmp cloop1_end" + STR(loopCount1) + Chr(10);
             } else {
@@ -2298,6 +2307,7 @@ std::string compiler(std::string code) {
                 out += "    b .cloop2_end" + STR(loopCount2) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp cloop2_end" + STR(loopCount2) + Chr(10);
             } else {
                 out += "jmp .cloop2_end" + STR(loopCount2) + Chr(10);
@@ -2308,6 +2318,7 @@ std::string compiler(std::string code) {
                 out += "    b .cloop3_end" + STR(loopCount3) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp cloop3_end" + STR(loopCount3) + Chr(10);
             } else {
                 out += "jmp .cloop3_end" + STR(loopCount3) + Chr(10);
@@ -2318,6 +2329,7 @@ std::string compiler(std::string code) {
                 out += "    b .cloop4_end" + STR(loopCount4) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp cloop4_end" + STR(loopCount4) + Chr(10);
             } else {
                 out += "jmp .cloop4_end" + STR(loopCount4) + Chr(10);
@@ -2328,6 +2340,7 @@ std::string compiler(std::string code) {
                 out += "    b .cloop5_end" + STR(loopCount5) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp cloop5_end" + STR(loopCount5) + Chr(10);
             } else {
                 out += "jmp .cloop5_end" + STR(loopCount5) + Chr(10);
@@ -2338,6 +2351,7 @@ std::string compiler(std::string code) {
                 out += "    b .cloop6_end" + STR(loopCount6) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp cloop6_end" + STR(loopCount6) + Chr(10);
             } else {
                 out += "jmp .cloop6_end" + STR(loopCount6) + Chr(10);
@@ -2348,6 +2362,7 @@ std::string compiler(std::string code) {
                 out += "    b .cloop7_end" + STR(loopCount7) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp cloop7_end" + STR(loopCount7) + Chr(10);
             } else {
                 out += "jmp .cloop7_end" + STR(loopCount7) + Chr(10);
@@ -2358,6 +2373,7 @@ std::string compiler(std::string code) {
                 out += "    b .cloop8_end" + STR(loopCount8) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp cloop8_end" + STR(loopCount8) + Chr(10);
             } else {
                 out += "jmp .cloop8_end" + STR(loopCount8) + Chr(10);
@@ -2368,6 +2384,7 @@ std::string compiler(std::string code) {
                 out += "    b .cloop9_end" + STR(loopCount9) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp cloop9_end" + STR(loopCount9) + Chr(10);
             } else {
                 out += "jmp .cloop9_end" + STR(loopCount9) + Chr(10);
@@ -2378,6 +2395,7 @@ std::string compiler(std::string code) {
                 out += "    b .loop1_end" + STR(loopCount1) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp loop1_end" + STR(loopCount1) + Chr(10);
             } else {
                 out += "jmp .loop1_end" + STR(loopCount1) + Chr(10);
@@ -2388,6 +2406,7 @@ std::string compiler(std::string code) {
                 out += "    b .loop2_end" + STR(loopCount2) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp loop2_end" + STR(loopCount2) + Chr(10);
             } else {
                 out += "jmp .loop2_end" + STR(loopCount2) + Chr(10);
@@ -2398,6 +2417,7 @@ std::string compiler(std::string code) {
                 out += "    b .loop3_end" + STR(loopCount3) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp loop3_end" + STR(loopCount3) + Chr(10);
             } else {
                 out += "jmp .loop3_end" + STR(loopCount3) + Chr(10);
@@ -2408,6 +2428,7 @@ std::string compiler(std::string code) {
                 out += "    b .loop4_end" + STR(loopCount4) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp loop4_end" + STR(loopCount4) + Chr(10);
             } else {
                 out += "jmp .loop4_end" + STR(loopCount4) + Chr(10);
@@ -2418,6 +2439,7 @@ std::string compiler(std::string code) {
                 out += "    b .loop5_end" + STR(loopCount5) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp loop5_end" + STR(loopCount5) + Chr(10);
             } else {
                 out += "jmp .loop5_end" + STR(loopCount5) + Chr(10);
@@ -2428,6 +2450,7 @@ std::string compiler(std::string code) {
                 out += "    b .loop6_end" + STR(loopCount6) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp loop6_end" + STR(loopCount6) + Chr(10);
             } else {
                 out += "jmp .loop6_end" + STR(loopCount6) + Chr(10);
@@ -2438,6 +2461,7 @@ std::string compiler(std::string code) {
                 out += "    b .loop7_end" + STR(loopCount7) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp loop7_end" + STR(loopCount7) + Chr(10);
             } else {
                 out += "jmp .loop7_end" + STR(loopCount7) + Chr(10);
@@ -2448,6 +2472,7 @@ std::string compiler(std::string code) {
                 out += "    b .loop8_end" + STR(loopCount8) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp loop8_end" + STR(loopCount8) + Chr(10);
             } else {
                 out += "jmp .loop8_end" + STR(loopCount8) + Chr(10);
@@ -2458,6 +2483,7 @@ std::string compiler(std::string code) {
                 out += "    b .loop9_end" + STR(loopCount9) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp loop9_end" + STR(loopCount9) + Chr(10);
             } else {
                 out += "jmp .loop9_end" + STR(loopCount9) + Chr(10);
@@ -2495,6 +2521,7 @@ std::string compiler(std::string code) {
                 out += ".loop1_" + STR(loopCount1) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop1_end" + STR(loopCount1) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 1) ---
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
@@ -2525,6 +2552,7 @@ std::string compiler(std::string code) {
                 out += ".cloop1_end" + STR(loopCount1) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop1_" + STR(loopCount1) + Chr(10) + ".loop1_end" + STR(loopCount1) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 1 End) ---
                 out += "cloop1_end" + STR(loopCount1) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -2569,6 +2597,7 @@ std::string compiler(std::string code) {
                 out += ".loop2_" + STR(loopCount2) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop2_end" + STR(loopCount2) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 2) ---
                 // Reuse r90 (Limit) and r91 (Iterator), save previous values to stack
                 out += "push r90" + Chr(10);
@@ -2600,6 +2629,7 @@ std::string compiler(std::string code) {
                 out += ".cloop2_end" + STR(loopCount2) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop2_" + STR(loopCount2) + Chr(10) + ".loop2_end" + STR(loopCount2) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 2 End) ---
                 out += "cloop2_end" + STR(loopCount2) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -2646,6 +2676,7 @@ std::string compiler(std::string code) {
                 out += ".loop3_" + STR(loopCount3) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop3_end" + STR(loopCount3) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 3) ---
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
@@ -2675,6 +2706,7 @@ std::string compiler(std::string code) {
                 out += ".cloop3_end" + STR(loopCount3) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop3_" + STR(loopCount3) + Chr(10) + ".loop3_end" + STR(loopCount3) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 3 End) ---
                 out += "cloop3_end" + STR(loopCount3) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -2720,6 +2752,7 @@ std::string compiler(std::string code) {
                 out += ".loop4_" + STR(loopCount4) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop4_end" + STR(loopCount4) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 4) ---
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
@@ -2749,6 +2782,7 @@ std::string compiler(std::string code) {
                 out += ".cloop4_end" + STR(loopCount4) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop4_" + STR(loopCount4) + Chr(10) + ".loop4_end" + STR(loopCount4) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 4 End) ---
                 out += "cloop4_end" + STR(loopCount4) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -2794,6 +2828,7 @@ std::string compiler(std::string code) {
                 out += ".loop5_" + STR(loopCount5) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop5_end" + STR(loopCount5) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 5) ---
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
@@ -2823,6 +2858,7 @@ std::string compiler(std::string code) {
                 out += ".cloop5_end" + STR(loopCount5) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop5_" + STR(loopCount5) + Chr(10) + ".loop5_end" + STR(loopCount5) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 5 End) ---
                 out += "cloop5_end" + STR(loopCount5) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -2868,6 +2904,7 @@ std::string compiler(std::string code) {
                 out += ".loop6_" + STR(loopCount6) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop6_end" + STR(loopCount6) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 6) ---
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
@@ -2897,6 +2934,7 @@ std::string compiler(std::string code) {
                 out += ".cloop6_end" + STR(loopCount6) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop6_" + STR(loopCount6) + Chr(10) + ".loop6_end" + STR(loopCount6) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 6 End) ---
                 out += "cloop6_end" + STR(loopCount6) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -2942,6 +2980,7 @@ std::string compiler(std::string code) {
                 out += ".loop7_" + STR(loopCount7) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop7_end" + STR(loopCount7) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 7) ---
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
@@ -2971,6 +3010,7 @@ std::string compiler(std::string code) {
                 out += ".cloop7_end" + STR(loopCount7) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop7_" + STR(loopCount7) + Chr(10) + ".loop7_end" + STR(loopCount7) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 7 End) ---
                 out += "cloop7_end" + STR(loopCount7) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -3016,6 +3056,7 @@ std::string compiler(std::string code) {
                 out += ".loop8_" + STR(loopCount8) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop8_end" + STR(loopCount8) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 8) ---
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
@@ -3045,6 +3086,7 @@ std::string compiler(std::string code) {
                 out += ".cloop8_end" + STR(loopCount8) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop8_" + STR(loopCount8) + Chr(10) + ".loop8_end" + STR(loopCount8) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 8 End) ---
                 out += "cloop8_end" + STR(loopCount8) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -3090,6 +3132,7 @@ std::string compiler(std::string code) {
                 out += ".loop9_" + STR(loopCount9) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop9_end" + STR(loopCount9) + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 9) ---
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
@@ -3119,6 +3162,7 @@ std::string compiler(std::string code) {
                 out += ".cloop9_end" + STR(loopCount9) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop9_" + STR(loopCount9) + Chr(10) + ".loop9_end" + STR(loopCount9) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Loop 9 End) ---
                 out += "cloop9_end" + STR(loopCount9) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -3190,6 +3234,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.ne .end_if1_" + STR(ifCount1) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if = -> jne) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -3267,6 +3312,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.eq .end_if1_" + STR(ifCount1) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if != -> je) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -3344,6 +3390,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.le .end_if1_" + STR(ifCount1) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if > -> jle) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -3421,6 +3468,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.ge .end_if1_" + STR(ifCount1) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if < -> jge) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -3498,6 +3546,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.lt .end_if1_" + STR(ifCount1) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if >= -> jl) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -3575,6 +3624,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.gt .end_if1_" + STR(ifCount1) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if <= -> jg) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -3603,6 +3653,7 @@ std::string compiler(std::string code) {
         }
         else if (Trim(A_LoopField39) == "ifend" || Trim(A_LoopField39) == "endif" || Trim(A_LoopField39) == "ifend1" || Trim(A_LoopField39) == "endif1") {
             if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "end_if1_" + STR(ifCount1) + ":" + Chr(10);
             } else {
                 out += ".end_if1_" + STR(ifCount1) + ":" + Chr(10);
@@ -3667,6 +3718,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.ne .end_if2_" + STR(ifCount2) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if2 = -> jne) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -3744,6 +3796,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.eq .end_if2_" + STR(ifCount2) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if2 != -> je) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -3821,6 +3874,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.le .end_if2_" + STR(ifCount2) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if2 > -> jle) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -3898,6 +3952,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.ge .end_if2_" + STR(ifCount2) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if2 < -> jge) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -3975,6 +4030,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.lt .end_if2_" + STR(ifCount2) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if2 >= -> jl) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -4052,6 +4108,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.gt .end_if2_" + STR(ifCount2) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if2 <= -> jg) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -4080,6 +4137,7 @@ std::string compiler(std::string code) {
         }
         else if (Trim(A_LoopField39) == "ifend2" || Trim(A_LoopField39) == "endif2") {
             if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "end_if2_" + STR(ifCount2) + ":" + Chr(10);
             } else {
                 out += ".end_if2_" + STR(ifCount2) + ":" + Chr(10);
@@ -4142,6 +4200,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.ne .end_if3_" + STR(ifCount3) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if3 = -> jne) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -4219,6 +4278,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.eq .end_if3_" + STR(ifCount3) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if3 != -> je) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -4296,6 +4356,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.le .end_if3_" + STR(ifCount3) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if3 > -> jle) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -4373,6 +4434,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.ge .end_if3_" + STR(ifCount3) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if3 < -> jge) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -4450,6 +4512,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.lt .end_if3_" + STR(ifCount3) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if3 >= -> jl) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -4527,6 +4590,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.gt .end_if3_" + STR(ifCount3) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     // --- ORYX IR (if3 <= -> jg) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -4555,6 +4619,8 @@ std::string compiler(std::string code) {
         }
         else if (Trim(A_LoopField39) == "ifend3" || Trim(A_LoopField39) == "endif3") {
             if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "end_if3_" + STR(ifCount3) + ":" + Chr(10);
             } else {
                 out += ".end_if3_" + STR(ifCount3) + ":" + Chr(10);
@@ -4620,6 +4686,7 @@ std::string compiler(std::string code) {
                     out += "    b.ne .end_if4_" + STR(ifCount4) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -4703,6 +4770,7 @@ std::string compiler(std::string code) {
                     out += "    b.eq .end_if4_" + STR(ifCount4) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -4786,6 +4854,7 @@ std::string compiler(std::string code) {
                     out += "    b.le .end_if4_" + STR(ifCount4) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -4869,6 +4938,7 @@ std::string compiler(std::string code) {
                     out += "    b.ge .end_if4_" + STR(ifCount4) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -4952,6 +5022,7 @@ std::string compiler(std::string code) {
                     out += "    b.lt .end_if4_" + STR(ifCount4) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -5035,6 +5106,7 @@ std::string compiler(std::string code) {
                     out += "    b.gt .end_if4_" + STR(ifCount4) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -5066,6 +5138,7 @@ std::string compiler(std::string code) {
         }
         else if (Trim(A_LoopField39) == "ifend4" || Trim(A_LoopField39) == "endif4") {
             if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "end_if4_" + STR(ifCount4) + ":" + Chr(10);
             } else {
                 out += ".end_if4_" + STR(ifCount4) + ":" + Chr(10);
@@ -5131,6 +5204,7 @@ std::string compiler(std::string code) {
                     out += "    b.ne .end_if5_" + STR(ifCount5) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -5214,6 +5288,7 @@ std::string compiler(std::string code) {
                     out += "    b.eq .end_if5_" + STR(ifCount5) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -5297,6 +5372,7 @@ std::string compiler(std::string code) {
                     out += "    b.le .end_if5_" + STR(ifCount5) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -5380,6 +5456,7 @@ std::string compiler(std::string code) {
                     out += "    b.ge .end_if5_" + STR(ifCount5) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -5463,6 +5540,7 @@ std::string compiler(std::string code) {
                     out += "    b.lt .end_if5_" + STR(ifCount5) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -5546,6 +5624,7 @@ std::string compiler(std::string code) {
                     out += "    b.gt .end_if5_" + STR(ifCount5) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -5577,6 +5656,7 @@ std::string compiler(std::string code) {
         }
         else if (Trim(A_LoopField39) == "ifend5" || Trim(A_LoopField39) == "endif5") {
             if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "end_if5_" + STR(ifCount5) + ":" + Chr(10);
             } else {
                 out += ".end_if5_" + STR(ifCount5) + ":" + Chr(10);
@@ -5642,6 +5722,7 @@ std::string compiler(std::string code) {
                     out += "    b.ne .end_if6_" + STR(ifCount6) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -5725,6 +5806,7 @@ std::string compiler(std::string code) {
                     out += "    b.eq .end_if6_" + STR(ifCount6) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -5808,6 +5890,7 @@ std::string compiler(std::string code) {
                     out += "    b.le .end_if6_" + STR(ifCount6) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -5891,6 +5974,7 @@ std::string compiler(std::string code) {
                     out += "    b.ge .end_if6_" + STR(ifCount6) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -5974,6 +6058,7 @@ std::string compiler(std::string code) {
                     out += "    b.lt .end_if6_" + STR(ifCount6) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6057,6 +6142,7 @@ std::string compiler(std::string code) {
                     out += "    b.gt .end_if6_" + STR(ifCount6) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6088,6 +6174,7 @@ std::string compiler(std::string code) {
         }
         else if (Trim(A_LoopField39) == "ifend6" || Trim(A_LoopField39) == "endif6") {
             if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "end_if6_" + STR(ifCount6) + ":" + Chr(10);
             } else {
                 out += ".end_if6_" + STR(ifCount6) + ":" + Chr(10);
@@ -6153,6 +6240,7 @@ std::string compiler(std::string code) {
                     out += "    b.ne .end_if7_" + STR(ifCount7) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6236,6 +6324,7 @@ std::string compiler(std::string code) {
                     out += "    b.eq .end_if7_" + STR(ifCount7) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6319,6 +6408,7 @@ std::string compiler(std::string code) {
                     out += "    b.le .end_if7_" + STR(ifCount7) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6402,6 +6492,7 @@ std::string compiler(std::string code) {
                     out += "    b.ge .end_if7_" + STR(ifCount7) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6485,6 +6576,7 @@ std::string compiler(std::string code) {
                     out += "    b.lt .end_if7_" + STR(ifCount7) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6568,6 +6660,7 @@ std::string compiler(std::string code) {
                     out += "    b.gt .end_if7_" + STR(ifCount7) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6599,6 +6692,7 @@ std::string compiler(std::string code) {
         }
         else if (Trim(A_LoopField39) == "ifend7" || Trim(A_LoopField39) == "endif7") {
             if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "end_if7_" + STR(ifCount7) + ":" + Chr(10);
             } else {
                 out += ".end_if7_" + STR(ifCount7) + ":" + Chr(10);
@@ -6664,6 +6758,7 @@ std::string compiler(std::string code) {
                     out += "    b.ne .end_if8_" + STR(ifCount8) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6747,6 +6842,7 @@ std::string compiler(std::string code) {
                     out += "    b.eq .end_if8_" + STR(ifCount8) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6830,6 +6926,7 @@ std::string compiler(std::string code) {
                     out += "    b.le .end_if8_" + STR(ifCount8) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6913,6 +7010,7 @@ std::string compiler(std::string code) {
                     out += "    b.ge .end_if8_" + STR(ifCount8) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6996,6 +7094,7 @@ std::string compiler(std::string code) {
                     out += "    b.lt .end_if8_" + STR(ifCount8) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7079,6 +7178,7 @@ std::string compiler(std::string code) {
                     out += "    b.gt .end_if8_" + STR(ifCount8) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7110,6 +7210,7 @@ std::string compiler(std::string code) {
         }
         else if (Trim(A_LoopField39) == "ifend8" || Trim(A_LoopField39) == "endif8") {
             if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "end_if8_" + STR(ifCount8) + ":" + Chr(10);
             } else {
                 out += ".end_if8_" + STR(ifCount8) + ":" + Chr(10);
@@ -7175,6 +7276,7 @@ std::string compiler(std::string code) {
                     out += "    b.ne .end_if9_" + STR(ifCount9) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7258,6 +7360,7 @@ std::string compiler(std::string code) {
                     out += "    b.eq .end_if9_" + STR(ifCount9) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7341,6 +7444,7 @@ std::string compiler(std::string code) {
                     out += "    b.le .end_if9_" + STR(ifCount9) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7424,6 +7528,7 @@ std::string compiler(std::string code) {
                     out += "    b.ge .end_if9_" + STR(ifCount9) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7507,6 +7612,7 @@ std::string compiler(std::string code) {
                     out += "    b.lt .end_if9_" + STR(ifCount9) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7590,6 +7696,7 @@ std::string compiler(std::string code) {
                     out += "    b.gt .end_if9_" + STR(ifCount9) + Chr(10);
                 }
                 else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField39 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7621,6 +7728,7 @@ std::string compiler(std::string code) {
         }
         else if (Trim(A_LoopField39) == "ifend9" || Trim(A_LoopField39) == "endif9") {
             if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "end_if9_" + STR(ifCount9) + ":" + Chr(10);
             } else {
                 out += ".end_if9_" + STR(ifCount9) + ":" + Chr(10);
@@ -7686,6 +7794,7 @@ std::string compiler(std::string code) {
                 // --- END NEW LOGIC ---
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 isOryxFuncFirst++;
                 if (isOryxFuncFirst == 1) {
                     out += "jmp _start" + Chr(10);
@@ -7718,6 +7827,7 @@ std::string compiler(std::string code) {
                 out += "    ret" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 oryx_param_map = {};
                 // --- ORYX IR (Function End) ---
                 out += funcName + "_return:" + Chr(10);
@@ -7733,6 +7843,7 @@ std::string compiler(std::string code) {
                 out += "    b ." + funcName + "_return" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp " + funcName + "_return" + Chr(10);
             } else {
                 out += "jmp ." + funcName + "_return" + Chr(10);
@@ -7768,6 +7879,7 @@ std::string compiler(std::string code) {
                 out += "    b ." + funcName + "_return" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (return value) ---
                 if (RegExMatch(str1, "^\\d+$")) {
                     out += "mov r0, " + str1 + Chr(10);
@@ -7797,6 +7909,7 @@ std::string compiler(std::string code) {
                 arrBss += ".lcomm " + Trim(str1) + ", 24" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Array Declaration) ---
                 out += "arr " + Trim(str1) + Chr(10);
             } else {
@@ -7838,6 +7951,7 @@ std::string compiler(std::string code) {
                 out += "    bl array_append" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (arr.add) ---
                 strVal = str2;
                 if (str2 == "rax") {
@@ -7867,6 +7981,7 @@ std::string compiler(std::string code) {
                 out += "    bl array_pop" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // Oryx doesn't have explicit .pop in your spec, but let's assume it does or map it
                 // If not, we skip or use a custom VM call. Assuming arr.pop exists:
                 out += "arr.pop " + str1 + Chr(10);
@@ -7881,6 +7996,7 @@ std::string compiler(std::string code) {
                 out += "    bl array_clear" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "arr.clear " + str1 + Chr(10);
             } else {
                 out += "mov rdi, " + str1 + Chr(10) + "call array_clear" + Chr(10);
@@ -7895,6 +8011,7 @@ std::string compiler(std::string code) {
                 out += "    bl array_copy" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "arr.copy " + str2 + ", " + str1 + Chr(10);
             } else {
                 out += "mov rdi, " + str1 + Chr(10) + "mov rsi, " + str2 + Chr(10) + "call array_copy" + Chr(10);
@@ -7907,6 +8024,7 @@ std::string compiler(std::string code) {
                 out += "    ldr x0, [x9, #DynamicArray_size]" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // arr.size <array>, <dest_reg>
                 out += "arr.size " + str1 + ", r0" + Chr(10);
             } else {
@@ -7946,6 +8064,7 @@ std::string compiler(std::string code) {
                 out += "    ldr x0, [x9, x10, lsl #3]" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // arr.get <array>, <index_src>, <dest_reg>
                 strIndex = str2;
                 if (str2 == "rax") {
@@ -7979,6 +8098,7 @@ std::string compiler(std::string code) {
                 out += "    b .__HTLL_HTLL_" + str1 + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "jmp __HTLL_HTLL_" + str1 + Chr(10);
             } else {
                 out += "jmp .__HTLL_HTLL_" + str1 + Chr(10);
@@ -7987,6 +8107,7 @@ std::string compiler(std::string code) {
         else if (SubStr(StrLower(A_LoopField39), 1, 5) == "togo ") {
             str1 = Trim(StringTrimLeft(A_LoopField39, 5));
             if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "__HTLL_HTLL_" + str1 + ":" + Chr(10);
             } else {
                 out += ".__HTLL_HTLL_" + str1 + ":" + Chr(10);
@@ -8019,6 +8140,7 @@ std::string compiler(std::string code) {
                 out += "    bl sleep_ms" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 if (RegExMatch(str1, "^\\d+$")) {
                     out += "mov r1, " + str1 + Chr(10);
                 }
@@ -8062,6 +8184,7 @@ std::string compiler(std::string code) {
                 out += "    bl free_packed_string" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "; --- INLINE CONVERT " + str3 + " ---" + Chr(10);
                 out += "arr.size " + str3 + ", r90" + Chr(10);
                 out += "mov __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, " + Chr(34) + Chr(34) + Chr(10);
@@ -8100,6 +8223,7 @@ std::string compiler(std::string code) {
                 out += "    bl free_packed_string" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- INLINE CONVERT FILENAME (str2) ---
                 out += "; --- INLINE CONVERT " + str2 + " ---" + Chr(10);
                 out += "arr.size " + str2 + ", r90" + Chr(10);
@@ -8150,6 +8274,7 @@ std::string compiler(std::string code) {
                 out += "    bl free_packed_string" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "; --- INLINE CONVERT " + str1 + " ---" + Chr(10);
                 out += "arr.size " + str1 + ", r90" + Chr(10);
                 out += "mov __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, " + Chr(34) + Chr(34) + Chr(10);
@@ -8185,6 +8310,7 @@ std::string compiler(std::string code) {
                 out += "    bl file_read" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // Oryx: file.read dest, "file.txt"
                 out += "file.read " + str2 + ", " + str3 + Chr(10);
             } else {
@@ -8205,6 +8331,7 @@ std::string compiler(std::string code) {
                 out += "    bl file_append" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "file.append " + str2 + ", " + str3 + Chr(10);
             } else {
                 dot_data_print_temp_strings += path_label + " db " + str2 + ", 0" + Chr(10);
@@ -8221,6 +8348,7 @@ std::string compiler(std::string code) {
                 out += "    bl file_delete" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "file.delete " + str1 + Chr(10);
             } else {
                 dot_data_print_temp_strings += path_label + " db " + str1 + ", 0" + Chr(10);
@@ -8237,6 +8365,7 @@ std::string compiler(std::string code) {
                 out += "    bl get_user_input" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "; --- INLINE CONVERT " + str3 + " ---" + Chr(10);
                 out += "arr.size " + str3 + ", r90" + Chr(10);
                 out += "mov __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, " + Chr(34) + Chr(34) + Chr(10);
@@ -8321,6 +8450,7 @@ std::string compiler(std::string code) {
                 out += "    str x11, [x9, x10, lsl #3]" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // arr.set array, index, value
                 // Resolve Index
                 idxSrc = str_index;
@@ -8360,6 +8490,7 @@ std::string compiler(std::string code) {
                 out += "    add x0, x0, #1" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "inc r0" + Chr(10);
             } else {
                 out += "inc rax" + Chr(10);
@@ -8370,6 +8501,7 @@ std::string compiler(std::string code) {
                 out += "    sub x0, x0, #1" + Chr(10);
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 out += "dec r0" + Chr(10);
             } else {
                 out += "dec rax" + Chr(10);
@@ -8471,6 +8603,7 @@ std::string compiler(std::string code) {
                 }
             }
             else if (is_oryx == 1) {
+                out += "meta " + A_LoopField39 + Chr(10);
                 // --- ORYX IR (Function Call) ---
                 if (int1 == 0) {
                     std::vector<std::string> items182 = LoopParseFunc(str3, ", ");

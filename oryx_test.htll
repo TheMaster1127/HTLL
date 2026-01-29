@@ -1,20 +1,24 @@
-; To run from terminal: ./my_program arg1 "second arg" third
+arr my_data
+arr shared_buffer ; This is the agreed-upon global buffer
+
+; This function is designed to work ONLY with 'shared_buffer'
+func process_data_in_buffer()
+    print("Processing data...")
+    shared_buffer.size
+    Loop, rax
+        shared_buffer.index A_Index
+        rax++ ; Increment the value
+        print(rax)
+    endloop
+funcend
 
 main
-    print("--- Arguments Received ---")
-    args_array.size
-    if (rax = 0)
-        print("None.")
-        goto args_done
-    ifend
-        
-    Loop, rax
-        args_array.index A_Index
-        if (rax = 10)
-            print("") ; A newline separates each argument
-            continue
-        ifend
-        print_rax_as_char
-    endloop
+    ; 1. Load your primary data
+    my_data.add 100
+    my_data.add 200
     
-    togo args_done
+    ; 2. Copy the data to the shared buffer before calling
+    shared_buffer.copy my_data
+    
+    ; 3. Call the function, which now operates on the buffer
+    process_data_in_buffer()

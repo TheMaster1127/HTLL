@@ -501,3 +501,276 @@ array_append:
     ret
 
 %%%%array_append%%%%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+$$$$_htll_draw$$$$
+; --- _htll_draw(x, y, color) ---
+; Stack: [RSP]=Ret, [RSP+8]=Color, [RSP+16]=Y, [RSP+24]=X
+_htll_draw:
+    ; Read arguments without popping (Peeking)
+    mov rdx, [rsp+8]    ; Color
+    mov rsi, [rsp+16]   ; Y
+    mov rdi, [rsp+24]   ; X
+
+    ; Safety Check
+    cmp rdi, 80
+    jge .done
+    cmp rsi, 50
+    jge .done
+
+    ; Calculate Address
+    mov rax, rsi
+    shr rax, 1          ; Y / 2
+    imul rax, 160       ; Row * 160
+    imul rbx, rdi, 2    ; X * 2
+    add rax, rbx
+    add rax, 753664     ; 0xB8000
+
+    ; Read-Modify-Write
+    mov bl, byte [rax+1]
+    test rsi, 1
+    jnz .draw_bottom
+
+.draw_top:
+    and bl, 240
+    and dl, 15
+    or bl, dl
+    jmp .write_pixel
+
+.draw_bottom:
+    and bl, 15
+    and dl, 15
+    shl dl, 4
+    or bl, dl
+
+.write_pixel:
+    mov byte [rax+0], 223 ; FIXED: Added brackets
+    mov byte [rax+1], bl
+.done:
+    ret
+%%%%_htll_draw%%%%
+
+$$$$_htll_clear$$$$
+; --- _htll_clear(color) ---
+; Stack: [RSP]=Ret, [RSP+8]=Color
+_htll_clear:
+    mov rdx, [rsp+8]    ; Read Color
+
+    mov rax, rdx
+    shl rax, 4
+    or rax, rdx
+    mov rdx, rax
+
+    mov rdi, 753664
+    mov rcx, 2000
+
+.loop:
+    mov byte [rdi], 223
+    mov byte [rdi+1], dl
+    add rdi, 2
+    dec rcx
+    jnz .loop
+    ret
+%%%%_htll_clear%%%%
+
+$$$$_htll_get_key$$$$
+; --- _htll_get_key() ---
+_htll_get_key:
+    xor rax, rax
+    in al, 0x64
+    test al, 1
+    jz .no_key
+    in al, 0x60
+    ret
+.no_key:
+    ret
+%%%%_htll_get_key%%%%
+
+
+$$$$_htll_draw_char$$$$
+; --- _htll_draw_char(x, y, char_id, color_id) ---
+; ABI: Caller-Cleanup Stack (Peeking)
+; Stack: [RSP]=Ret, [RSP+8]=Color, [RSP+16]=Char, [RSP+24]=Y, [RSP+32]=X
+_htll_draw_char:
+    ; Read arguments without popping
+    mov r8,  [rsp+8]     ; Color ID (e.g., 15 for White)
+    mov r9,  [rsp+16]    ; Character ID (e.g., 65 for 'A')
+    mov rsi, [rsp+24]    ; Y (This is the REAL 0-24 row, not the 0-49 pixel)
+    mov rdi, [rsp+32]    ; X (0-79)
+
+    ; Bounds Check (Standard 80x25 grid)
+    cmp rdi, 80
+    jge .done
+    cmp rsi, 25
+    jge .done
+
+    ; Calculate Address: 753664 + (Y * 160) + (X * 2)
+    imul rsi, 160
+    imul rdi, 2
+    add rsi, rdi
+    add rsi, 753664     ; 0xB8000
+
+    ; --- Draw ---
+    mov byte [rsi], r9b     ; Write the Character ID (lower 8 bits of R9)
+    mov byte [rsi+1], r8b   ; Write the Color ID (lower 8 bits of R8)
+
+.done:
+    ret
+%%%%_htll_draw_char%%%%
+
+
+
+
+$$$$bcd2bin$$$$
+bcd2bin:
+    movzx eax, al      ; AL -> EAX (32-bit)
+    mov ecx, eax
+    and ecx, 0x0F      ; low nibble
+    shr eax, 4         ; high nibble
+    imul eax, 10       ; multiply high nibble by 10
+    add eax, ecx       ; add low nibble
+    ret
+%%%%bcd2bin%%%%
+$$$$print_two_digits$$$$
+; ----------------------------
+; Print number in RAX as two digits
+; ----------------------------
+print_two_digits:
+    xor rdx, rdx       ; clear RDX for div
+    mov rcx, 10
+    div rcx            ; RAX = quotient (tens), RDX = remainder (units)
+    mov al, al         ; get quotient in AL
+    add al, '0'
+    call print_char
+    mov al, dl         ; remainder
+    add al, '0'
+    call print_char
+    ret
+%%%%print_two_digits%%%%
+
+$$$$_htll_display_clock$$$$
+; --- _htll_display_clock(x, y, color, utc_dir, utc_val, is_12h) ---
+; ABI: Caller-Cleanup Stack (Peeking)
+; Stack: [RSP]=Ret, [RSP+8]=12h, [RSP+16]=utc_val, [RSP+24]=utc_dir, [RSP+32]=color, [RSP+40]=y, [RSP+48]=x
+_htll_display_clock:
+    ; --- Read Arguments from Stack ---
+    mov rdi, [rsp+48]   ; X
+    mov rsi, [rsp+40]   ; Y
+    mov rdx, [rsp+32]   ; Color
+    mov r8,  [rsp+24]   ; UTC Direction (1 for +, 0 for -)
+    mov r9,  [rsp+16]   ; UTC Value
+    mov r10, [rsp+8]    ; 12h Mode Flag (1 for 12h, 0 for 24h)
+
+    ; --- Set Cursor Position ---
+    mov [cursor_x], rdi
+    mov [cursor_y], rsi
+
+    ; --- Read RTC and store in registers (local variables) ---
+    ; r12 = hour, r13 = minute, r14 = second
+    mov al, 4
+    out 0x70, al
+    in al, 0x71
+    call bcd2bin
+    mov r12, rax
+
+    mov al, 2
+    out 0x70, al
+    in al, 0x71
+    call bcd2bin
+    mov r13, rax
+
+    mov al, 0
+    out 0x70, al
+    in al, 0x71
+    call bcd2bin
+    mov r14, rax
+
+    ; --- Apply UTC Offset ---
+    cmp r8, 1
+    je .utc_add
+.utc_sub:
+    sub r12, r9
+    jmp .utc_done
+.utc_add:
+    add r12, r9
+.utc_done:
+
+    ; Handle hour wrapping
+.utc_wrap_check:
+    cmp r12, 23
+    jg .utc_wrap_sub
+    cmp r12, 0
+    jl .utc_wrap_add
+    jmp .apply_12h_mode
+.utc_wrap_sub:
+    sub r12, 24
+    jmp .utc_wrap_check
+.utc_wrap_add:
+    add r12, 24
+    jmp .utc_wrap_check
+
+    ; --- Apply 12-hour formatting if requested ---
+.apply_12h_mode:
+    cmp r10, 1
+    jne .print_time
+
+    ; It is 12h mode
+    cmp r12, 12
+    jg .subtract_12
+    cmp r12, 0
+    je .is_midnight
+    jmp .print_time ; Hours 1-12 are fine
+.subtract_12:
+    sub r12, 12
+    jmp .print_time
+.is_midnight:
+    mov r12, 12 ; 0 hour becomes 12 AM
+
+    ; --- Print the final time ---
+.print_time:
+    mov rax, r12
+    call print_two_digits
+
+    mov al, ':'
+    call print_char
+
+    mov rax, r13
+    call print_two_digits
+
+    mov al, ':'
+    call print_char
+
+    mov rax, r14
+    call print_two_digits
+
+    ret
+%%%%_htll_display_clock%%%%
