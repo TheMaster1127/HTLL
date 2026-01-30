@@ -1,4 +1,4 @@
-### Clean List (Sorted by Difficulty)
+### List (Sorted by Difficulty)
 
 1.  `StrLen`
 2.  `Chr`

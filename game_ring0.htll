@@ -50,6 +50,8 @@ _htll_draw_char(42, 12, 111, 15)
     
     _htll_draw(x, y, playerColor)
     
+    draw_all()
+    
     ; wait
     Loop, 400000 {}
     

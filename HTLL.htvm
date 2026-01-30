@@ -22,8 +22,8 @@ str str18 := ""
 str str19 := ""
 str str20 := ""
 int is_arm := 0
-int is_oryx := 1
-int ring0 := 0
+int is_oryx := 0
+int ring0 := 1
 arr str nintArr
 
 func str SubStrLastChars(str text, int numOfChars) {
@@ -8107,7 +8107,7 @@ else if (is_oryx = 1) {      out .= "meta " . A_LoopField . Chr(10)
             }
             else {
                 upCode := Chr(10) . "    SCALE_FACTOR   dq 1000000" . Chr(10) . "    INITIAL_CAPACITY = 2" . Chr(10) . "    print_buffer   rb 21" . Chr(10) . "    dot            db " . Chr(39) . "." . Chr(39) . "" . Chr(10) . "    minus_sign     db " . Chr(39) . "-" . Chr(39) . "" . Chr(10) . "    nl   db 10" . Chr(10) . dot_data . Chr(10)
-                upCode .= Chr(10) . Chr(10) . "    input_buffer rb 256" . Chr(10) . "    file_read_buffer rb 4096" . Chr(10) . "    input_len    rq 1" . Chr(10) . "    filename_ptr_size  rq 1" . Chr(10) . "    source_ptr      rq 1" . Chr(10) . "    source_ptr_size rq 1" . Chr(10) . "    args_array rq 3" . Chr(10) . "    filename_ptr      rq 1" . Chr(10) . "    asm_code_ptr    rq 1" . Chr(10) . "    print_buffer_n rb 20" . Chr(10) . arrBss . dot_bss . Chr(10) . "; Global variables for the 64-bit Runtime" . Chr(10) . "cursor_x dq 0" . Chr(10) . "cursor_y dq 0" . Chr(10) . "heap_ptr dq 0x40000" . Chr(10) . "; Minimal Scancode Map (QWERTY) - You can expand this" . Chr(10) . "scan_map:" . Chr(10) . "db 0,27,'1','2','3','4','5','6','7','8','9','0','-','=',8,9" . Chr(10) . "db 'q','w','e','r','t','y','u','i','o','p','[',']',10,0,'a','s'" . Chr(10) . "db 'd','f','g','h','j','k','l',';',39,'" . Chr(96) . "',0,'\','z','x','c','v'" . Chr(10) . "db 'b','n','m',',','.','/',0,'*',0,32" . Chr(10)
+                upCode .= Chr(10) . Chr(10) . "    input_buffer rb 256" . Chr(10) . "    file_read_buffer rb 4096" . Chr(10) . "    input_len    rq 1" . Chr(10) . "    filename_ptr_size  rq 1" . Chr(10) . "    source_ptr      rq 1" . Chr(10) . "    source_ptr_size rq 1" . Chr(10) . "    args_array rq 3" . Chr(10) . "    filename_ptr      rq 1" . Chr(10) . "    asm_code_ptr    rq 1" . Chr(10) . "    print_buffer_n rb 20" . Chr(10) . arrBss . dot_bss . Chr(10) . "; Global variables for the 64-bit Runtime" . Chr(10) . "cursor_x dq 0" . Chr(10) . "cursor_y dq 0" . Chr(10) . "heap_ptr dq 0x40000" . Chr(10) . "; Minimal Scancode Map (QWERTY) - You can expand this" . Chr(10) . "scan_map:" . Chr(10) . "db 0,27,'1','2','3','4','5','6','7','8','9','0','-','=',8,9" . Chr(10) . "db 'q','w','e','r','t','y','u','i','o','p','[',']',10,0,'a','s'" . Chr(10) . "db 'd','f','g','h','j','k','l',';',39,'" . Chr(96) . "',0,'\','z','x','c','v'" . Chr(10) . "db 'b','n','m',',','.','/',0,'*',0,32" . Chr(10) . "align 16" . Chr(10) . "video_buffer: rb 4000" . Chr(10)
                 upCode .= Chr(10) . HTLL_Libs_x86_new . Chr(10)
             }
         }

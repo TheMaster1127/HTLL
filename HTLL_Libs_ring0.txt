@@ -65,61 +65,39 @@ print_str:
 
 $$$$print_char$$$$
 print_char:
-    ; 1. SAVE ALL REGISTERS
-    ; We must save everything because scrolling uses almost all of them.
     push rdi
     push rbx
     push rcx
-    push rdx 
+    push rdx
     push rax
-    push rsi 
-
-    ; 2. CHECK FOR NEWLINE
+    push rsi
     cmp al, 10
     je .newline
-
-    ; 3. CALCULATE MEMORY OFFSET
-    ; Offset = (y * 80 + x) * 2
-    mov cl, al  
+    mov cl, al
     mov rax, [cursor_y]
     mov rbx, 80
     mul rbx
     add rax, [cursor_x]
     shl rax, 1
     
-    mov rdi, 0xB8000
-    add rdi, rax
+    lea rdi, [video_buffer + rax] ; <--- TARGETS BUFFER
     
-    ; 4. DRAW CHARACTER
     mov byte [rdi], cl
     mov byte [rdi+1], 0x0F
-    
-    ; 5. ADVANCE CURSOR
     inc qword [cursor_x]
-    
-    ; 6. CHECK LINE WRAP (If x >= 80)
     cmp qword [cursor_x], 80
     jl .check_scroll
-    
 .newline:
     mov qword [cursor_x], 0
     inc qword [cursor_y]
-
 .check_scroll:
     cmp qword [cursor_y], 25
     jl .done
-
-    ; ===========================
-    ; SCROLLING LOGIC
-    ; ===========================
     
-    ; Move lines 1-24 UP to lines 0-23
-    ; We copy 8 bytes (4 chars) at a time for speed and safety.
-    
-    mov rsi, 0xB80A0
-    mov rdi, 0xB8000
+    ; Scroll the buffer
+    lea rsi, [video_buffer + 160]
+    lea rdi, [video_buffer]
     mov rcx, 480
-
 .scroll_loop:
     mov rax, [rsi]
     mov [rdi], rax
@@ -127,24 +105,18 @@ print_char:
     add rdi, 8
     dec rcx
     jnz .scroll_loop
-
-    ; Clear the last line (Line 24)
-    mov rdi, 0xB8F00            
-    mov rax, 0x0F200F200F200F20 
+    
+    ; Clear last line in buffer
+    lea rdi, [video_buffer + 3840]
+    mov rax, 0x0F200F200F200F20
     mov rcx, 20
-
 .clear_loop:
     mov [rdi], rax
     add rdi, 8
     loop .clear_loop
-
-    ; Reset cursor to the start of the last line
     mov qword [cursor_y], 24
     mov qword [cursor_x], 0
-
 .done:
-    ; 7. RESTORE ALL REGISTERS
-    ; Must be popped in REVERSE order of push
     pop rsi
     pop rax
     pop rdx
@@ -536,44 +508,36 @@ $$$$_htll_draw$$$$
 ; --- _htll_draw(x, y, color) ---
 ; Stack: [RSP]=Ret, [RSP+8]=Color, [RSP+16]=Y, [RSP+24]=X
 _htll_draw:
-    ; Read arguments without popping (Peeking)
     mov rdx, [rsp+8]    ; Color
     mov rsi, [rsp+16]   ; Y
     mov rdi, [rsp+24]   ; X
-
-    ; Safety Check
     cmp rdi, 80
     jge .done
     cmp rsi, 50
     jge .done
-
-    ; Calculate Address
+    
     mov rax, rsi
     shr rax, 1          ; Y / 2
     imul rax, 160       ; Row * 160
     imul rbx, rdi, 2    ; X * 2
     add rax, rbx
-    add rax, 753664     ; 0xB8000
-
-    ; Read-Modify-Write
-    mov bl, byte [rax+1]
+    add rax, video_buffer ; <--- TARGETS BUFFER
+    
+    mov bl, byte [rax+1] ; Read existing color from buffer
     test rsi, 1
     jnz .draw_bottom
-
 .draw_top:
     and bl, 240
     and dl, 15
     or bl, dl
     jmp .write_pixel
-
 .draw_bottom:
     and bl, 15
     and dl, 15
     shl dl, 4
     or bl, dl
-
 .write_pixel:
-    mov byte [rax+0], 223 ; FIXED: Added brackets
+    mov byte [rax+0], 223
     mov byte [rax+1], bl
 .done:
     ret
@@ -584,23 +548,34 @@ $$$$_htll_clear$$$$
 ; Stack: [RSP]=Ret, [RSP+8]=Color
 _htll_clear:
     mov rdx, [rsp+8]    ; Read Color
-
     mov rax, rdx
     shl rax, 4
     or rax, rdx
     mov rdx, rax
-
-    mov rdi, 753664
+    
+    mov rdi, video_buffer ; <--- TARGETS BUFFER
     mov rcx, 2000
-
 .loop:
-    mov byte [rdi], 223
+    mov byte [rdi], 32 ; Space char
     mov byte [rdi+1], dl
     add rdi, 2
     dec rcx
     jnz .loop
     ret
 %%%%_htll_clear%%%%
+
+
+$$$$draw_all$$$$
+; --- The Buffer Swap (Writes to VRAM) ---
+draw_all:
+    cld
+    mov rsi, video_buffer
+    mov rdi, 0xB8000
+    mov rcx, 500       ; 4000 bytes / 8 bytes per qword = 500 ops
+    rep movsq          ; Blit buffer to VRAM
+    ret
+%%%%draw_all%%%%
+
 
 $$$$_htll_get_key$$$$
 ; --- _htll_get_key() ---
@@ -621,28 +596,20 @@ $$$$_htll_draw_char$$$$
 ; ABI: Caller-Cleanup Stack (Peeking)
 ; Stack: [RSP]=Ret, [RSP+8]=Color, [RSP+16]=Char, [RSP+24]=Y, [RSP+32]=X
 _htll_draw_char:
-    ; Read arguments without popping
-    mov r8,  [rsp+8]     ; Color ID (e.g., 15 for White)
-    mov r9,  [rsp+16]    ; Character ID (e.g., 65 for 'A')
-    mov rsi, [rsp+24]    ; Y (This is the REAL 0-24 row, not the 0-49 pixel)
-    mov rdi, [rsp+32]    ; X (0-79)
-
-    ; Bounds Check (Standard 80x25 grid)
+    mov r8,  [rsp+8]     ; Color ID
+    mov r9,  [rsp+16]    ; Character ID
+    mov rsi, [rsp+24]    ; Y
+    mov rdi, [rsp+32]    ; X
     cmp rdi, 80
     jge .done
     cmp rsi, 25
     jge .done
-
-    ; Calculate Address: 753664 + (Y * 160) + (X * 2)
     imul rsi, 160
     imul rdi, 2
     add rsi, rdi
-    add rsi, 753664     ; 0xB8000
-
-    ; --- Draw ---
-    mov byte [rsi], r9b     ; Write the Character ID (lower 8 bits of R9)
-    mov byte [rsi+1], r8b   ; Write the Color ID (lower 8 bits of R8)
-
+    add rsi, video_buffer ; <--- TARGETS BUFFER
+    mov byte [rsi], r9b
+    mov byte [rsi+1], r8b
 .done:
     ret
 %%%%_htll_draw_char%%%%
