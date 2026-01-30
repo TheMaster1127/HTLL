@@ -244,29 +244,19 @@ prompt.add 32 ; This adds the trailing space
 
 ### 6. Control Flow: Loops
 
-Loops are **zero-indexed** and can be nested up to 9 levels (`Loop`, `Loop2`, ..., `Loop9`). The number (`2`, `3`, etc.) is only for the parser to keep track of nesting; it does not change the behavior.
+Loops are **zero-indexed** and can be nested up to 9 levels.
 
 **Syntax:** `Loop, <count>`
-
-**CRITICAL:** The current iteration index is **always** available in the special variable `A_Index`. There is no `A_Index2` or `A_Index3`. This means if you have nested loops, `A_Index` will refer to the index of the innermost loop currently executing.
 
 **Example 1: Basic zero-indexed loop**
 ```ahk
 ; This will print 0, 1, 2, 3, 4
-Loop, 5
+Loop, 5 {
     print(A_Index)
-endloop
+}
 ```
 
-**Example 2: Basic counted loop**
-```ahk
-; Prints 0, 1, 2
-Loop, 3
-    print(A_Index)
-endloop
-```
-
-**Example 3: Iterating over an array**
+**Example 2: Iterating over an array**
 ```ahk
 arr data_arr
 data_arr.add 11
@@ -274,49 +264,49 @@ data_arr.add 22
 data_arr.add 33
 
 data_arr.size ; Place size (3) into rax
-Loop, rax
+Loop, rax {
     data_arr.index A_Index
     print(rax)
-endloop
+}
 ```
 
-**Example 4: Nested Loops and `A_Index`**
+**Example 3: Nested Loops and `A_Index`**
 ```ahk
-Loop, 2 ; Outer loop from 0 to 1
+Loop, 2 { ; Outer loop from 0 to 1
     print("Outer:")
     print(A_Index) ; This A_Index belongs to the outer loop
     
-    Loop2, 3 ; Inner loop from 0 to 2
+    Loop2, 3 { ; Inner loop from 0 to 2
         print("  Inner:")
         print(A_Index) ; This A_Index belongs to the inner loop
-    endloop2
-endloop
+    }
+}
 ```
 
 ---
 
 ### 7. Control Flow: Conditionals
 
-Conditional logic requires parentheses and can also be nested up to 9 levels (`if`, `if2`, ..., `if9`).
+Conditional logic requires parentheses.
 
 **Operators:** `=`, `!=`, `>`, `<`, `>=`, `<=`
 
 **Example 1: Simple check**
 ```ahk
 int val := 10
-if (val = 10)
+if (val = 10) {
     print("Value is 10.")
-ifend
+}
 ```
 
 **Example 2: Simulating an `else` block**
 HTLL does not have an `else` keyword. You achieve this with `goto`.
 ```ahk
 int access_level := 5
-if (access_level > 8)
+if (access_level > 8) {
     print("Admin access granted.")
     goto end_check
-ifend
+}
 print("Standard access.")
 togo end_check
 ```
@@ -336,9 +326,9 @@ int counter := 0
 togo loop_start
     counter++
     print(counter)
-    if (counter < 3)
+    if (counter < 3) {
         goto loop_start
-    ifend
+    }
 print("Loop finished.")
 ```
 
@@ -356,10 +346,10 @@ HTLL supports parameter shadowing. If you define a function parameter with the s
 ```ahk
 int x := 10  ; Global variable
 
-func my_func(x) ; This 'x' is a local parameter, shadowing the global 'x'
-    x += 5     ; This modifies the local 'x' on the stack (20 + 5)
-    print(x)   ; Prints 25
-funcend
+func my_func(x) { ; This 'x' is a local parameter, shadowing the global 'x'
+    x += 5        ; This modifies the local 'x' on the stack (20 + 5)
+    print(x)      ; Prints 25
+}
 
 main
     my_func(20) ; We pass 20 to the function.
@@ -371,11 +361,11 @@ main
 
 **The Wrong Way (Bugged Logic):**
 ```ahk
-func counter_broken()
+func counter_broken() {
     int i := 0 ; This line only truly runs once during compilation!
     i++
     print(i)
-funcend
+}
 
 main
     counter_broken() ; Prints 1
@@ -387,11 +377,11 @@ main
 ```ahk
 int i := 0 ; 1. Declare the variable in the global scope.
 
-func counter_correct()
+func counter_correct() {
     i := 0 ; 2. Reset the variable to its starting value inside the function.
     i++
     print(i)
-funcend
+}
 
 main
     counter_correct() ; Prints 1
@@ -413,15 +403,15 @@ arr my_data
 arr shared_buffer ; This is the agreed-upon global buffer
 
 ; This function is designed to work ONLY with 'shared_buffer'
-func process_data_in_buffer()
+func process_data_in_buffer() {
     print("Processing data...")
     shared_buffer.size
-    Loop, rax
+    Loop, rax {
         shared_buffer.index A_Index
         rax++ ; Increment the value
         print(rax)
-    endloop
-funcend
+    }
+}
 
 main
     ; 1. Load your primary data
@@ -466,10 +456,10 @@ main
 
     ; Print the contents
     content_buffer.size
-    Loop, rax
+    Loop, rax {
         content_buffer.index A_Index
         print_rax_as_char
-    endloop
+    }
 
     ; Clean up
     print("Deleting file...")
@@ -492,19 +482,19 @@ Internally, HTLL loops through the arguments provided by the operating system, u
 main
     print("--- Arguments Received ---")
     args_array.size
-    if (rax = 0)
+    if (rax = 0) {
         print("None.")
         goto args_done
-    ifend
+    }
         
-    Loop, rax
+    Loop, rax {
         args_array.index A_Index
-        if (rax = 10)
+        if (rax = 10) {
             print("") ; A newline separates each argument
             continue
-        ifend
+        }
         print_rax_as_char
-    endloop
+    }
     
     togo args_done
 ```
@@ -521,18 +511,7 @@ print("Step 2")
 
 ---
 
-### 13. Syntax Reference & Flexibility
-
-*   **Block Enders:** Blocks can be closed with two styles. They are interchangeable.
-    *   `if` -> `ifend` or `endif`
-    *   `loop` -> `endloop` or `loopend`
-    *   `func` -> `funcend` or `endfunc`
-*   **Nesting Limit:** Loops and conditionals can be nested up to 9 levels deep.
-*   **Loop Iterator:** The loop variable is **always** `A_Index`.
-
----
-
-### 14. Comprehensive All-In-One Example
+### 13. Comprehensive All-In-One Example
 
 This single program demonstrates the correct usage of globals, functions, the buffer pattern, I/O, loops, and conditionals to perform a series of tasks.
 
@@ -555,7 +534,7 @@ int item1 := 0
 int item2 := 0
 
 ; --- Function to sort the global 'number_list' via Bubble Sort ---
-func sort_number_list()
+func sort_number_list() {
     print("--- Sorting List ---")
     togo sort_start_label
         swapped := 0
@@ -563,7 +542,7 @@ func sort_number_list()
         n := rax
         n-- ; Adjust for zero-based index
 
-        Loop, n
+        Loop, n {
             i := A_Index
             number_list.index i
             item1 := rax
@@ -572,20 +551,21 @@ func sort_number_list()
             number_list.index i
             item2 := rax
 
-            if (item1 > item2)
+            if (item1 > item2) {
                 number_list.set A_Index, item2
                 number_list.set i, item1
                 swapped := 1
-            ifend
-        endloop
-        if (swapped = 1)
+            }
+        }
+        
+        if (swapped = 1) {
             goto sort_start_label
-        ifend
+        }
     print("Sort complete.")
-funcend
+}
 
 ; --- Function to append the contents of 'log_content_buffer' to disk ---
-func append_to_log()
+func append_to_log() {
     ; This function uses the agreed-upon global buffers
     fileappend_arr filename_buffer, log_content_buffer
     
@@ -593,7 +573,7 @@ func append_to_log()
     log_content_buffer.clear
     log_content_buffer.add 10
     fileappend_arr filename_buffer, log_content_buffer
-funcend
+}
 
 ;#######################################################
 ;# MAIN EXECUTION BLOCK
@@ -633,10 +613,10 @@ main
     fileread_arr log_content_buffer, filename_buffer
     
     log_content_buffer.size
-    Loop, rax
+    Loop, rax {
         log_content_buffer.index A_Index
         print_rax_as_char
-    endloop
+    }
     
     print("--- DEMO COMPLETE ---")
 ```
@@ -654,7 +634,7 @@ This is a summary of the most important, non-obvious rules of HTLL. Internalize 
 *   **NO `else`, `and`, `or`:** These constructs do not exist. You must build equivalent logic using `goto` and nested `if` statements. This is intentional.
 *   **`print("")` IS FOR NEWLINES:** This is the specific syntax trick to print a newline character.
 *   **SPACE BEFORE END-OF-LINE COMMENTS:** A comment at the end of a line needs a space. `x++ ; comment` is correct. `x++;comment` is wrong.
-*   **NESTING IS FINITE:** You have 9 levels (`Loop` to `Loop9`, `if` to `if9`). If you need more, your code is too complex and must be refactored into smaller functions.
+*   **NESTING IS FINITE:** You have 9 levels. If you need more, your code is too complex and must be refactored into smaller functions.
 
 ---
 
@@ -662,4 +642,4 @@ In conclusion: **C is bloated.**
 
 You have been told your whole life that C is the pinnacle of minimalism. This is a lie. The dependency on `libc` and the complexity of its toolchains introduce unnecessary bloat.
 
-HTLL is an experiment in true minimalism. The trade-off is its specificity: it only targets only one architecture (x86-64) and one operating system (Linux). But within that domain, it offers unparalleled control and efficiency.
+HTLL is an experiment in true minimalism. The trade-off is its specificity: it only targets only a few architectures (x86-64 and AArch64) and one operating system (Linux). But within that domain, it offers unparalleled control and efficiency.
