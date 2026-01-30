@@ -742,7 +742,7 @@ std::string str19 = "";
 std::string str20 = "";
 int is_arm = 0;
 int is_oryx = 0;
-int ring0 = 1;
+int ring0 = 0;
 std::vector<std::string> nintArr;
 std::string SubStrLastChars(std::string text, int numOfChars) {
     std::string LastOut = "";
@@ -9124,17 +9124,55 @@ std::string compiler(std::string code) {
 int main(int argc, char* argv[]) {
     std::string params = Trim(GetParams());
     std::string paramsTemp = "";
+    std::string paramsTemp_fileName = "";
     if (params == "") {
-        print("Usage:" + Chr(10) + "./HTLL your_file.htll");
+        print("Usage:" + Chr(10) + "./HTLL your_file.htll <target>" + Chr(10) + "Targets: x86-64, arm, oryx, x86-64-ring0");
+    }
+    else if (InStr(params, Chr(10)) == false) {
+        print("Usage:" + Chr(10) + "./HTLL your_file.htll <target>" + Chr(10) + "Targets: x86-64, arm, oryx, x86-64-ring0");
     } else {
         std::vector<std::string> items196 = LoopParseFunc(params, "\n", "\r");
         for (size_t A_Index196 = 0; A_Index196 < items196.size(); A_Index196++) {
             std::string A_LoopField196 = items196[A_Index196 - 0];
             paramsTemp = Trim(A_LoopField196);
             if (A_Index196 == 0) {
-                FileDelete("finalASM_HTLL_ASM.s");
-                FileAppend(compiler(FileRead(paramsTemp)), "finalASM_HTLL_ASM.s");
-                print("Compilation finished: finalASM_HTLL_ASM.s generated.");
+                paramsTemp_fileName = Trim(StringTrimRight(paramsTemp, 5));
+            }
+            if (A_Index196 == 1) {
+                if (paramsTemp == "x86-64") {
+                    is_arm = 0;
+                    is_oryx = 0;
+                    ring0 = 0;
+                    FileDelete(paramsTemp_fileName + ".s");
+                    FileAppend(compiler(FileRead(paramsTemp_fileName + ".htll")), paramsTemp_fileName + ".s");
+                    print("Compilation finished: " + paramsTemp_fileName + ".s generated.");
+                }
+                else if (paramsTemp == "arm") {
+                    is_arm = 1;
+                    is_oryx = 0;
+                    ring0 = 0;
+                    FileDelete(paramsTemp_fileName + ".s");
+                    FileAppend(compiler(FileRead(paramsTemp_fileName + ".htll")), paramsTemp_fileName + ".s");
+                    print("Compilation finished: " + paramsTemp_fileName + ".s generated.");
+                }
+                else if (paramsTemp == "oryx") {
+                    is_arm = 0;
+                    is_oryx = 1;
+                    ring0 = 0;
+                    FileDelete(paramsTemp_fileName + ".oryxir");
+                    FileAppend(compiler(FileRead(paramsTemp_fileName + ".htll")), paramsTemp_fileName + ".oryxir");
+                    print("Compilation finished: " + paramsTemp_fileName + ".oryxir generated.");
+                }
+                else if (paramsTemp == "x86-64-ring0") {
+                    is_arm = 0;
+                    is_oryx = 0;
+                    ring0 = 1;
+                    FileDelete(paramsTemp_fileName + ".s");
+                    FileAppend(compiler(FileRead(paramsTemp_fileName + ".htll")), paramsTemp_fileName + ".s");
+                    print("Compilation finished: " + paramsTemp_fileName + ".s generated.");
+                } else {
+                    print("Usage:" + Chr(10) + "./HTLL your_file.htll <target>" + Chr(10) + "Targets: x86-64, arm, oryx, x86-64-ring0");
+                }
             }
         }
     }

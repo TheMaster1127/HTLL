@@ -23,7 +23,7 @@ str str19 := ""
 str str20 := ""
 int is_arm := 0
 int is_oryx := 0
-int ring0 := 1
+int ring0 := 0
 arr str nintArr
 
 func str SubStrLastChars(str text, int numOfChars) {
@@ -8333,16 +8333,54 @@ else if (is_oryx = 1) {      out .= "meta " . A_LoopField . Chr(10)
 main
 str params := Trim(GetParams())
 str paramsTemp := ""
+str paramsTemp_fileName := ""
 if (params = "") {
-    print("Usage:" . Chr(10) . "./HTLL your_file.htll")
+    print("Usage:" . Chr(10) . "./HTLL your_file.htll <target>" . Chr(10) . "Targets: x86-64, arm, oryx, x86-64-ring0")
+}
+else if (InStr(params, Chr(10)) = false) {
+    print("Usage:" . Chr(10) . "./HTLL your_file.htll <target>" . Chr(10) . "Targets: x86-64, arm, oryx, x86-64-ring0")
 }
 else {
     Loop, Parse, params, `n, `r {
         paramsTemp := Trim(A_LoopField)
         if (A_Index = 0) {
-            FileDelete("finalASM_HTLL_ASM.s")
-            FileAppend(compiler(FileRead(paramsTemp)), "finalASM_HTLL_ASM.s")
-            print("Compilation finished: finalASM_HTLL_ASM.s generated.")
+            paramsTemp_fileName := Trim(StringTrimRight(paramsTemp, 5))          
+        }
+        if (A_Index = 1) {
+            if (paramsTemp = "x86-64") {
+                is_arm := 0
+                is_oryx := 0
+                ring0 := 0
+                FileDelete(paramsTemp_fileName . ".s")
+                FileAppend(compiler(FileRead(paramsTemp_fileName . ".htll")), paramsTemp_fileName . ".s")
+                print("Compilation finished: " . paramsTemp_fileName . ".s generated.")
+            }
+            else if (paramsTemp = "arm") {
+                is_arm := 1
+                is_oryx := 0
+                ring0 := 0
+                FileDelete(paramsTemp_fileName . ".s")
+                FileAppend(compiler(FileRead(paramsTemp_fileName . ".htll")), paramsTemp_fileName . ".s")
+                print("Compilation finished: " . paramsTemp_fileName . ".s generated.")
+            }
+            else if (paramsTemp = "oryx") {
+                is_arm := 0
+                is_oryx := 1
+                ring0 := 0
+                FileDelete(paramsTemp_fileName . ".oryxir")
+                FileAppend(compiler(FileRead(paramsTemp_fileName . ".htll")), paramsTemp_fileName . ".oryxir")
+                print("Compilation finished: " . paramsTemp_fileName . ".oryxir generated.")
+            }
+            else if (paramsTemp = "x86-64-ring0") {
+                is_arm := 0
+                is_oryx := 0
+                ring0 := 1
+                FileDelete(paramsTemp_fileName . ".s")
+                FileAppend(compiler(FileRead(paramsTemp_fileName . ".htll")), paramsTemp_fileName . ".s")
+                print("Compilation finished: " . paramsTemp_fileName . ".s generated.")
+            } else {
+                print("Usage:" . Chr(10) . "./HTLL your_file.htll <target>" . Chr(10) . "Targets: x86-64, arm, oryx, x86-64-ring0")
+            }
         }
     }
 }
