@@ -1,14 +1,11 @@
 # The HTLL Documentation: A Guide to Zero-Bloat Programming
 
-**Philosophy:** Zero Bloat. No Libc. Direct Kernel Syscalls. Static Linking.
-**Target:** Linux x86-64 (ELF64)
-
 ### The Power of Minimalism: A Concrete Example
 
 HTLL is not an academic exercise; it is a practical tool for creating hyper-efficient software. Its simplicity translates directly to size and performance.
 
-*   A standard `Hello, World!` program in HTLL compiles to a **440-byte** assembly (`.s`) file. When assembled, the final **statically linked** binary file is only **255 bytes**.
-*   A more complex program, like a full Bubble Sort algorithm, produces a final **statically linked** executable of just **1.1 kilobytes**.
+*   A standard `Hello, World!` program in HTLL compiles to a **440-byte** x86-64 assembly (`.s`) file. When assembled, the final **statically linked** binary x86-64 file is only **255 bytes**.
+*   A more complex program, like a full Bubble Sort algorithm, produces a final **statically linked** executable x86-64 of just **1.1 kilobytes**.
 
 This is the result of rejecting unnecessary layers of abstraction.
 
@@ -16,6 +13,7 @@ This is the result of rejecting unnecessary layers of abstraction.
 
 ## Table of Contents
 
+0.  [Rules](#rules)
 1.  [The 'Types Are a Lie' Doctrine](#1-the-types-are-a-lie-doctrine)
 2.  [The `main` Entry Point: Rules of Execution](#2-the-main-entry-point-rules-of-execution)
 3.  [Variables: 64-bit Integers](#3-variables-64-bit-integers)
@@ -31,6 +29,128 @@ This is the result of rejecting unnecessary layers of abstraction.
 13. [Syntax Reference & Flexibility](#13-syntax-reference--flexibility)
 14. [Comprehensive All-In-One Example](#14-comprehensive-all-in-one-example)
 15. [**HTLL Quirks & Gotchas: A Mandatory Review**](#15-htll-quirks--gotchas-a-mandatory-review)
+
+---
+
+# Rules
+
+### 1. Data Types (The "Types are a Lie" Doctrine)
+*   **Integers (`int` / `nint`):**
+    *   64-bit signed integers.
+    *   `int` and `nint` are functionally identical.
+    *   **Global Scope Rule:** All variables defined anywhere (except function params) are **global** and initialized only once.
+*   **Arrays (`arr`):**
+    *   Universal dynamic byte buffers.
+    *   Can hold ASCII text, integers, or raw data.
+    *   **NOT** passable as function parameters.
+*   **The `rax` Register:**
+    *   This is the volatile "working memory" of the compiler.
+    *   **Behavior:** It is overwritten by almost every operation (`.size`, `.index`, math, etc.).
+    *   **Rule:** Use the value in `rax` *immediately* or store it. Do not expect it to persist.
+
+### 2. The Strict Syntax & Space Mandate
+*   **Operator Spacing:** You **must** put a space *around* every single binary operator.
+    *   *Correct:* `int x := 0`
+    *   *Incorrect:* `int x:=0`
+    *   *Correct:* `x += 10`
+    *   *Incorrect:* `x+=10`
+*   **Control Flow Spacing:** You **must** put a space between the keyword and the opening parenthesis/brace.
+    *   *Correct:* `if (x = 1) {`
+    *   *Incorrect:* `if(x=1){`
+*   **Unary Exception:** `++` and `--` are the *only* operators that stick to the variable.
+    *   *Correct:* `x++`
+*   **Comments:** Require a preceding space if on the same line (e.g., `code ; comment`).
+
+### 3. Math & Logic (NO EXPRESSIONS)
+*   **Rule:** **Expressions do not exist.** You cannot perform math and assignment in the same step unless it is a compound assignment.
+    *   *Illegal:* `z := x + y`
+    *   *Illegal:* `if (x + 1 > 5)`
+*   **The "Line-by-Line" Workflow:** To add two numbers into a third variable, you must do it in steps:
+    ```ahk
+    z := x
+    z += y
+    ```
+*   **Allowed Math Operations:**
+    *   `+=` (Add to variable)
+    *   `-=` (Subtract from variable)
+    *   `*=` (Multiply variable)
+    *   `++` (Increment)
+    *   `--` (Decrement)
+*   **Assignment:** `:=`
+
+### 4. Control Flow (Brackets & Limits)
+*   **The 9-Level Limit:** You can only nest blocks (Loops/Ifs) up to **9 levels deep**.
+    *   This is a hard limit of the parser stack.
+*   **Loops:**
+    *   **Syntax:** `Loop, <count> {` or `Loop, rax {`
+    *   **Termination:** `}`
+    *   **Iterator:** `A_Index` (Always refers to the *innermost* active loop).
+    *   **`continue`:** Skips the rest of the current iteration and jumps to the next.
+    *   **`break`:** Immediately terminates the loop.
+*   **Conditionals:**
+    *   **Syntax:** `if (<operand1> <operator> <operand2>) {`
+    *   **Termination:** `}`
+    *   **Operators:** ` = `, ` != `, ` > `, ` < `, ` >= `, ` <= ` (Spaces required!).
+    *   **Logic:** NO `else`. NO `and`. NO `or`. You must use `goto` or nested `if` blocks to simulate this.
+*   **Jumps:**
+    *   `togo <label>`: Defines a jump target.
+    *   `goto <label>`: Unconditional jump.
+
+### 5. Array Methods & Manipulation
+*   **`arradd <arr> <text>`:**
+    *   Appends text to the array.
+    *   **NO QUOTES ALLOWED.** (e.g., `arradd mybuf Hello World`).
+    *   **TRIMS SPACES:** Trailing spaces are automatically removed.
+*   **`.add <value>`:** Appends a raw 64-bit value or an ASCII code (e.g., `.add 32` for a space).
+*   **`.pop`:** Removes the last element from the array.
+*   **`.clear`:** Resets the array size to 0.
+*   **`.size`:** Calculates the size and puts it into `rax`.
+*   **`.index <i_val>`:** Retrieves value at index `i_val` and puts it into `rax`.
+*   **`.set <idx>, <val>`:** Overwrites the value at a specific index.
+*   **`.copy <src_arr>`:** Copies contents of source array to destination array.
+
+### 6. Functions & Scope
+*   **Definition:** `func <name>(param1, param2) {`
+*   **Termination:** `}`
+*   **Parameters:** These are the **ONLY** local variables in the entire language. They are pushed to the stack.
+*   **No Nesting:** You cannot define a function inside another function.
+*   **The Anti-Pattern:** Do **not** define variables (`int x := 0`) inside a function. They will be global and only initialize once.
+*   **The Buffer Pattern:** Since you cannot pass arrays as parameters, you must agree on a global `arr` to use as a shared data buffer between the caller and the function.
+
+### 7. Terminal I/O
+*   **`print(<value>)`:** Prints integer value of a variable or register.
+*   **`print("text")`:** Prints a double-quoted string literal.
+*   **`print("")`:** Prints a newline (ASCII 10).
+*   **`print_rax_as_char`:** Interprets the value in `rax` as an ASCII code and prints the corresponding character.
+*   **`input <dest_arr>, <prompt_arr>`:** Displays the text in `prompt_arr`, then reads from standard input into `dest_arr`.
+
+### 8. File System I/O (Direct Syscalls)
+*   **Read:**
+    *   `fileread <dest_arr>, "file.txt"` (Literal filename)
+    *   `fileread_arr <dest_arr>, <filename_arr>` (Filename in an array)
+*   **Append:**
+    *   `fileappend "file.txt", <source_arr>`
+    *   `fileappend_arr <filename_arr>, <source_arr>`
+*   **Delete:**
+    *   `filedelete "file.txt"`
+    *   `filedelete_arr <filename_arr>`
+
+### 9. System Internals
+*   **`main` Label:**
+    *   Mandatory if functions are used (must be placed after definitions).
+    *   Optional if writing a simple top-down script.
+*   **`args_array`:**
+    *   A special global array automatically populated at startup.
+    *   Contains command-line arguments.
+    *   **Separator:** Each argument is separated by a newline character (ASCII 10) inside the array.
+*   **`Sleep, <ms>`:** Pauses execution via a kernel sleep syscall.
+
+### 10. Quirks & Gotchas (Mandatory Knowledge)
+*   **No Booleans:** True/False must be handled via integers (1/0).
+*   **Manual ASCII:** To add a space to a string builder, you must use `.add 32`. `arradd` will strip it.
+*   **Stack Management:** The parser manages the stack for you, but you must respect the 9-level nesting limit.
+*   **No Expressions:** Never try to do math inside an `if` statement or an assignment. One operation per line.
+
 
 ---
 
