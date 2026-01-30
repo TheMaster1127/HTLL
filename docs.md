@@ -276,7 +276,7 @@ Loop, 2 { ; Outer loop from 0 to 1
     print("Outer:")
     print(A_Index) ; This A_Index belongs to the outer loop
     
-    Loop2, 3 { ; Inner loop from 0 to 2
+    Loop, 3 { ; Inner loop from 0 to 2
         print("  Inner:")
         print(A_Index) ; This A_Index belongs to the inner loop
     }
