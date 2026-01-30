@@ -1,6 +1,6 @@
 # HTLL
 
-HTLL is a low-level programming language that compiles directly to **x86-64 Linux assembly** via FASM, creating small, fast, and dependency-free statically linked binaries. It's built on the "Escape Programming" philosophy, which rejects the bloat and restrictions of modern toolchains in favor of absolute control.
+HTLL is a low-level programming language that compiles directly to x86-64 and AArch64 Linux assembly and some more, creating small, fast, and dependency-free statically linked binaries. It's built on the "Escape Programming" philosophy, which rejects the bloat and restrictions of modern toolchains in favor of absolute control. 
 
 ## The Power of Minimalism: A Concrete Example
 
