@@ -54,30 +54,6 @@ To build the `HTLL` compiler from source, follow these exact steps in order:
     ```bash
     g++ HTLL.cpp -o HTLL
     ```
-2.  **Run it to generate the initial assembly:**
-    ```bash
-    ./HTLL HTLL.htll
-    ```
-3.  **Rename the output file:**
-    ```bash
-    mv finalASM_HTLL_ASM.s HTLL.s
-    ```
-4.  **Compile the C++ Backend Library:**
-    ```bash
-    g++ -shared -fPIC HTLL.cpp wrapper.cpp -o libHTLL-lib.so
-    ```
-5.  **Regenerate the assembly:**
-    ```bash
-    ./HTLL HTLL.htll
-    ```
-6.  **Assemble the Compiler:**
-    ```bash
-    fasm HTLL.s HTLL.o
-    ```
-7.  **Link the Compiler:**
-    ```bash
-    ld -o HTLL HTLL.o -L. -lHTLL-lib --dynamic-linker /lib64/ld-linux-x86-64.so.2 -rpath '$ORIGIN'
-    ```
 
 ### 2. Compiling and Running Your Program
 
@@ -95,22 +71,6 @@ Once the compiler is built, use this simple workflow for your own `.htll` files:
     ```bash
     ./my_program
     ```
-
----
-
-## 💀 The "Escape Programming" Philosophy
-
-*   **Definition:** "Escaping Programming" means **rejecting the authority** of external compilers and interpreters (`g++`, Python, GCC, etc.) that impose their own rules, syntax, and constraints. It's about seizing absolute control over the entire software creation process.
-*   **The Ultimate Goal:** A fully self-hosting development environment where I only code in my own syntax. The final compiler will be a single, statically linked binary that produces code with **zero** dependencies (no `libc`), speaking directly to the kernel via syscalls.
-*   **The Enemy:** Restriction and Bloat. `g++` is a dictator. `libc` is a dependency chain. I reject any tool that forces me to think within its predefined box.
-
----
-
-## Bootstrapping Notes
-
-*   Currently, the HTLL compiler relies on a `.so` library for some built-in functions.
-*   The ultimate goal is a full bootstrap, removing all external dependencies.
-*   The future statically linked HTLL compiler will produce binaries under 100 KB with zero dependencies.
 
 ---
 
