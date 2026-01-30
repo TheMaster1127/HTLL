@@ -3,6 +3,7 @@
 *.s
 *.so
 *.a
+*.oryxir
 HTLL
 my_program
 output
