@@ -971,7 +971,6 @@ std::string compiler(std::string code) {
         } else {
             // --- THE FIX IS HERE ---
             main_syntax = "_start:" + Chr(10);
-            main_syntax += "    ; Standard ARM prologue" + Chr(10);
             main_syntax += "    stp x29, x30, [sp, #-16]!" + Chr(10);
             main_syntax += "    mov x29, sp" + Chr(10) + Chr(10);
         }
@@ -8646,7 +8645,7 @@ std::string compiler(std::string code) {
         // Place this AFTER your main compilation loop finishes generating 'out'
         for (int A_Index184 = 0; A_Index184 < HTVM_Size(funcArgsArr); A_Index184++) {
             if (is_arm == 1) {
-                out = RegExReplace(out, Chr(61) + "\\b" + Trim(funcArgsArr[A_Index184]) + "\\b", "[sp, #" + STR(A_Index184 * 8) + "]");
+                out = RegExReplace(out, Chr(61) + "\\b" + Trim(funcArgsArr[A_Index184]) + "\\b", "[sp, #" + STR(8 + ( (HTVM_Size(funcArgsArr) - A_Index184) * 8 )) + "]");
             }
             if (is_arm == 0 && is_oryx == 1) {
                 out = RegExReplace(out, "\\b" + Trim(funcArgsArr[A_Index184]) + "\\b", "r" + STR(A_Index184 + 50));
@@ -8819,7 +8818,7 @@ std::string compiler(std::string code) {
             // --- ARM GNU AS HEADER & CONSTANTS ---
             // NOTE: GNU AS doesn't have a direct 'format' or 'entry' like FASM.
             // Those are handled by the linker (ld). This header sets up constants.
-            fasm_header = "; ARM AArch64 Header for GNU AS" + Chr(10);
+            fasm_header = Chr(10);
             fasm_header += ".equ SYS_READ, 63" + Chr(10);
             fasm_header += ".equ SYS_WRITE, 64" + Chr(10);
             fasm_header += ".equ SYS_OPENAT, 56" + Chr(10);

@@ -265,7 +265,6 @@ func str compiler(str code) {
         else {
             ; --- THE FIX IS HERE ---
             main_syntax := "_start:" . Chr(10)
-            main_syntax .= "    ; Standard ARM prologue" . Chr(10)
             main_syntax .= "    stp x29, x30, [sp, #-16]!" . Chr(10)
             main_syntax .= "    mov x29, sp" . Chr(10) . Chr(10)
         }
@@ -7846,7 +7845,7 @@ else if (is_oryx = 1) {      out .= "meta " . A_LoopField . Chr(10)
         ; Place this AFTER your main compilation loop finishes generating 'out'
         Loop, % funcArgsArr.size() {
             if (is_arm = 1) {
-                out := RegExReplace(out, Chr(61) . "\b" . Trim(funcArgsArr[A_Index]) . "\b", "[sp, #" . STR(A_Index * 8) . "]")
+                out := RegExReplace(out, Chr(61) . "\b" . Trim(funcArgsArr[A_Index]) . "\b", "[sp, #" . STR(8 + ( (funcArgsArr.size() - A_Index) * 8 )) . "]")
             }
             if (is_arm = 0) and (is_oryx = 1) {
                 out := RegExReplace(out, "\b" . Trim(funcArgsArr[A_Index]) . "\b", "r" . STR(A_Index + 50))
@@ -8016,7 +8015,7 @@ else if (is_oryx = 1) {      out .= "meta " . A_LoopField . Chr(10)
         ; --- ARM GNU AS HEADER & CONSTANTS ---
         ; NOTE: GNU AS doesn't have a direct 'format' or 'entry' like FASM.
         ; Those are handled by the linker (ld). This header sets up constants.
-        fasm_header := "; ARM AArch64 Header for GNU AS" . Chr(10)
+        fasm_header := Chr(10)
         fasm_header .= ".equ SYS_READ, 63" . Chr(10)
         fasm_header .= ".equ SYS_WRITE, 64" . Chr(10)
         fasm_header .= ".equ SYS_OPENAT, 56" . Chr(10)

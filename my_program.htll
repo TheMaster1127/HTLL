@@ -1,1 +1,17 @@
+
+func func1(when) {
+arr arr1
+arr1.add 5
+arr1.add 10
+arr1.add 15
+Loop, 4294967295 {
+arr1.index A_Index
+print(rax)
+if (A_Index = when) {
+break
+}
 print("hello world")
+}
+}
+main
+func1(5)
