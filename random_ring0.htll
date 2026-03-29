@@ -1,0 +1,402 @@
+; =============================================================
+; 1. GLOBAL VARIABLE DEFINITIONS
+; =============================================================
+; Standard LCG - Safe for bare metal
+int lcg_seed := 0
+int lcg_multiplier := 1664525
+int lcg_increment  := 1013904223
+int lcg_modulus    := 999983
+
+int pos_x := 0
+int pos_y := 0
+int pos_xx := 0
+
+int STR_main_num := 0
+int remainder_val := 0
+int current_digit := 0
+int actual_str_len := 0
+int temp_size := 0
+
+arr func_arr
+arr STR_temp_buffer
+
+int range_val := 0
+int temp_math_val := 0
+int random_result := 0
+int final_num := 0
+
+arr pressEnterStr
+arr pressEscStr
+arr input_bufferr
+arr prompt
+arr cmd_help
+arr cmd_exit
+
+; Command Prefixes
+arr cmd_min_pre
+arr cmd_max_pre
+
+int num := 1
+int num2 := 1
+int is_match := 0
+int l1 := 0
+int l2 := 0
+int v1 := 0
+int v2 := 0
+
+int i := 0
+
+; Parsing Variables
+int start_rand_num := 5
+int end_rand_num := 20
+int temp_parsed_int := 0
+int parse_valid := 0
+int digit_val := 0
+int digit_count := 0
+int prefix_match := 0
+
+; Global params for random to avoid stack pressure
+int r_min := 0
+int r_max := 0
+
+; =============================================================
+; 2. UTILITY FUNCTIONS
+; =============================================================
+
+func init_constants() {
+    ; Clear buffers first to claim heap space
+    input_bufferr.clear
+    STR_temp_buffer.clear
+    func_arr.clear
+
+    arradd prompt [HTLL-Shell]
+    prompt.add 62 ; ASCII for '>'
+    prompt.add 32 ; ASCII for ' '
+    
+    arradd cmd_help help
+    arradd cmd_exit exit
+    
+    ; "min-rand=" is 9 characters
+    arradd cmd_min_pre min-rand=
+    ; "max-rand=" is 9 characters
+    arradd cmd_max_pre max-rand=
+    
+    arradd pressEnterStr Press Space To Start...
+    arradd pressEscStr Press Esc To Restart...
+}
+
+func check_if_help() {
+    is_match := 0
+    input_bufferr.size
+    l1 := rax
+    cmd_help.size
+    l2 := rax
+    
+    ; GUARD: If input isn't exactly the length of 'help', it's not a match.
+    if (l1 = l2) {
+        is_match := 1
+        Loop, l1 {
+            input_bufferr.index A_Index
+            v1 := rax
+            cmd_help.index A_Index
+            v2 := rax
+            if (v1 != v2) {
+                is_match := 0
+            }
+        }
+    }
+}
+
+func check_if_exit() {
+    is_match := 0
+    input_bufferr.size
+    l1 := rax
+    cmd_exit.size
+    l2 := rax
+    
+    ; GUARD: If input isn't exactly the length of 'exit', it's not a match.
+    if (l1 = l2) {
+        is_match := 1
+        Loop, l1 {
+            input_bufferr.index A_Index
+            v1 := rax
+            cmd_exit.index A_Index
+            v2 := rax
+            if (v1 != v2) {
+                is_match := 0
+            }
+        }
+    }
+}
+
+func parse_num_from_input() {
+    temp_parsed_int := 0
+    parse_valid := 0
+    digit_count := 0
+    input_bufferr.size
+    l1 := rax
+    
+    ; Guard: Prefix is 9 chars. Must be at least 10 to have a digit.
+    if (l1 < 10) {
+        goto end_parse
+    }
+
+    parse_valid := 1
+    Loop, l1 {
+        i := A_Index
+        ; Only start looking for digits AFTER the prefix (index 9)
+        if (i >= 9) {
+            input_bufferr.index i
+            digit_val := rax
+            ; Filter to strictly allow 0-9
+            if (digit_val >= 48) {
+                if (digit_val <= 57) {
+                    digit_val -= 48
+                    temp_parsed_int *= 10
+                    temp_parsed_int += digit_val
+                    digit_count++
+                }
+            }
+        }
+    }
+    ; If no digits found, set as invalid
+    if (digit_count = 0) {
+        parse_valid := 0
+    }
+    togo end_parse
+}
+
+func check_min_command() {
+    prefix_match := 0
+    input_bufferr.size
+    l1 := rax
+    ; GUARD: Input must be at least 9 chars long for the prefix "min-rand="
+    if (l1 >= 9) {
+        prefix_match := 1
+        Loop, 9 {
+            input_bufferr.index A_Index
+            v1 := rax
+            cmd_min_pre.index A_Index
+            v2 := rax
+            if (v1 != v2) {
+                prefix_match := 0
+            }
+        }
+    }
+}
+
+func check_max_command() {
+    prefix_match := 0
+    input_bufferr.size
+    l1 := rax
+    ; GUARD: Input must be at least 9 chars long for the prefix "max-rand="
+    if (l1 >= 9) {
+        prefix_match := 1
+        Loop, 9 {
+            input_bufferr.index A_Index
+            v1 := rax
+            cmd_max_pre.index A_Index
+            v2 := rax
+            if (v1 != v2) {
+                prefix_match := 0
+            }
+        }
+    }
+}
+
+func echo_input() {
+    print("Echo: ")
+    input_bufferr.size
+    if (rax = 0) {
+        print("(empty)")
+    }
+    Loop, rax {
+        input_bufferr.index A_Index
+        print_rax_as_char
+    }
+    print("")
+}
+
+func INT_To_STR() {
+    if (STR_main_num = 0) {
+        func_arr.clear
+        func_arr.add 48 ; '0'
+        goto end_stoi
+    }
+    STR_temp_buffer.clear
+    remainder_val := STR_main_num
+    togo str_extraction_loop
+        current_digit := remainder_val
+        current_digit %= 10
+        current_digit += 48
+        STR_temp_buffer.add current_digit
+        remainder_val //= 10
+        if (remainder_val > 0) {
+            goto str_extraction_loop
+        }
+    func_arr.clear
+    STR_temp_buffer.size
+    actual_str_len := rax
+    Loop, actual_str_len {
+        temp_size := actual_str_len
+        temp_size--
+        temp_size -= A_Index
+        STR_temp_buffer.index temp_size
+        func_arr.add rax
+    }
+    togo end_stoi
+}
+
+func generate_random() {
+    ; Safety guard against math errors
+    if (r_max <= r_min) {
+        r_max := r_min
+        r_max++
+    }
+    
+    range_val := r_max
+    range_val -= r_min
+    range_val++
+
+    ; Seed mutation
+    lcg_seed *= lcg_multiplier
+    lcg_seed += lcg_increment
+    lcg_seed %= lcg_modulus
+
+    random_result := lcg_seed
+    random_result %= range_val
+    random_result += r_min
+}
+
+; =============================================================
+; 3. MAIN PROGRAM EXECUTION
+; =============================================================
+main
+    init_constants()
+
+togo start_start
+    _htll_clear(1)
+    pos_x := 28
+    pressEnterStr.size
+    Loop, rax {
+        pressEnterStr.index A_Index
+        _htll_draw_char(pos_x, 12, rax, 15)
+        pos_x++
+    }
+    draw_all()
+
+    togo mainWaitLoop
+        Loop, 20000 {
+        }
+        num++
+        if (num > 10000) {
+            num := 1
+        }
+        num2++
+        if (num2 > 10004) {
+            num2 := 500
+        }
+        _htll_get_key()
+        if (rax = 57) {
+            goto start_shell
+        }
+        goto mainWaitLoop
+
+togo start_shell
+    ; Final seed setup from user interaction timing
+    lcg_seed := num
+    lcg_seed *= num2
+    lcg_seed %= lcg_modulus
+    if (lcg_seed = 0) {
+        lcg_seed := 1
+    }
+
+    _htll_clear(1)
+    draw_all()
+    print("Welcome to HTLL Shell.")
+    print("Commands: min-rand= NUM, max-rand= NUM, help, exit")
+
+    togo shell_loop
+        input_bufferr.clear
+        input input_bufferr, prompt
+
+        check_if_exit()
+        if (is_match = 1) {
+            goto run_generator
+        }
+
+        check_if_help()
+        if (is_match = 1) {
+            print("Set range using min-rand= 10 and max-rand= 100")
+            print("Type 'exit' to start generator.")
+            goto shell_loop
+        }
+
+        check_min_command()
+        if (prefix_match = 1) {
+            parse_num_from_input()
+            if (parse_valid = 1) {
+                start_rand_num := temp_parsed_int
+                print("Minimum set.")
+            }
+            goto shell_loop
+        }
+
+        check_max_command()
+        if (prefix_match = 1) {
+            parse_num_from_input()
+            if (parse_valid = 1) {
+                end_rand_num := temp_parsed_int
+                print("Maximum set.")
+            }
+            goto shell_loop
+        }
+
+        ; Only echo if it didn't match any known command
+        echo_input()
+        draw_all()
+        goto shell_loop
+
+togo run_generator
+    _htll_clear(1)
+    draw_all()
+    pos_xx := 1
+    Loop, 12 {
+        pos_y := 3
+        Loop, 20 {
+            r_min := start_rand_num
+            r_max := end_rand_num
+            generate_random()
+            
+            final_num := random_result
+            STR_main_num := final_num
+            INT_To_STR()
+            
+            pos_x := pos_xx
+            func_arr.size
+            Loop, rax {
+                func_arr.index A_Index
+                _htll_draw_char(pos_x, pos_y, rax, 15)
+                pos_x++
+            }
+            pos_y++
+        }
+        pos_xx += 6
+        draw_all()
+    }
+
+    pos_x := 1
+    pressEscStr.size
+    Loop, rax {
+        pressEscStr.index A_Index
+        _htll_draw_char(pos_x, 24, rax, 15)
+        pos_x++
+    }
+    draw_all()
+
+togo main_esc_loop
+    _htll_get_key()
+    if (rax = 1) {
+        goto start_start
+    }
+    goto main_esc_loop

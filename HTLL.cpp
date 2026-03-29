@@ -744,6 +744,30 @@ int is_arm = 0;
 int is_oryx = 0;
 int ring0 = 0;
 std::vector<std::string> nintArr;
+std::string langToConvertTo = "";
+std::vector<std::string> programmingBlock_InTheTranspiledLang;
+std::vector<std::string> programmingBlock_CPP;
+std::vector<std::string> programmingBlock_PY;
+std::vector<std::string> programmingBlock_JS;
+std::vector<std::string> programmingBlock_GO;
+std::string keyWordCodeInTheTranspiledLangStart = "___start asm";
+std::string keyWordCodeInTheTranspiledLangStartCPP = "___start x86-64";
+std::string keyWordCodeInTheTranspiledLangStartPY = "___start arm";
+std::string keyWordCodeInTheTranspiledLangStartJS = "___start oryx";
+std::string keyWordCodeInTheTranspiledLangStartGO = "___start x86-64-ring0";
+std::string keyWordCodeInTheTranspiledLangEnd = "___end asm";
+std::string keyWordCodeInTheTranspiledLangEndCPP = "___end x86-64";
+std::string keyWordCodeInTheTranspiledLangEndPY = "___end arm";
+std::string keyWordCodeInTheTranspiledLangEndJS = "___end oryx";
+std::string keyWordCodeInTheTranspiledLangEndGO = "___end x86-64-ring0";
+int COUNT_programmingBlock_InTheTranspiledLang = 0;
+int COUNT_programmingBlock_CPP = 0;
+int COUNT_programmingBlock_PY = 0;
+int COUNT_programmingBlock_JS = 0;
+int COUNT_programmingBlock_GO = 0;
+std::string programmingBlocksTemp = "";
+int inProgarmmingBlock = 0;
+std::string holdTempDataProgrammingBlockThenPutInArr = "";
 std::string SubStrLastChars(std::string text, int numOfChars) {
     std::string LastOut = "";
     int NumOfChars = 0;
@@ -881,38 +905,945 @@ std::string transformBracesToHTLL(std::string code) {
     }
     return Trim(out);
 }
+bool isFuncRetARR(std::string line) {
+    if (InStr(line, "__HTLL_param_")) {
+        return true;
+    }
+    return false;
+}
+bool isFuncRetARR2(std::string line) {
+    if (InStr(line, "__HTLL_flocal_")) {
+        return true;
+    }
+    return false;
+}
+bool isFuncRetARR3(std::string line, std::vector<std::string> arrays_from_global_scope_ARR) {
+    for (int A_Index24 = 0; A_Index24 < HTVM_Size(arrays_from_global_scope_ARR); A_Index24++) {
+        if (Trim(StringTrimLeft(Trim(line), 7)) == arrays_from_global_scope_ARR[A_Index24]) {
+            return true;
+        }
+    }
+    return false;
+}
+bool doseHaveInclude(std::string TheCodeThatMightHaveInclude) {
+    std::string keyWordInclude = "include";
+    std::vector<std::string> items25 = LoopParseFunc(TheCodeThatMightHaveInclude, "\n", "\r");
+    for (size_t A_Index25 = 0; A_Index25 < items25.size(); A_Index25++) {
+        std::string A_LoopField25 = items25[A_Index25 - 0];
+        if (SubStr(StrLower(Trim(A_LoopField25)), 1, StrLen(StrLower(keyWordInclude + " "))) == StrLower(keyWordInclude + " ")) {
+            return true;
+        }
+    }
+    return false;
+}
 std::string HTLL_Lang(std::string code) {
     std::string out = "";
+    // PROGRAMMING BLOCK
+    // PROGRAMMING BLOCK
+    // PROGRAMMING BLOCK
+    // PROGRAMMING BLOCK
+    std::vector<std::string> items26 = LoopParseFunc(code, "\n", "\r");
+    for (size_t A_Index26 = 0; A_Index26 < items26.size(); A_Index26++) {
+        std::string A_LoopField26 = items26[A_Index26 - 0];
+        if (Trim(StrLower(A_LoopField26)) == StrLower(keyWordCodeInTheTranspiledLangEnd)) {
+            COUNT_programmingBlock_InTheTranspiledLang++;
+            holdTempDataProgrammingBlockThenPutInArr = StringTrimRight(holdTempDataProgrammingBlockThenPutInArr, 1);
+            programmingBlocksTemp += "programmingBlock_InTheTranspiledLang-programmingBlock_InTheTranspiledLang-AA" + STR(COUNT_programmingBlock_InTheTranspiledLang) + "AA" + Chr(10);
+            HTVM_Append(programmingBlock_InTheTranspiledLang, holdTempDataProgrammingBlockThenPutInArr);
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 0;
+        }
+        else if (Trim(StrLower(A_LoopField26)) == StrLower(keyWordCodeInTheTranspiledLangEndCPP)) {
+            COUNT_programmingBlock_CPP++;
+            holdTempDataProgrammingBlockThenPutInArr = StringTrimRight(holdTempDataProgrammingBlockThenPutInArr, 1);
+            programmingBlocksTemp += "programmingBlock_CPP-programmingBlock_CPP-AA" + STR(COUNT_programmingBlock_CPP) + "AA" + Chr(10);
+            HTVM_Append(programmingBlock_CPP, holdTempDataProgrammingBlockThenPutInArr);
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 0;
+        }
+        else if (Trim(StrLower(A_LoopField26)) == StrLower(keyWordCodeInTheTranspiledLangEndPY)) {
+            COUNT_programmingBlock_PY++;
+            holdTempDataProgrammingBlockThenPutInArr = StringTrimRight(holdTempDataProgrammingBlockThenPutInArr, 1);
+            programmingBlocksTemp += "programmingBlock_PY-programmingBlock_PY-AA" + STR(COUNT_programmingBlock_PY) + "AA" + Chr(10);
+            HTVM_Append(programmingBlock_PY, holdTempDataProgrammingBlockThenPutInArr);
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 0;
+        }
+        else if (Trim(StrLower(A_LoopField26)) == StrLower(keyWordCodeInTheTranspiledLangEndJS)) {
+            COUNT_programmingBlock_JS++;
+            holdTempDataProgrammingBlockThenPutInArr = StringTrimRight(holdTempDataProgrammingBlockThenPutInArr, 1);
+            programmingBlocksTemp += "programmingBlock_JS-programmingBlock_JS-AA" + STR(COUNT_programmingBlock_JS) + "AA" + Chr(10);
+            HTVM_Append(programmingBlock_JS, holdTempDataProgrammingBlockThenPutInArr);
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 0;
+        }
+        else if (Trim(StrLower(A_LoopField26)) == StrLower(keyWordCodeInTheTranspiledLangEndGO)) {
+            COUNT_programmingBlock_GO++;
+            holdTempDataProgrammingBlockThenPutInArr = StringTrimRight(holdTempDataProgrammingBlockThenPutInArr, 1);
+            programmingBlocksTemp += "programmingBlock_GO-programmingBlock_GO-AA" + STR(COUNT_programmingBlock_GO) + "AA" + Chr(10);
+            HTVM_Append(programmingBlock_GO, holdTempDataProgrammingBlockThenPutInArr);
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 0;
+        }
+        else if (inProgarmmingBlock == 1) {
+            holdTempDataProgrammingBlockThenPutInArr += A_LoopField26 + Chr(10);
+        }
+        else if (Trim(StrLower(A_LoopField26)) == StrLower(keyWordCodeInTheTranspiledLangStart)) {
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 1;
+        }
+        else if (Trim(StrLower(A_LoopField26)) == StrLower(keyWordCodeInTheTranspiledLangStartCPP)) {
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 1;
+        }
+        else if (Trim(StrLower(A_LoopField26)) == StrLower(keyWordCodeInTheTranspiledLangStartPY)) {
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 1;
+        }
+        else if (Trim(StrLower(A_LoopField26)) == StrLower(keyWordCodeInTheTranspiledLangStartJS)) {
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 1;
+        }
+        else if (Trim(StrLower(A_LoopField26)) == StrLower(keyWordCodeInTheTranspiledLangStartGO)) {
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 1;
+        } else {
+            programmingBlocksTemp += A_LoopField26 + Chr(10);
+        }
+    }
+    code = StringTrimRight(programmingBlocksTemp, 1);
+    //programmingBlock_InTheTranspiledLang
+    //programmingBlock_CPP
+    //programmingBlock_PY
+    //programmingBlock_JS
+    //programmingBlock_GO
+    // PROGRAMMING BLOCK
+    // PROGRAMMING BLOCK
+    // PROGRAMMING BLOCK
+    // PROGRAMMING BLOCK
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    // this is the start of include
+    // this is the start of include
+    // this is the start of include
+    // this is the start of include
+    std::vector<std::string> includedFilePaths;
+    bool includesWereFoundInPass = false;
+    std::string reconstructedCode = "";
+    std::string currentLine = "";
+    std::string filePathToInclude = "";
+    bool isAlreadyIncluded = false;
+    std::string fileContent = "";
+    std::string keyWordInclude = "include";
+    std::string keyWordComment = ";";
+    if (doseHaveInclude(code)) {
+        // Loop up to 10000 times to resolve nested includes. Each pass processes one level of includes.
+        for (int A_Index27 = 0; A_Index27 < 10000; A_Index27++) {
+            // Reset the flag and the temporary code string for this pass.
+            includesWereFoundInPass = false;
+            reconstructedCode = "";
+            // Iterate through each line of the current code.
+            std::vector<std::string> items28 = LoopParseFunc(code, "\n", "\r");
+            for (size_t A_Index28 = 0; A_Index28 < items28.size(); A_Index28++) {
+                std::string A_LoopField28 = items28[A_Index28 - 0];
+                currentLine = A_LoopField28;
+                // Check if the current line is an 'include' directive.
+                if (SubStr(StrLower(Trim(currentLine)), 1, StrLen(keyWordInclude + " ")) == StrLower(keyWordInclude + " ")) {
+                    includesWereFoundInPass = true;
+                    filePathToInclude = StrReplace(StringTrimLeft(Trim(currentLine), StrLen(keyWordInclude + " ")), Chr(34), "");
+                    // Reset flag for the inner loop.
+                    isAlreadyIncluded = false;
+                    // NOTE: Both this loop's A_Index and the array access are 0-based, which is correct.
+                    for (int A_Index29 = 0; A_Index29 < HTVM_Size(includedFilePaths); A_Index29++) {
+                        if (filePathToInclude == includedFilePaths[A_Index29]) {
+                            isAlreadyIncluded = true;
+                            break;
+                        }
+                    }
+                    if (isAlreadyIncluded == false) {
+                        fileContent = Trim(FileRead(filePathToInclude));
+                        // The 'include' line is replaced by the file's content in the reconstructed code.
+                        reconstructedCode = reconstructedCode + Chr(10) + keyWordComment + " start of " + filePathToInclude + Chr(10) + fileContent + Chr(10) + keyWordComment + " end of " + filePathToInclude + Chr(10) + Chr(10);
+                        HTVM_Append(includedFilePaths, filePathToInclude);
+                    }
+                } else {
+                    // If it's not an include directive, just copy the line as is.
+                    reconstructedCode = reconstructedCode + currentLine + Chr(10);
+                }
+            }
+            // --- Cleanup and Preparation for Next Pass ---
+            // Replace the old code with the newly reconstructed code. This "clears up" the processed includes.
+            code = reconstructedCode;
+            // If no includes were found in this entire pass, all directives are resolved. Exit the loop.
+            if (includesWereFoundInPass == false) {
+                break;
+            }
+        }
+    }
+    // this is the end of include
+    //;;;;;;;;;;;;;;;;;;;;;;;
+    //;;;;;;;;;;;;;;;;;;;;;;;
+    //;;;;;;;;;;;;;;;;;;;;;;;
+    programmingBlocksTemp = "";
+    inProgarmmingBlock = 0;
+    holdTempDataProgrammingBlockThenPutInArr = "";
+    std::vector<std::string> items30 = LoopParseFunc(code, "\n", "\r");
+    for (size_t A_Index30 = 0; A_Index30 < items30.size(); A_Index30++) {
+        std::string A_LoopField30 = items30[A_Index30 - 0];
+        if (Trim(StrLower(A_LoopField30)) == StrLower(keyWordCodeInTheTranspiledLangEnd)) {
+            COUNT_programmingBlock_InTheTranspiledLang++;
+            holdTempDataProgrammingBlockThenPutInArr = StringTrimRight(holdTempDataProgrammingBlockThenPutInArr, 1);
+            programmingBlocksTemp += "programmingBlock_InTheTranspiledLang-programmingBlock_InTheTranspiledLang-AA" + STR(COUNT_programmingBlock_InTheTranspiledLang) + "AA" + Chr(10);
+            HTVM_Append(programmingBlock_InTheTranspiledLang, holdTempDataProgrammingBlockThenPutInArr);
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 0;
+        }
+        else if (Trim(StrLower(A_LoopField30)) == StrLower(keyWordCodeInTheTranspiledLangEndCPP)) {
+            COUNT_programmingBlock_CPP++;
+            holdTempDataProgrammingBlockThenPutInArr = StringTrimRight(holdTempDataProgrammingBlockThenPutInArr, 1);
+            programmingBlocksTemp += "programmingBlock_CPP-programmingBlock_CPP-AA" + STR(COUNT_programmingBlock_CPP) + "AA" + Chr(10);
+            HTVM_Append(programmingBlock_CPP, holdTempDataProgrammingBlockThenPutInArr);
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 0;
+        }
+        else if (Trim(StrLower(A_LoopField30)) == StrLower(keyWordCodeInTheTranspiledLangEndPY)) {
+            COUNT_programmingBlock_PY++;
+            holdTempDataProgrammingBlockThenPutInArr = StringTrimRight(holdTempDataProgrammingBlockThenPutInArr, 1);
+            programmingBlocksTemp += "programmingBlock_PY-programmingBlock_PY-AA" + STR(COUNT_programmingBlock_PY) + "AA" + Chr(10);
+            HTVM_Append(programmingBlock_PY, holdTempDataProgrammingBlockThenPutInArr);
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 0;
+        }
+        else if (Trim(StrLower(A_LoopField30)) == StrLower(keyWordCodeInTheTranspiledLangEndJS)) {
+            COUNT_programmingBlock_JS++;
+            holdTempDataProgrammingBlockThenPutInArr = StringTrimRight(holdTempDataProgrammingBlockThenPutInArr, 1);
+            programmingBlocksTemp += "programmingBlock_JS-programmingBlock_JS-AA" + STR(COUNT_programmingBlock_JS) + "AA" + Chr(10);
+            HTVM_Append(programmingBlock_JS, holdTempDataProgrammingBlockThenPutInArr);
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 0;
+        }
+        else if (Trim(StrLower(A_LoopField30)) == StrLower(keyWordCodeInTheTranspiledLangEndGO)) {
+            COUNT_programmingBlock_GO++;
+            holdTempDataProgrammingBlockThenPutInArr = StringTrimRight(holdTempDataProgrammingBlockThenPutInArr, 1);
+            programmingBlocksTemp += "programmingBlock_GO-programmingBlock_GO-AA" + STR(COUNT_programmingBlock_GO) + "AA" + Chr(10);
+            HTVM_Append(programmingBlock_GO, holdTempDataProgrammingBlockThenPutInArr);
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 0;
+        }
+        else if (inProgarmmingBlock == 1) {
+            holdTempDataProgrammingBlockThenPutInArr += A_LoopField30 + Chr(10);
+        }
+        else if (Trim(StrLower(A_LoopField30)) == StrLower(keyWordCodeInTheTranspiledLangStart)) {
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 1;
+        }
+        else if (Trim(StrLower(A_LoopField30)) == StrLower(keyWordCodeInTheTranspiledLangStartCPP)) {
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 1;
+        }
+        else if (Trim(StrLower(A_LoopField30)) == StrLower(keyWordCodeInTheTranspiledLangStartPY)) {
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 1;
+        }
+        else if (Trim(StrLower(A_LoopField30)) == StrLower(keyWordCodeInTheTranspiledLangStartJS)) {
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 1;
+        }
+        else if (Trim(StrLower(A_LoopField30)) == StrLower(keyWordCodeInTheTranspiledLangStartGO)) {
+            holdTempDataProgrammingBlockThenPutInArr = "";
+            inProgarmmingBlock = 1;
+        } else {
+            programmingBlocksTemp += A_LoopField30 + Chr(10);
+        }
+    }
+    code = StringTrimRight(programmingBlocksTemp, 1);
+    //programmingBlock_InTheTranspiledLang
+    //programmingBlock_CPP
+    //programmingBlock_PY
+    //programmingBlock_JS
+    //programmingBlock_GO
+    // PROGRAMMING BLOCK
+    // PROGRAMMING BLOCK
+    // PROGRAMMING BLOCK
+    // PROGRAMMING BLOCK
     code = cleanUpFirst(code);
     code = preserveStrings(code);
     code = handleComments(code);
     code = formatCurlyBracesForParsing(code);
-    //print(code)
+    int doWeEverSeeExprestion = 0;
+    out = "";
+    std::vector<std::string> items31 = LoopParseFunc(code, "\n", "\r");
+    for (size_t A_Index31 = 0; A_Index31 < items31.size(); A_Index31++) {
+        std::string A_LoopField31 = items31[A_Index31 - 0];
+        if (InStr(A_LoopField31, " := ") || InStr(A_LoopField31, " += ") || InStr(A_LoopField31, " -= ") || InStr(A_LoopField31, " *= ") || InStr(A_LoopField31, " //= ") || InStr(A_LoopField31, " %= ") || InStr(A_LoopField31, " <<= ") || InStr(A_LoopField31, " >>= ") || InStr(A_LoopField31, " &= ") || InStr(A_LoopField31, " |= ") || InStr(A_LoopField31, " ^= ")) {
+            str1 = Trim(A_LoopField31);
+            if (InStr(A_LoopField31, " + ") || InStr(A_LoopField31, " - ") || InStr(A_LoopField31, " * ") || InStr(A_LoopField31, " // ") || InStr(A_LoopField31, " % ") || InStr(A_LoopField31, " << ") || InStr(A_LoopField31, " >> ") || InStr(A_LoopField31, " & ") || InStr(A_LoopField31, " | ") || InStr(A_LoopField31, " ^ ")) {
+                if (InStr(A_LoopField31, " := ")) {
+                    str10 = ":=";
+                }
+                else if (InStr(A_LoopField31, " += ")) {
+                    str10 = "+=";
+                }
+                else if (InStr(A_LoopField31, " -= ")) {
+                    str10 = "-=";
+                }
+                else if (InStr(A_LoopField31, " *= ")) {
+                    str10 = "*=";
+                }
+                else if (InStr(A_LoopField31, " //= ")) {
+                    str10 = "//=";
+                }
+                else if (InStr(A_LoopField31, " %= ")) {
+                    str10 = "%=";
+                }
+                else if (InStr(A_LoopField31, " <<= ")) {
+                    str10 = "<<=";
+                }
+                else if (InStr(A_LoopField31, " >>= ")) {
+                    str10 = ">>=";
+                }
+                else if (InStr(A_LoopField31, " &= ")) {
+                    str10 = "&=";
+                }
+                else if (InStr(A_LoopField31, " |= ")) {
+                    str10 = "|=";
+                }
+                else if (InStr(A_LoopField31, " ^= ")) {
+                    str10 = "^=";
+                }
+                doWeEverSeeExprestion = 1;
+                //;;;; code here
+                //;;;; code here
+                // x := x + 5 * 7 // var1
+                // ___HTLL_expression_helper___
+                str2 = Trim(StrSplit(str1, str10, 1));
+                str3 = Trim(StrSplit(str1, str10, 2));
+                std::vector<std::string> items32 = LoopParseFunc(str3, " ");
+                for (size_t A_Index32 = 0; A_Index32 < items32.size(); A_Index32++) {
+                    std::string A_LoopField32 = items32[A_Index32 - 0];
+                    if (Trim(A_LoopField32) != "") {
+                        if (A_Index32 == 0) {
+                            out += "___HTLL_expression_helper___ := " + Trim(A_LoopField32) + Chr(10);
+                        } else {
+                            if (InStr(A_LoopField32, "+") || InStr(A_LoopField32, "-") || InStr(A_LoopField32, "*") || InStr(A_LoopField32, "//") || InStr(A_LoopField32, "%") || InStr(A_LoopField32, "<<") || InStr(A_LoopField32, ">>") || InStr(A_LoopField32, "&") || InStr(A_LoopField32, "|") || InStr(A_LoopField32, "^")) {
+                                out += "___HTLL_expression_helper___ " + Trim(A_LoopField32) + "= ";
+                            } else {
+                                out += Trim(A_LoopField32) + Chr(10);
+                            }
+                        }
+                    }
+                }
+                out += str2 + " " + str10 + " ___HTLL_expression_helper___" + Chr(10);
+                //;;;; code here
+                //;;;; code here
+            } else {
+                out += A_LoopField31 + Chr(10);
+            }
+        }
+        else if (SubStr(StrLower(Trim(A_LoopField31)), 1, 7) == "return ") {
+            //;;;;;;;;;;;;; return
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField31), 7));
+            if (InStr(A_LoopField31, " + ") || InStr(A_LoopField31, " - ") || InStr(A_LoopField31, " * ") || InStr(A_LoopField31, " // ") || InStr(A_LoopField31, " % ") || InStr(A_LoopField31, " << ") || InStr(A_LoopField31, " >> ") || InStr(A_LoopField31, " & ") || InStr(A_LoopField31, " | ") || InStr(A_LoopField31, " ^ ")) {
+                //;;;;;;;;;;;;; return return
+                //;;;;;;;;;;;;; return return
+                doWeEverSeeExprestion = 1;
+                str3 = str1;
+                std::vector<std::string> items33 = LoopParseFunc(str3, " ");
+                for (size_t A_Index33 = 0; A_Index33 < items33.size(); A_Index33++) {
+                    std::string A_LoopField33 = items33[A_Index33 - 0];
+                    if (Trim(A_LoopField33) != "") {
+                        if (A_Index33 == 0) {
+                            out += "___HTLL_expression_helper___ := " + Trim(A_LoopField33) + Chr(10);
+                        } else {
+                            if (InStr(A_LoopField33, "+") || InStr(A_LoopField33, "-") || InStr(A_LoopField33, "*") || InStr(A_LoopField33, "//") || InStr(A_LoopField33, "%") || InStr(A_LoopField33, "<<") || InStr(A_LoopField33, ">>") || InStr(A_LoopField33, "&") || InStr(A_LoopField33, "|") || InStr(A_LoopField33, "^")) {
+                                out += "___HTLL_expression_helper___ " + Trim(A_LoopField33) + "= ";
+                            } else {
+                                out += Trim(A_LoopField33) + Chr(10);
+                            }
+                        }
+                    }
+                }
+                out += "return ___HTLL_expression_helper___" + Chr(10);
+                //;;;;;;;;;;;;; return return
+                //;;;;;;;;;;;;; return return
+            } else {
+                out += A_LoopField31 + Chr(10);
+            }
+            //;;;;;;;;;;;;; return
+        } else {
+            out += A_LoopField31 + Chr(10);
+        }
+    }
+    code = StringTrimRight(out, 1);
+    if (doWeEverSeeExprestion == 1) {
+        code = "int ___HTLL_expression_helper___ := 0" + Chr(10) + code;
+    }
+    out = "";
+    std::vector<std::string> items34 = LoopParseFunc(code, "\n", "\r");
+    for (size_t A_Index34 = 0; A_Index34 < items34.size(); A_Index34++) {
+        std::string A_LoopField34 = items34[A_Index34 - 0];
+        if (SubStr(StrLower(Trim(A_LoopField34)), 1, 6) == "loop, ") {
+            str1 = Trim(A_LoopField34);
+            str2 = Trim(StrSplit(str1, ",", 2));
+            if (InStr(str2, ".size")) {
+                out += Trim(str2) + Chr(10) + "Loop, rax" + Chr(10);
+            } else {
+                out += A_LoopField34 + Chr(10);
+            }
+        }
+        else if (StrLower(Trim(A_LoopField34)) == "loop") {
+            out += "Loop, -1" + Chr(10);
+        } else {
+            out += A_LoopField34 + Chr(10);
+        }
+    }
+    code = StringTrimRight(out, 1);
+    out = "";
     if (InStr(code, "{")) {
         code = transformBracesToHTLL(code);
     }
-    // VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFCAA
-    //print(code)
-    //Loop, % HT_Lib_theIdNumOfThe34theVar.size() {
-    //if (Trim(HT_Lib_theIdNumOfThe34theVar[A_Index]) != "") {
-    //print(A_Index)
-    //print(HT_Lib_theIdNumOfThe34theVar[A_Index])
-    //}
-    //if (A_Index = 50) {
-    //break
-    //}
-    //}
-    std::vector<std::string> items24 = LoopParseFunc(code, "\n", "\r");
-    for (size_t A_Index24 = 0; A_Index24 < items24.size(); A_Index24++) {
-        std::string A_LoopField24 = items24[A_Index24 - 0];
-        if (SubStr(A_LoopField24, 1, 4) == "str ") {
-            str1 = Trim(StringTrimLeft(A_LoopField24, 4));
-        } else {
-            out += A_LoopField24 + Chr(10);
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    int dose_func_exist = 0;
+    std::vector<std::string> items35 = LoopParseFunc(code, "\n", "\r");
+    for (size_t A_Index35 = 0; A_Index35 < items35.size(); A_Index35++) {
+        std::string A_LoopField35 = items35[A_Index35 - 0];
+        if (SubStr(StrLower(Trim(A_LoopField35)), 1, 5) == "func ") {
+            dose_func_exist = 1;
+            break;
         }
     }
-    out = Trim(out);
-    out = restoreStrings(out);
+    int is_in_func = 0;
+    int is_in_main = 0;
+    std::vector<std::string> arrays_from_global_scope;
+    std::vector<std::string> func_arrs_params;
+    std::vector<std::string> func_arrs_params_ORIGINAL_NAME;
+    std::vector<std::string> func_vars_and_arrs;
+    std::vector<std::string> main_vars_and_arrs;
+    std::vector<std::string> funcs_and_what_types;
+    std::string ALoopField = "";
+    int AIndex = 0;
+    int AAIndex = 0;
+    int it_macth_arr_name = 0;
+    out = "";
+    std::vector<std::string> items36 = LoopParseFunc(code, "\n", "\r");
+    for (size_t A_Index36 = 0; A_Index36 < items36.size(); A_Index36++) {
+        std::string A_LoopField36 = items36[A_Index36 - 0];
+        if (SubStr(StrLower(Trim(A_LoopField36)), 1, 5) == "func ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField36), 5));
+            is_in_func = 1;
+            str2 = "";
+            str3 = "";
+            str4 = "";
+            str5 = "";
+            str6 = "";
+            str7 = "";
+            str8 = "";
+            str9 = "";
+            func_arrs_params = {};
+            str2 = Trim(StrSplit(str1, "(", 1));
+            str4 = Trim(StrSplit(str1, "(", 2));
+            str4 = StringTrimRight(str4, 1);
+            if (InStr(str2, " ")) {
+                // is an array func return
+                // get name of func
+                str3 = Trim(StrSplit(str2, " ", 2));
+                str8 = "";
+                str6 += "arr __HTLL_ret_" + str3 + Chr(10);
+                str5 = "";
+                if (InStr(str1, "()") == false) {
+                    std::vector<std::string> items37 = LoopParseFunc(str4, ",");
+                    for (size_t A_Index37 = 0; A_Index37 < items37.size(); A_Index37++) {
+                        std::string A_LoopField37 = items37[A_Index37 - 0];
+                        if (InStr(Trim(A_LoopField37), " ")) {
+                            // its an array param
+                            HTVM_Append(func_arrs_params, "__HTLL_param_" + str3 + "_" + Trim(StrSplit(Trim(A_LoopField37), " ", 2)));
+                            str8 += Trim(StrSplit(Trim(A_LoopField37), " ", 2)) + ",";
+                            HTVM_Append(func_arrs_params_ORIGINAL_NAME, Trim(StrSplit(Trim(A_LoopField37), " ", 2)));
+                        } else {
+                            str8 += "__000_NOT-ARRAY_000__,";
+                            str5 += Trim(A_LoopField37) + ", ";
+                        }
+                    }
+                    str8 = StringTrimRight(str8, 1);
+                    HTVM_Append(funcs_and_what_types, "yes|" + str3 + "|" + Trim(str8));
+                    str5 = Trim(str5);
+                    str5 = StringTrimRight(str5, 1);
+                } else {
+                    str5 = "";
+                    HTVM_Append(funcs_and_what_types, "yes|" + str3 + "|");
+                }
+            } else {
+                // get name of func
+                str3 = Trim(str2);
+                str8 = "";
+                str5 = "";
+                if (InStr(str1, "()") == false) {
+                    std::vector<std::string> items38 = LoopParseFunc(str4, ",");
+                    for (size_t A_Index38 = 0; A_Index38 < items38.size(); A_Index38++) {
+                        std::string A_LoopField38 = items38[A_Index38 - 0];
+                        if (InStr(Trim(A_LoopField38), " ")) {
+                            // its an array param
+                            HTVM_Append(func_arrs_params, "__HTLL_param_" + str3 + "_" + Trim(StrSplit(Trim(A_LoopField38), " ", 2)));
+                            str8 += Trim(StrSplit(Trim(A_LoopField38), " ", 2)) + ",";
+                            HTVM_Append(func_arrs_params_ORIGINAL_NAME, Trim(StrSplit(Trim(A_LoopField38), " ", 2)));
+                        } else {
+                            str8 += "__000_NOT-ARRAY_000__,";
+                            str5 += Trim(A_LoopField38) + ", ";
+                        }
+                    }
+                    str8 = StringTrimRight(str8, 1);
+                    HTVM_Append(funcs_and_what_types, "no|" + str3 + "|" + Trim(str8));
+                    str5 = Trim(str5);
+                    str5 = StringTrimRight(str5, 1);
+                } else {
+                    str5 = "";
+                    HTVM_Append(funcs_and_what_types, "no|" + str3 + "|");
+                }
+            }
+            for (int A_Index39 = 0; A_Index39 < HTVM_Size(func_arrs_params); A_Index39++) {
+                str6 += "arr " + func_arrs_params[A_Index39] + Chr(10);
+            }
+            str6 += "func " + str3 + "(" + str5 + ")";
+            out += str6 + Chr(10);
+            str14 = str3;
+        }
+        else if (Trim(A_LoopField36) == "funcend") {
+            is_in_func = 0;
+            str1 = "";
+            str2 = "";
+            str3 = "";
+            str4 = "";
+            str5 = "";
+            out += A_LoopField36 + Chr(10);
+        }
+        else if (Trim(A_LoopField36) == "main") {
+            is_in_main = 1;
+            str1 = "";
+            str2 = "";
+            str3 = "";
+            str4 = "";
+            str5 = "";
+            out += A_LoopField36 + Chr(10);
+        } else {
+            if (is_in_func == 1 && is_in_main == 0) {
+                // in a func
+                str1 = "";
+                str2 = "";
+                str4 = "";
+                str5 = "";
+                str1 = A_LoopField36;
+                if (SubStr(StrLower(Trim(A_LoopField36)), 1, 4) == "arr " || SubStr(StrLower(Trim(A_LoopField36)), 1, 4) == "int ") {
+                    if (SubStr(StrLower(Trim(A_LoopField36)), 1, 4) == "arr ") {
+                        out += "__HTLL_flocal_" + str3 + "_" + Trim(StringTrimLeft(Trim(A_LoopField36), 4)) + ".clear" + Chr(10);
+                    }
+                    if (InStr(A_LoopField36, " := ")) {
+                        str2 = Trim(StrSplit(A_LoopField36, ":=", 1));
+                        str4 = Trim(StrSplit(A_LoopField36, " ", 2));
+                    } else {
+                        str2 = Trim(A_LoopField36);
+                        str4 = Trim(StrSplit(A_LoopField36, " ", 2));
+                    }
+                    HTVM_Append(func_vars_and_arrs, str4);
+                }
+                for (int A_Index40 = 0; A_Index40 < HTVM_Size(func_arrs_params_ORIGINAL_NAME); A_Index40++) {
+                    str1 = RegExReplace(str1, "\\b" + func_arrs_params_ORIGINAL_NAME[A_Index40] + "\\b", "__HTLL_param_" + str14 + "_" + func_arrs_params_ORIGINAL_NAME[A_Index40]);
+                }
+                for (int A_Index41 = 0; A_Index41 < HTVM_Size(func_vars_and_arrs); A_Index41++) {
+                    str1 = RegExReplace(str1, "\\b" + func_vars_and_arrs[A_Index41] + "\\b", "__HTLL_flocal_" + str14 + "_" + func_vars_and_arrs[A_Index41]);
+                }
+                //::::::::::::::::::::::
+                //::::::::::::::::::::::
+                //::::::::::::::::::::::
+                //::::::::::::::::::::::
+                //::::::::::::::::::::::
+                //::::::::::::::::::::::
+                str6 = str1;
+                for (int A_Index42 = 0; A_Index42 < HTVM_Size(funcs_and_what_types); A_Index42++) {
+                    if (InStr(A_LoopField36, ")") && RegExMatch(A_LoopField36, "\\b" + StrSplit(funcs_and_what_types[A_Index42], "|", 2) + "\\b")) {
+                        if (InStr(A_LoopField36, " := ")) {
+                            if (StrSplit(funcs_and_what_types[A_Index42], "|", 1) == "no") {
+                                throw std::runtime_error("ERROR You cannot use the assignment operator and save the function " + StrSplit(funcs_and_what_types[A_Index42], "|", 2) + " please use rax.");
+                            }
+                            // for arrays
+                            // for arrays
+                            str1 = Trim(StrSplit(str6, " := ", 1));
+                            str2 = Trim(StrSplit(str6, " := ", 2));
+                            str3 = Trim(StrSplit(str2, "(", 1));
+                            str4 = Trim(StrSplit(str2, "(", 2));
+                            str4 = StringTrimRight(str4, 1);
+                            // str1 = arrName
+                            // str2 WE DONT CARE
+                            // str3 = func name
+                            // str4 = all params if any
+                            if (Trim(str4) == "") {
+                                // no param handle here
+                                str5 = StrSplit(funcs_and_what_types[A_Index42], "|", 2) + "()" + Chr(10);
+                                str5 += str1 + ".copy __HTLL_ret_" + StrSplit(funcs_and_what_types[A_Index42], "|", 2) + Chr(10);
+                            } else {
+                                // there are params so handle here
+                                str7 = "";
+                                str5 = "";
+                                str8 = StrSplit(funcs_and_what_types[A_Index42], "|", 3);
+                                AAIndex = A_Index42;
+                                std::vector<std::string> items43 = LoopParseFunc(str4, ",");
+                                for (size_t A_Index43 = 0; A_Index43 < items43.size(); A_Index43++) {
+                                    std::string A_LoopField43 = items43[A_Index43 - 0];
+                                    ALoopField = Trim(A_LoopField43);
+                                    AIndex = A_Index43;
+                                    it_macth_arr_name = 0;
+                                    std::vector<std::string> items44 = LoopParseFunc(str8, ",");
+                                    for (size_t A_Index44 = 0; A_Index44 < items44.size(); A_Index44++) {
+                                        std::string A_LoopField44 = items44[A_Index44 - 0];
+                                        if (Trim(A_LoopField44) != "__000_NOT-ARRAY_000__" && AIndex == A_Index44) {
+                                            ALoopField = Trim(A_LoopField44);
+                                            if (Trim(ALoopField) != "") {
+                                                it_macth_arr_name = 1;
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    if (it_macth_arr_name == 1) {
+                                        if (InStr(A_LoopField43, "__HTLL_flocal_")) {
+                                            str5 += "__HTLL_param_" + StrSplit(funcs_and_what_types[AAIndex], "|", 2) + "_" + ALoopField + ".copy " + Trim(A_LoopField43) + Chr(10);
+                                        } else {
+                                            str5 += "__HTLL_param_" + StrSplit(funcs_and_what_types[AAIndex], "|", 2) + "_" + ALoopField + ".copy __HTLL_flocal_" + str14 + "_" + Trim(A_LoopField43) + Chr(10);
+                                        }
+                                    } else {
+                                        if (RegExMatch(Trim(A_LoopField43), "^\\d+$")) {
+                                            str7 += Trim(A_LoopField43) + ", ";
+                                        } else {
+                                            if (InStr(A_LoopField43, "__HTLL_flocal_")) {
+                                                str7 += "__HTLL_flocal_" + str14 + "_" + Trim(A_LoopField43) + ", ";
+                                            } else {
+                                                str7 += "__HTLL_flocal_" + str14 + "_" + Trim(A_LoopField43) + ", ";
+                                            }
+                                        }
+                                    }
+                                }
+                                str5 += StrSplit(funcs_and_what_types[A_Index42], "|", 2) + "(" + StringTrimRight(Trim(str7), 1) + ")" + Chr(10);
+                                str5 += str1 + ".copy __HTLL_ret_" + StrSplit(funcs_and_what_types[A_Index42], "|", 2) + Chr(10);
+                                // there are params so handle here
+                            }
+                            str6 = str5;
+                            // for arrays
+                            // for arrays
+                        } else {
+                            if (StrSplit(funcs_and_what_types[A_Index42], "|", 1) == "yes") {
+                                throw std::runtime_error("ERROR You must use the assignment operator and save the function " + StrSplit(funcs_and_what_types[A_Index42], "|", 2) + " to an array.");
+                            }
+                            // for not arays returned
+                            // for not arays returned
+                            str1 = Trim(A_LoopField36);
+                            str2 = str1;
+                            str3 = Trim(StrSplit(str2, "(", 1));
+                            str4 = Trim(StrSplit(str2, "(", 2));
+                            str4 = StringTrimRight(str4, 1);
+                            // str2 WE DONT CARE
+                            // str3 = func name
+                            // str4 = all params if any
+                            if (Trim(str4) == "") {
+                                // no param handle here
+                                str5 = StrSplit(funcs_and_what_types[A_Index42], "|", 2) + "()" + Chr(10);
+                            } else {
+                                // there are params so handle here
+                                str7 = "";
+                                str5 = "";
+                                str8 = StrSplit(funcs_and_what_types[A_Index42], "|", 3);
+                                AAIndex = A_Index42;
+                                std::vector<std::string> items45 = LoopParseFunc(str4, ",");
+                                for (size_t A_Index45 = 0; A_Index45 < items45.size(); A_Index45++) {
+                                    std::string A_LoopField45 = items45[A_Index45 - 0];
+                                    ALoopField = Trim(A_LoopField45);
+                                    AIndex = A_Index45;
+                                    it_macth_arr_name = 0;
+                                    std::vector<std::string> items46 = LoopParseFunc(str8, ",");
+                                    for (size_t A_Index46 = 0; A_Index46 < items46.size(); A_Index46++) {
+                                        std::string A_LoopField46 = items46[A_Index46 - 0];
+                                        if (Trim(A_LoopField46) != "__000_NOT-ARRAY_000__" && AIndex == A_Index46) {
+                                            ALoopField = Trim(A_LoopField46);
+                                            if (Trim(ALoopField) != "") {
+                                                it_macth_arr_name = 1;
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    if (it_macth_arr_name == 1) {
+                                        if (InStr(A_LoopField45, "__HTLL_flocal_")) {
+                                            str5 += "__HTLL_param_" + StrSplit(funcs_and_what_types[AAIndex], "|", 2) + "_" + ALoopField + ".copy " + Trim(A_LoopField45) + Chr(10);
+                                        } else {
+                                            str5 += "__HTLL_param_" + StrSplit(funcs_and_what_types[AAIndex], "|", 2) + "_" + ALoopField + ".copy __HTLL_flocal_" + str14 + "_" + Trim(A_LoopField45) + Chr(10);
+                                        }
+                                    } else {
+                                        if (RegExMatch(Trim(A_LoopField45), "^\\d+$")) {
+                                            str7 += Trim(A_LoopField45) + ", ";
+                                        } else {
+                                            if (InStr(A_LoopField45, "__HTLL_flocal_")) {
+                                                str7 += "__HTLL_flocal_" + str14 + "_" + Trim(A_LoopField45) + ", ";
+                                            } else {
+                                                str7 += "__HTLL_flocal_" + str14 + "_" + Trim(A_LoopField45) + ", ";
+                                            }
+                                        }
+                                    }
+                                }
+                                str5 += StrSplit(funcs_and_what_types[A_Index42], "|", 2) + "(" + StringTrimRight(Trim(str7), 1) + ")" + Chr(10);
+                                // there are params so handle here
+                            }
+                            str6 = str5;
+                            // for not arays returned
+                            // for not arays returned
+                        }
+                        break;
+                    } else {
+                        str6 = str1;
+                    }
+                }
+                out += str6 + Chr(10);
+                //::::::::::::::::::::::
+                //::::::::::::::::::::::
+                //::::::::::::::::::::::
+                //::::::::::::::::::::::
+                //::::::::::::::::::::::
+                //::::::::::::::::::::::
+            }
+            else if (is_in_main == 1) {
+                // in main
+                str1 = "";
+                str2 = "";
+                str3 = "";
+                str4 = "";
+                str5 = "";
+                str6 = "";
+                str7 = "";
+                str11 = A_LoopField36;
+                if (SubStr(StrLower(Trim(A_LoopField36)), 1, 4) == "arr " || SubStr(StrLower(Trim(A_LoopField36)), 1, 4) == "int ") {
+                    if (InStr(A_LoopField36, " := ")) {
+                        str2 = Trim(StrSplit(A_LoopField36, ":=", 1));
+                        str3 = Trim(StrSplit(A_LoopField36, " ", 2));
+                    } else {
+                        str2 = Trim(A_LoopField36);
+                        str3 = Trim(StrSplit(A_LoopField36, " ", 2));
+                    }
+                    HTVM_Append(main_vars_and_arrs, str3);
+                }
+                for (int A_Index47 = 0; A_Index47 < HTVM_Size(main_vars_and_arrs); A_Index47++) {
+                    str11 = RegExReplace(str11, "\\b" + main_vars_and_arrs[A_Index47] + "\\b", "__HTLL_mlocal_" + main_vars_and_arrs[A_Index47]);
+                }
+                str6 = str11;
+                for (int A_Index48 = 0; A_Index48 < HTVM_Size(funcs_and_what_types); A_Index48++) {
+                    if (InStr(A_LoopField36, ")") && RegExMatch(A_LoopField36, "\\b" + StrSplit(funcs_and_what_types[A_Index48], "|", 2) + "\\b")) {
+                        if (InStr(A_LoopField36, " := ")) {
+                            if (StrSplit(funcs_and_what_types[A_Index48], "|", 1) == "no") {
+                                throw std::runtime_error("ERROR You cannot use the assignment operator and save the function " + StrSplit(funcs_and_what_types[A_Index48], "|", 2) + " please use rax.");
+                            }
+                            // for arrays
+                            // for arrays
+                            str1 = Trim(StrSplit(str6, " := ", 1));
+                            str2 = Trim(StrSplit(str6, " := ", 2));
+                            str3 = Trim(StrSplit(str2, "(", 1));
+                            str4 = Trim(StrSplit(str2, "(", 2));
+                            str4 = StringTrimRight(str4, 1);
+                            // str1 = arrName
+                            // str2 WE DONT CARE
+                            // str3 = func name
+                            // str4 = all params if any
+                            if (Trim(str4) == "") {
+                                // no param handle here
+                                str5 = StrSplit(funcs_and_what_types[A_Index48], "|", 2) + "()" + Chr(10);
+                                str5 += str1 + ".copy __HTLL_ret_" + StrSplit(funcs_and_what_types[A_Index48], "|", 2) + Chr(10);
+                            } else {
+                                // there are params so handle here
+                                str7 = "";
+                                str5 = "";
+                                str8 = StrSplit(funcs_and_what_types[A_Index48], "|", 3);
+                                AAIndex = A_Index48;
+                                std::vector<std::string> items49 = LoopParseFunc(str4, ",");
+                                for (size_t A_Index49 = 0; A_Index49 < items49.size(); A_Index49++) {
+                                    std::string A_LoopField49 = items49[A_Index49 - 0];
+                                    ALoopField = Trim(A_LoopField49);
+                                    AIndex = A_Index49;
+                                    it_macth_arr_name = 0;
+                                    std::vector<std::string> items50 = LoopParseFunc(str8, ",");
+                                    for (size_t A_Index50 = 0; A_Index50 < items50.size(); A_Index50++) {
+                                        std::string A_LoopField50 = items50[A_Index50 - 0];
+                                        if (Trim(A_LoopField50) != "__000_NOT-ARRAY_000__" && AIndex == A_Index50) {
+                                            ALoopField = Trim(A_LoopField50);
+                                            if (Trim(ALoopField) != "") {
+                                                it_macth_arr_name = 1;
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    if (it_macth_arr_name == 1) {
+                                        if (InStr(A_LoopField49, "__HTLL_mlocal_")) {
+                                            str5 += "__HTLL_param_" + StrSplit(funcs_and_what_types[AAIndex], "|", 2) + "_" + ALoopField + ".copy " + Trim(A_LoopField49) + Chr(10);
+                                        } else {
+                                            str5 += "__HTLL_param_" + StrSplit(funcs_and_what_types[AAIndex], "|", 2) + "_" + ALoopField + ".copy __HTLL_mlocal_" + Trim(A_LoopField49) + Chr(10);
+                                        }
+                                    } else {
+                                        if (RegExMatch(Trim(A_LoopField49), "^\\d+$")) {
+                                            str7 += Trim(A_LoopField49) + ", ";
+                                        } else {
+                                            if (InStr(A_LoopField49, "__HTLL_mlocal_")) {
+                                                str7 += Trim(A_LoopField49) + ", ";
+                                            } else {
+                                                str7 += "__HTLL_mlocal_" + Trim(A_LoopField49) + ", ";
+                                            }
+                                        }
+                                    }
+                                }
+                                str5 += StrSplit(funcs_and_what_types[A_Index48], "|", 2) + "(" + StringTrimRight(Trim(str7), 1) + ")" + Chr(10);
+                                str5 += str1 + ".copy __HTLL_ret_" + StrSplit(funcs_and_what_types[A_Index48], "|", 2) + Chr(10);
+                                // there are params so handle here
+                            }
+                            str6 = str5;
+                            // for arrays
+                            // for arrays
+                        } else {
+                            if (StrSplit(funcs_and_what_types[A_Index48], "|", 1) == "yes") {
+                                throw std::runtime_error("ERROR You must use the assignment operator and save the function " + StrSplit(funcs_and_what_types[A_Index48], "|", 2) + " to an array.");
+                            }
+                            // for not arays returned
+                            // for not arays returned
+                            str1 = Trim(A_LoopField36);
+                            str2 = str1;
+                            str3 = Trim(StrSplit(str2, "(", 1));
+                            str4 = Trim(StrSplit(str2, "(", 2));
+                            str4 = StringTrimRight(str4, 1);
+                            // str2 WE DONT CARE
+                            // str3 = func name
+                            // str4 = all params if any
+                            if (Trim(str4) == "") {
+                                // no param handle here
+                                str5 = StrSplit(funcs_and_what_types[A_Index48], "|", 2) + "()" + Chr(10);
+                            } else {
+                                // there are params so handle here
+                                str7 = "";
+                                str5 = "";
+                                str8 = StrSplit(funcs_and_what_types[A_Index48], "|", 3);
+                                AAIndex = A_Index48;
+                                std::vector<std::string> items51 = LoopParseFunc(str4, ",");
+                                for (size_t A_Index51 = 0; A_Index51 < items51.size(); A_Index51++) {
+                                    std::string A_LoopField51 = items51[A_Index51 - 0];
+                                    ALoopField = Trim(A_LoopField51);
+                                    AIndex = A_Index51;
+                                    it_macth_arr_name = 0;
+                                    std::vector<std::string> items52 = LoopParseFunc(str8, ",");
+                                    for (size_t A_Index52 = 0; A_Index52 < items52.size(); A_Index52++) {
+                                        std::string A_LoopField52 = items52[A_Index52 - 0];
+                                        if (Trim(A_LoopField52) != "__000_NOT-ARRAY_000__" && AIndex == A_Index52) {
+                                            ALoopField = Trim(A_LoopField52);
+                                            if (Trim(ALoopField) != "") {
+                                                it_macth_arr_name = 1;
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    if (it_macth_arr_name == 1) {
+                                        if (InStr(A_LoopField51, "__HTLL_mlocal_")) {
+                                            str5 += "__HTLL_param_" + StrSplit(funcs_and_what_types[AAIndex], "|", 2) + "_" + ALoopField + ".copy " + Trim(A_LoopField51) + Chr(10);
+                                        } else {
+                                            str5 += "__HTLL_param_" + StrSplit(funcs_and_what_types[AAIndex], "|", 2) + "_" + ALoopField + ".copy __HTLL_mlocal_" + Trim(A_LoopField51) + Chr(10);
+                                        }
+                                    } else {
+                                        if (RegExMatch(Trim(A_LoopField51), "^\\d+$")) {
+                                            str7 += Trim(A_LoopField51) + ", ";
+                                        } else {
+                                            if (InStr(A_LoopField51, "__HTLL_mlocal_")) {
+                                                str7 += Trim(A_LoopField51) + ", ";
+                                            } else {
+                                                str7 += "__HTLL_mlocal_" + Trim(A_LoopField51) + ", ";
+                                            }
+                                        }
+                                    }
+                                }
+                                str5 += StrSplit(funcs_and_what_types[A_Index48], "|", 2) + "(" + StringTrimRight(Trim(str7), 1) + ")" + Chr(10);
+                                // there are params so handle here
+                            }
+                            str6 = str5;
+                            // for not arays returned
+                            // for not arays returned
+                        }
+                        break;
+                    } else {
+                        str6 = str11;
+                    }
+                }
+                out += str6 + Chr(10);
+            } else {
+                // get all array names
+                if (SubStr(StrLower(Trim(A_LoopField36)), 1, 4) == "arr ") {
+                    HTVM_Append(arrays_from_global_scope, Trim(StringTrimLeft(Trim(A_LoopField36), 4)));
+                }
+                out += A_LoopField36 + Chr(10);
+            }
+        }
+    }
+    code = StringTrimRight(out, 1);
+    out = "";
+    int doWeReturnARR = 0;
+    std::vector<std::string> items53 = LoopParseFunc(code, "\n", "\r");
+    for (size_t A_Index53 = 0; A_Index53 < items53.size(); A_Index53++) {
+        std::string A_LoopField53 = items53[A_Index53 - 0];
+        if (SubStr(StrLower(Trim(A_LoopField53)), 1, 5) == "func ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField53), 5));
+            str2 = "";
+            str3 = "";
+            str4 = "";
+            str6 = "";
+            doWeReturnARR = 0;
+            str2 = Trim(StrSplit(str1, "(", 1));
+            str4 = Trim(StrSplit(str1, "(", 2));
+            str4 = StringTrimRight(str4, 1);
+            if (InStr(str2, " ")) {
+                // is an array func return
+                // get name of func
+                str3 = Trim(StrSplit(str2, " ", 2));
+            } else {
+                // get name of func
+                str3 = Trim(str2);
+            }
+            for (int A_Index54 = 0; A_Index54 < HTVM_Size(funcs_and_what_types); A_Index54++) {
+                if (StrSplit(funcs_and_what_types[A_Index54], "|", 2) == str3) {
+                    if (StrSplit(funcs_and_what_types[A_Index54], "|", 1) == "yes") {
+                        doWeReturnARR = 1;
+                    } else {
+                        doWeReturnARR = 0;
+                    }
+                    break;
+                }
+            }
+            out += A_LoopField53 + Chr(10);
+        }
+        else if (SubStr(StrLower(Trim(A_LoopField53)), 1, 7) == "return " && isFuncRetARR(A_LoopField53) && doWeReturnARR == 1) {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField53), 21 + StrLen(Trim(str3))));
+            str2 = "__HTLL_ret_" + str3 + ".copy __HTLL_param_" + str3 + "_" + str1 + "";
+            out += str2 + Chr(10);
+            out += "return 0" + Chr(10);
+        }
+        else if (SubStr(StrLower(Trim(A_LoopField53)), 1, 7) == "return " && isFuncRetARR2(A_LoopField53) && doWeReturnARR == 1) {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField53), 7 ));
+            str2 = "__HTLL_ret_" + str3 + ".copy " + str1;
+            out += str2 + Chr(10);
+            out += "return 0" + Chr(10);
+        }
+        else if (SubStr(StrLower(Trim(A_LoopField53)), 1, 7) == "return " && isFuncRetARR3(A_LoopField53, arrays_from_global_scope) && doWeReturnARR == 1) {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField53), 7 ));
+            str2 = "__HTLL_ret_" + str3 + ".copy " + str1;
+            out += str2 + Chr(10);
+            out += "return 0" + Chr(10);
+        } else {
+            out += A_LoopField53 + Chr(10);
+        }
+    }
+    out = RegExReplace(out, "__HTLL_[^ \\n\\],]*?___HTLL", "__HTLL");
+    code = StringTrimRight(out, 1);
+    out = "";
+    out = restoreStrings(code);
     return out;
 }
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -926,8 +1857,8 @@ std::string HTLL_Lang(std::string code) {
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 bool isNint(std::string name) {
-    for (int A_Index25 = 0; A_Index25 < HTVM_Size(nintArr); A_Index25++) {
-        if (Trim(name) == Trim(nintArr[A_Index25])) {
+    for (int A_Index55 = 0; A_Index55 < HTVM_Size(nintArr); A_Index55++) {
+        if (Trim(name) == Trim(nintArr[A_Index55])) {
             return true;
         }
     }
@@ -1071,29 +2002,30 @@ std::string compiler(std::string code) {
     std::string idxSrc = "";
     std::string valSrc = "";
     std::string strArg = "";
-    std::vector<std::string> items26 = LoopParseFunc(code);
-    for (size_t A_Index26 = 0; A_Index26 < items26.size(); A_Index26++) {
-        std::string A_LoopField26 = items26[A_Index26 - 0];
+    int is_inf_loop = 0;
+    std::vector<std::string> items56 = LoopParseFunc(code);
+    for (size_t A_Index56 = 0; A_Index56 < items56.size(); A_Index56++) {
+        std::string A_LoopField56 = items56[A_Index56 - 0];
         HTVM_Append(theIdNumOfThe34theVar, "");
         HTVM_Append(theIdNumOfThe34theVar, "");
     }
-    std::vector<std::string> items27 = LoopParseFunc(code);
-    for (size_t A_Index27 = 0; A_Index27 < items27.size(); A_Index27++) {
-        std::string A_LoopField27 = items27[A_Index27 - 0];
-        theIdNumOfThe34theVar[A_Index27] = theIdNumOfThe34theVar[A_Index27] + Chr(34);
-        HTVM_Append(getAllCharForTheFurtureSoIcanAddEscapeChar, A_LoopField27);
+    std::vector<std::string> items57 = LoopParseFunc(code);
+    for (size_t A_Index57 = 0; A_Index57 < items57.size(); A_Index57++) {
+        std::string A_LoopField57 = items57[A_Index57 - 0];
+        theIdNumOfThe34theVar[A_Index57] = theIdNumOfThe34theVar[A_Index57] + Chr(34);
+        HTVM_Append(getAllCharForTheFurtureSoIcanAddEscapeChar, A_LoopField57);
     }
     HTVM_Append(getAllCharForTheFurtureSoIcanAddEscapeChar, " ");
     ReplaceFixWhitOutFixDoubleQuotesInsideDoubleQuotes = Chr(34) + "ihuiuuhuuhtheidFor" + str21 + "--" + str21 + "asds" + str21 + "as--" + str21 + "theuhtuwaesphoutr" + Chr(34);
-    std::vector<std::string> items28 = LoopParseFunc(code);
-    for (size_t A_Index28 = 0; A_Index28 < items28.size(); A_Index28++) {
-        std::string A_LoopField28 = items28[A_Index28 - 0];
-        if (A_LoopField28 == keyWordEscpaeChar && getAllCharForTheFurtureSoIcanAddEscapeChar[A_Index28 + 1] == Chr(34)) {
+    std::vector<std::string> items58 = LoopParseFunc(code);
+    for (size_t A_Index58 = 0; A_Index58 < items58.size(); A_Index58++) {
+        std::string A_LoopField58 = items58[A_Index58 - 0];
+        if (A_LoopField58 == keyWordEscpaeChar && getAllCharForTheFurtureSoIcanAddEscapeChar[A_Index58 + 1] == Chr(34)) {
             fixOutFixDoubleQuotesInsideDoubleQuotesFIXok = 1;
             OutFixDoubleQuotesInsideDoubleQuotes += ReplaceFixWhitOutFixDoubleQuotesInsideDoubleQuotes;
         } else {
             if (fixOutFixDoubleQuotesInsideDoubleQuotesFIXok != 1) {
-                OutFixDoubleQuotesInsideDoubleQuotes += A_LoopField28;
+                OutFixDoubleQuotesInsideDoubleQuotes += A_LoopField58;
             } else {
                 fixOutFixDoubleQuotesInsideDoubleQuotesFIXok = 0;
             }
@@ -1104,18 +2036,18 @@ std::string compiler(std::string code) {
         code = StrReplace(code, Chr(92), Chr(92) + Chr(92));
     }
     if (keyWordEscpaeChar == Chr(92)) {
-        std::vector<std::string> items29 = LoopParseFunc(code);
-        for (size_t A_Index29 = 0; A_Index29 < items29.size(); A_Index29++) {
-            std::string A_LoopField29 = items29[A_Index29 - 0];
-            if (A_LoopField29 == Chr(34)) {
+        std::vector<std::string> items59 = LoopParseFunc(code);
+        for (size_t A_Index59 = 0; A_Index59 < items59.size(); A_Index59++) {
+            std::string A_LoopField59 = items59[A_Index59 - 0];
+            if (A_LoopField59 == Chr(34)) {
                 areWEinSome34sNum++;
             }
             if (areWEinSome34sNum == 1) {
-                if (A_LoopField29 != Chr(34)) {
-                    if (A_LoopField29 == keyWordEscpaeChar) {
+                if (A_LoopField59 != Chr(34)) {
+                    if (A_LoopField59 == keyWordEscpaeChar) {
                         theIdNumOfThe34theVar[theIdNumOfThe34] = theIdNumOfThe34theVar[theIdNumOfThe34] + Chr(92);
                     } else {
-                        theIdNumOfThe34theVar[theIdNumOfThe34] = theIdNumOfThe34theVar[theIdNumOfThe34] + A_LoopField29;
+                        theIdNumOfThe34theVar[theIdNumOfThe34] = theIdNumOfThe34theVar[theIdNumOfThe34] + A_LoopField59;
                     }
                 } else {
                     theIdNumOfThe34++;
@@ -1123,33 +2055,33 @@ std::string compiler(std::string code) {
                 }
             }
             if (areWEinSome34sNum == 2 || areWEinSome34sNum == 0) {
-                if (A_LoopField29 != Chr(34)) {
-                    htCodeOUT754754 += A_LoopField29;
+                if (A_LoopField59 != Chr(34)) {
+                    htCodeOUT754754 += A_LoopField59;
                 }
                 areWEinSome34sNum = 0;
             }
         }
     } else {
-        std::vector<std::string> items30 = LoopParseFunc(code);
-        for (size_t A_Index30 = 0; A_Index30 < items30.size(); A_Index30++) {
-            std::string A_LoopField30 = items30[A_Index30 - 0];
-            if (A_LoopField30 == Chr(34)) {
+        std::vector<std::string> items60 = LoopParseFunc(code);
+        for (size_t A_Index60 = 0; A_Index60 < items60.size(); A_Index60++) {
+            std::string A_LoopField60 = items60[A_Index60 - 0];
+            if (A_LoopField60 == Chr(34)) {
                 areWEinSome34sNum++;
             }
             if (areWEinSome34sNum == 1) {
-                if (A_LoopField30 != Chr(34)) {
-                    if (A_LoopField30 == keyWordEscpaeChar && keyWordEscpaeChar == getAllCharForTheFurtureSoIcanAddEscapeChar[A_Index30 + 1]) {
+                if (A_LoopField60 != Chr(34)) {
+                    if (A_LoopField60 == keyWordEscpaeChar && keyWordEscpaeChar == getAllCharForTheFurtureSoIcanAddEscapeChar[A_Index60 + 1]) {
                         theIdNumOfThe34theVar[theIdNumOfThe34] = theIdNumOfThe34theVar[theIdNumOfThe34] + keyWordEscpaeChar;
                         removeNexFixkeyWordEscpaeChar = 1;
                     }
-                    else if (A_LoopField30 == keyWordEscpaeChar) {
+                    else if (A_LoopField60 == keyWordEscpaeChar) {
                         if (removeNexFixkeyWordEscpaeChar != 1) {
                             theIdNumOfThe34theVar[theIdNumOfThe34] = theIdNumOfThe34theVar[theIdNumOfThe34] + Chr(92);
                         } else {
                             removeNexFixkeyWordEscpaeChar = 0;
                         }
                     } else {
-                        theIdNumOfThe34theVar[theIdNumOfThe34] = theIdNumOfThe34theVar[theIdNumOfThe34] + A_LoopField30;
+                        theIdNumOfThe34theVar[theIdNumOfThe34] = theIdNumOfThe34theVar[theIdNumOfThe34] + A_LoopField60;
                     }
                 } else {
                     theIdNumOfThe34++;
@@ -1157,36 +2089,36 @@ std::string compiler(std::string code) {
                 }
             }
             if (areWEinSome34sNum == 2 || areWEinSome34sNum == 0) {
-                if (A_LoopField30 != Chr(34)) {
-                    htCodeOUT754754 += A_LoopField30;
+                if (A_LoopField60 != Chr(34)) {
+                    htCodeOUT754754 += A_LoopField60;
                 }
                 areWEinSome34sNum = 0;
             }
         }
     }
     code = htCodeOUT754754;
-    for (int A_Index31 = 0; A_Index31 < theIdNumOfThe34; A_Index31++) {
-        theIdNumOfThe34theVar[A_Index31] = theIdNumOfThe34theVar[A_Index31] + Chr(34);
+    for (int A_Index61 = 0; A_Index61 < theIdNumOfThe34; A_Index61++) {
+        theIdNumOfThe34theVar[A_Index61] = theIdNumOfThe34theVar[A_Index61] + Chr(34);
     }
     HTVM_Append(theIdNumOfThe34theVar, Chr(34));
     code = StrReplace(code, "{", Chr(10) + "{" + Chr(10));
     code = StrReplace(code, "}", Chr(10) + "}" + Chr(10));
-    std::vector<std::string> items32 = LoopParseFunc(code, "\n", "\r");
-    for (size_t A_Index32 = 0; A_Index32 < items32.size(); A_Index32++) {
-        std::string A_LoopField32 = items32[A_Index32 - 0];
-        out += Trim(A_LoopField32) + Chr(10);
+    std::vector<std::string> items62 = LoopParseFunc(code, "\n", "\r");
+    for (size_t A_Index62 = 0; A_Index62 < items62.size(); A_Index62++) {
+        std::string A_LoopField62 = items62[A_Index62 - 0];
+        out += Trim(A_LoopField62) + Chr(10);
     }
     code = StringTrimRight(out, 1);
     str1 = "";
     out = "";
-    std::vector<std::string> items33 = LoopParseFunc(code, "\n", "\r");
-    for (size_t A_Index33 = 0; A_Index33 < items33.size(); A_Index33++) {
-        std::string A_LoopField33 = items33[A_Index33 - 0];
-        std::vector<std::string> items34 = LoopParseFunc(A_LoopField33);
-        for (size_t A_Index34 = 0; A_Index34 < items34.size(); A_Index34++) {
-            std::string A_LoopField34 = items34[A_Index34 - 0];
-            if (A_LoopField34 != ";") {
-                str1 += A_LoopField34;
+    std::vector<std::string> items63 = LoopParseFunc(code, "\n", "\r");
+    for (size_t A_Index63 = 0; A_Index63 < items63.size(); A_Index63++) {
+        std::string A_LoopField63 = items63[A_Index63 - 0];
+        std::vector<std::string> items64 = LoopParseFunc(A_LoopField63);
+        for (size_t A_Index64 = 0; A_Index64 < items64.size(); A_Index64++) {
+            std::string A_LoopField64 = items64[A_Index64 - 0];
+            if (A_LoopField64 != ";") {
+                str1 += A_LoopField64;
             } else {
                 break;
             }
@@ -1197,27 +2129,27 @@ std::string compiler(std::string code) {
     code = StringTrimRight(out, 1);
     int seenMain = 0;
     out = "";
-    std::vector<std::string> items35 = LoopParseFunc(code, "\n", "\r");
-    for (size_t A_Index35 = 0; A_Index35 < items35.size(); A_Index35++) {
-        std::string A_LoopField35 = items35[A_Index35 - 0];
-        if (Trim(A_LoopField35) == "main") {
+    std::vector<std::string> items65 = LoopParseFunc(code, "\n", "\r");
+    for (size_t A_Index65 = 0; A_Index65 < items65.size(); A_Index65++) {
+        std::string A_LoopField65 = items65[A_Index65 - 0];
+        if (Trim(A_LoopField65) == "main") {
             seenMain = 1;
             out += main_syntax + Chr(10);
         } else {
-            out += A_LoopField35 + Chr(10);
+            out += A_LoopField65 + Chr(10);
         }
     }
     code = StringTrimRight(out, 1);
     int fix_func_temp_int = 0;
     std::vector<std::string> fix_func_temp_arr;
     out = "";
-    std::vector<std::string> items36 = LoopParseFunc(code, "\n", "\r");
-    for (size_t A_Index36 = 0; A_Index36 < items36.size(); A_Index36++) {
-        std::string A_LoopField36 = items36[A_Index36 - 0];
-        if (SubStr(A_LoopField36, 1, 5) == "func ") {
+    std::vector<std::string> items66 = LoopParseFunc(code, "\n", "\r");
+    for (size_t A_Index66 = 0; A_Index66 < items66.size(); A_Index66++) {
+        std::string A_LoopField66 = items66[A_Index66 - 0];
+        if (SubStr(Trim(A_LoopField66), 1, 5) == "func ") {
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-            str1 = Trim(StringTrimLeft(A_LoopField36, 5));
+            str1 = Trim(StringTrimLeft(A_LoopField66, 5));
             str2 = Trim(StrSplit(str1, "(", 1));
             str3 = StrSplit(str1, "(", 2);
             str3 = Trim(StrReplace(str3, ")", ""));
@@ -1225,80 +2157,89 @@ std::string compiler(std::string code) {
             if (Trim(str3) != "") {
                 fix_func_temp_arr = {};
                 fix_func_temp_int = 1;
-                std::vector<std::string> items37 = LoopParseFunc(str3, ",");
-                for (size_t A_Index37 = 0; A_Index37 < items37.size(); A_Index37++) {
-                    std::string A_LoopField37 = items37[A_Index37 - 0];
-                    str4 += "_jhkjli_HTLL_HTLL_HTLL_" + Trim(A_LoopField37) + ", ";
-                    HTVM_Append(fix_func_temp_arr, Trim(A_LoopField37));
+                std::vector<std::string> items67 = LoopParseFunc(str3, ",");
+                for (size_t A_Index67 = 0; A_Index67 < items67.size(); A_Index67++) {
+                    std::string A_LoopField67 = items67[A_Index67 - 0];
+                    str4 += "_jhkjli_HTLL_HTLL_HTLL_" + Trim(A_LoopField67) + ", ";
+                    HTVM_Append(fix_func_temp_arr, Trim(A_LoopField67));
                 }
                 str4 = StringTrimRight(str4, 2);
                 out += "func " + str2 + "(" + str4 + ")" + Chr(10);
             } else {
-                out += A_LoopField36 + Chr(10);
+                out += A_LoopField66 + Chr(10);
             }
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
         }
-        else if (Trim(A_LoopField36) == "funcend" || Trim(A_LoopField36) == "endfunc") {
+        else if (Trim(A_LoopField66) == "funcend" || Trim(A_LoopField66) == "endfunc") {
             fix_func_temp_int = 0;
             fix_func_temp_arr = {};
-            out += A_LoopField36 + Chr(10);
+            out += A_LoopField66 + Chr(10);
         } else {
             if (fix_func_temp_int == 1) {
-                str1 = A_LoopField36;
-                for (int A_Index38 = 0; A_Index38 < HTVM_Size(fix_func_temp_arr); A_Index38++) {
-                    str1 = RegExReplace(str1, "\\b" + Trim(fix_func_temp_arr[A_Index38]) + "\\b", "_jhkjli_HTLL_HTLL_HTLL_" + Trim(fix_func_temp_arr[A_Index38]));
+                str1 = A_LoopField66;
+                for (int A_Index68 = 0; A_Index68 < HTVM_Size(fix_func_temp_arr); A_Index68++) {
+                    str1 = RegExReplace(str1, "\\b" + Trim(fix_func_temp_arr[A_Index68]) + "\\b", "_jhkjli_HTLL_HTLL_HTLL_" + Trim(fix_func_temp_arr[A_Index68]));
                 }
                 out += str1 + Chr(10);
             } else {
-                out += A_LoopField36 + Chr(10);
+                out += A_LoopField66 + Chr(10);
             }
         }
     }
     code = StringTrimRight(out, 1);
     out = "";
-    std::vector<std::string> items39 = LoopParseFunc(code, "\n", "\r");
-    for (size_t A_Index39 = 0; A_Index39 < items39.size(); A_Index39++) {
-        std::string A_LoopField39 = items39[A_Index39 - 0];
-        if (SubStr(A_LoopField39, 1, 7) == "arradd ") {
-            str1 = Trim(StringTrimLeft(A_LoopField39, 7));
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    // main loop main loop main loop main loop
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    // main loop main loop main loop main loop
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    // main loop main loop main loop main loop
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    // main loop main loop main loop main loop
+    //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    std::vector<std::string> items69 = LoopParseFunc(code, "\n", "\r");
+    for (size_t A_Index69 = 0; A_Index69 < items69.size(); A_Index69++) {
+        std::string A_LoopField69 = items69[A_Index69 - 0];
+        if (SubStr(A_LoopField69, 1, 7) == "arradd ") {
+            str1 = Trim(StringTrimLeft(A_LoopField69, 7));
             str2 = StrSplit(str1, " ", 1);
             str3 = StringTrimLeft(str1, StrLen(str2) + 1);
             str4 = "";
             if (is_arm == 1) {
                 // --- AArch64 CODE GENERATION ---
-                std::vector<std::string> items40 = LoopParseFunc(str3);
-                for (size_t A_Index40 = 0; A_Index40 < items40.size(); A_Index40++) {
-                    std::string A_LoopField40 = items40[A_Index40 - 0];
+                std::vector<std::string> items70 = LoopParseFunc(str3);
+                for (size_t A_Index70 = 0; A_Index70 < items70.size(); A_Index70++) {
+                    std::string A_LoopField70 = items70[A_Index70 - 0];
                     // For each character, we call array_append(array_ptr, char_value)
                     // Arg 1 (array_ptr) goes in x0
                     // Arg 2 (char_value) goes in x1
                     str4 += "    ldr x0, =" + str2 + Chr(10);
-                    str4 += "    mov x1, #" + Chr(39) + A_LoopField40 + Chr(39) + Chr(10);
+                    str4 += "    mov x1, #" + Chr(39) + A_LoopField70 + Chr(39) + Chr(10);
                     str4 += "    bl array_append" + Chr(10);
                 }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR GENERATION ---
-                std::vector<std::string> items41 = LoopParseFunc(str3);
-                for (size_t A_Index41 = 0; A_Index41 < items41.size(); A_Index41++) {
-                    std::string A_LoopField41 = items41[A_Index41 - 0];
+                std::vector<std::string> items71 = LoopParseFunc(str3);
+                for (size_t A_Index71 = 0; A_Index71 < items71.size(); A_Index71++) {
+                    std::string A_LoopField71 = items71[A_Index71 - 0];
                     // arr.add arrayName, charValue
-                    str4 += "    arr.add " + str2 + ", " + STR(Asc(A_LoopField41)) + Chr(10);
+                    str4 += "    arr.add " + str2 + ", " + STR(Asc(A_LoopField71)) + Chr(10);
                 }
             } else {
                 // --- YOUR EXISTING X86 CODE - UNCHANGED ---
-                std::vector<std::string> items42 = LoopParseFunc(str3);
-                for (size_t A_Index42 = 0; A_Index42 < items42.size(); A_Index42++) {
-                    std::string A_LoopField42 = items42[A_Index42 - 0];
-                    str4 += "mov rsi, " + Chr(39) + A_LoopField42 + Chr(39) + Chr(10) + "mov rdi, " + str2 + Chr(10) + "call array_append" + Chr(10);
+                std::vector<std::string> items72 = LoopParseFunc(str3);
+                for (size_t A_Index72 = 0; A_Index72 < items72.size(); A_Index72++) {
+                    std::string A_LoopField72 = items72[A_Index72 - 0];
+                    str4 += "mov rsi, " + Chr(39) + A_LoopField72 + Chr(39) + Chr(10) + "mov rdi, " + str2 + Chr(10) + "call array_append" + Chr(10);
                 }
             }
             out += str4 + Chr(10);
         }
-        else if (SubStr(A_LoopField39, 1, 4) == "int ") {
-            str1 = Trim(StringTrimLeft(A_LoopField39, 4));
+        else if (SubStr(A_LoopField69, 1, 4) == "int ") {
+            str1 = Trim(StringTrimLeft(A_LoopField69, 4));
             if (is_arm == 1) {
                 // --- AArch64 CODE GENERATION ---
                 if (InStr(str1, ":=")) {
@@ -1339,7 +2280,7 @@ std::string compiler(std::string code) {
                     str2 = Trim(StrSplit(str1, "-=", 1));
                     dot_data_ints += str2 + ": .quad 0" + Chr(10);
                 }
-                if (InStr(A_LoopField39, " += ")) {
+                if (InStr(A_LoopField69, " += ")) {
                     str2 = Trim(StrSplit(str1, "+=", 1));
                     str3 = Trim(StrSplit(str1, "+=", 2));
                     out += "    ldr x10, =" + str2 + Chr(10);
@@ -1360,7 +2301,7 @@ std::string compiler(std::string code) {
                     // ############## FIX END ##############
                     out += "    str x9, [x10]" + Chr(10);
                 }
-                else if (InStr(A_LoopField39, " *= ")) {
+                else if (InStr(A_LoopField69, " *= ")) {
                     str2 = Trim(StrSplit(str1, "*=", 1));
                     str3 = Trim(StrSplit(str1, "*=", 2));
                     out += "    ldr x10, =" + str2 + Chr(10);
@@ -1382,7 +2323,7 @@ std::string compiler(std::string code) {
                     // ############## FIX END ##############
                     out += "    str x9, [x10]" + Chr(10);
                 }
-                else if (InStr(A_LoopField39, " -= ")) {
+                else if (InStr(A_LoopField69, " -= ")) {
                     str2 = Trim(StrSplit(str1, "-=", 1));
                     str3 = Trim(StrSplit(str1, "-=", 2));
                     out += "    ldr x10, =" + str2 + Chr(10);
@@ -1405,7 +2346,7 @@ std::string compiler(std::string code) {
                 }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR GENERATION ---
                 if (InStr(str1, ":=")) {
                     str2 = Trim(StrSplit(str1, ":=", 1));
@@ -1437,7 +2378,7 @@ std::string compiler(std::string code) {
                     }
                     out += "int " + Trim(str2) + ": 0" + Chr(10);
                 }
-                if (InStr(A_LoopField39, " += ")) {
+                if (InStr(A_LoopField69, " += ")) {
                     str2 = Trim(StrSplit(str1, "+=", 1));
                     str3 = Trim(StrSplit(str1, "+=", 2));
                     strSrc = str3;
@@ -1449,7 +2390,7 @@ std::string compiler(std::string code) {
                     }
                     out += "add " + str2 + ", " + strSrc + Chr(10);
                 }
-                else if (InStr(A_LoopField39, " *= ")) {
+                else if (InStr(A_LoopField69, " *= ")) {
                     str2 = Trim(StrSplit(str1, "*=", 1));
                     str3 = Trim(StrSplit(str1, "*=", 2));
                     strSrc = str3;
@@ -1461,7 +2402,7 @@ std::string compiler(std::string code) {
                     }
                     out += "mul " + str2 + ", " + strSrc + Chr(10);
                 }
-                else if (InStr(A_LoopField39, " -= ")) {
+                else if (InStr(A_LoopField69, " -= ")) {
                     str2 = Trim(StrSplit(str1, "-=", 1));
                     str3 = Trim(StrSplit(str1, "-=", 2));
                     strSrc = str3;
@@ -1475,7 +2416,7 @@ std::string compiler(std::string code) {
                 }
             } else {
                 // --- YOUR EXISTING X86 CODE - UNCHANGED ---
-                str1 = Trim(StringTrimLeft(A_LoopField39, 4));
+                str1 = Trim(StringTrimLeft(A_LoopField69, 4));
                 if (InStr(str1, ":=")) {
                     str2 = Trim(StrSplit(str1, ":=", 1));
                     str3 = Trim(StrSplit(str1, ":=", 2));
@@ -1506,7 +2447,7 @@ std::string compiler(std::string code) {
                     str3 = Trim(StrSplit(str1, "-=", 2));
                     dot_data_ints += str2 + " dq 0" + Chr(10);
                 }
-                if (InStr(A_LoopField39, " += ")) {
+                if (InStr(A_LoopField69, " += ")) {
                     str2 = Trim(StrSplit(str1, "+=", 1));
                     str3 = Trim(StrSplit(str1, "+=", 2));
                     if (RegExMatch(str3, "^\\d+$")) {
@@ -1516,7 +2457,7 @@ std::string compiler(std::string code) {
                         out += "add qword [" + str2 + "], rdi" + Chr(10);
                     }
                 }
-                else if (InStr(A_LoopField39, " *= ")) {
+                else if (InStr(A_LoopField69, " *= ")) {
                     str2 = Trim(StrSplit(str1, "*=", 1));
                     str3 = Trim(StrSplit(str1, "*=", 2));
                     if (RegExMatch(str3, "^\\d+$")) {
@@ -1529,7 +2470,7 @@ std::string compiler(std::string code) {
                         out += "mov [" + str2 + "], rax" + Chr(10);
                     }
                 }
-                else if (InStr(A_LoopField39, " -= ")) {
+                else if (InStr(A_LoopField69, " -= ")) {
                     str2 = Trim(StrSplit(str1, "-=", 1));
                     str3 = Trim(StrSplit(str1, "-=", 2));
                     if (RegExMatch(str3, "^\\d+$")) {
@@ -1541,8 +2482,8 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (SubStr(A_LoopField39, 1, 5) == "nint ") {
-            str1 = Trim(StringTrimLeft(A_LoopField39, 5));
+        else if (SubStr(A_LoopField69, 1, 5) == "nint ") {
+            str1 = Trim(StringTrimLeft(A_LoopField69, 5));
             if (InStr(str1, " ")) {
                 HTVM_Append(nintArr, StrSplit(str1, " ", 1));
             } else {
@@ -1592,7 +2533,7 @@ std::string compiler(std::string code) {
                     dot_data_ints += str2 + ": .quad 0" + Chr(10);
                     dot_data_ints += str2 + "_is_negative: .quad 0" + Chr(10);
                 }
-                if (InStr(A_LoopField39, " += ")) {
+                if (InStr(A_LoopField69, " += ")) {
                     str2 = Trim(StrSplit(str1, "+=", 1));
                     str3 = Trim(StrSplit(str1, "+=", 2));
                     out += "    ldr x10, =" + str2 + Chr(10) + "    ldr x9, [x10]" + Chr(10);
@@ -1615,7 +2556,7 @@ std::string compiler(std::string code) {
                     out += "    ldr x1, =" + str2 + "_is_negative" + Chr(10);
                     out += "    bl is_nint_negative" + Chr(10);
                 }
-                else if (InStr(A_LoopField39, " *= ")) {
+                else if (InStr(A_LoopField69, " *= ")) {
                     str2 = Trim(StrSplit(str1, "*=", 1));
                     str3 = Trim(StrSplit(str1, "*=", 2));
                     out += "    ldr x10, =" + str2 + Chr(10) + "    ldr x9, [x10]" + Chr(10);
@@ -1639,7 +2580,7 @@ std::string compiler(std::string code) {
                     out += "    ldr x1, =" + str2 + "_is_negative" + Chr(10);
                     out += "    bl is_nint_negative" + Chr(10);
                 }
-                else if (InStr(A_LoopField39, " -= ")) {
+                else if (InStr(A_LoopField69, " -= ")) {
                     str2 = Trim(StrSplit(str1, "-=", 1));
                     str3 = Trim(StrSplit(str1, "-=", 2));
                     out += "    ldr x10, =" + str2 + Chr(10) + "    ldr x9, [x10]" + Chr(10);
@@ -1664,7 +2605,7 @@ std::string compiler(std::string code) {
                 }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR GENERATION (nint) ---
                 if (InStr(str1, ":=")) {
                     str2 = Trim(StrSplit(str1, ":=", 1));
@@ -1698,7 +2639,7 @@ std::string compiler(std::string code) {
                     out += "int " + Trim(str2) + ": 0" + Chr(10);
                     out += "int " + Trim(str2) + "_is_negative: 0" + Chr(10);
                 }
-                if (InStr(A_LoopField39, " += ")) {
+                if (InStr(A_LoopField69, " += ")) {
                     str2 = Trim(StrSplit(str1, "+=", 1));
                     str3 = Trim(StrSplit(str1, "+=", 2));
                     strSrc = str3;
@@ -1710,7 +2651,7 @@ std::string compiler(std::string code) {
                     }
                     out += "add " + str2 + ", " + strSrc + Chr(10);
                 }
-                else if (InStr(A_LoopField39, " *= ")) {
+                else if (InStr(A_LoopField69, " *= ")) {
                     str2 = Trim(StrSplit(str1, "*=", 1));
                     str3 = Trim(StrSplit(str1, "*=", 2));
                     strSrc = str3;
@@ -1722,7 +2663,7 @@ std::string compiler(std::string code) {
                     }
                     out += "mul " + str2 + ", " + strSrc + Chr(10);
                 }
-                else if (InStr(A_LoopField39, " -= ")) {
+                else if (InStr(A_LoopField69, " -= ")) {
                     str2 = Trim(StrSplit(str1, "-=", 1));
                     str3 = Trim(StrSplit(str1, "-=", 2));
                     strSrc = str3;
@@ -1772,7 +2713,7 @@ std::string compiler(std::string code) {
                     dot_data_ints += str2 + " dq 0" + Chr(10);
                     dot_data_ints += str2 + "_is_negative: dq 0" + Chr(10);
                 }
-                if (InStr(A_LoopField39, " += ")) {
+                if (InStr(A_LoopField69, " += ")) {
                     str2 = Trim(StrSplit(str1, "+=", 1));
                     str3 = Trim(StrSplit(str1, "+=", 2));
                     if (RegExMatch(str3, "^\\d+$")) {
@@ -1784,7 +2725,7 @@ std::string compiler(std::string code) {
                         out += "lea rdi, [" + str2 + "]" + Chr(10) + "lea rsi, [" + str2 + "_is_negative]" + Chr(10) + "call is_nint_negative" + Chr(10);
                     }
                 }
-                else if (InStr(A_LoopField39, " *= ")) {
+                else if (InStr(A_LoopField69, " *= ")) {
                     str2 = Trim(StrSplit(str1, "*=", 1));
                     str3 = Trim(StrSplit(str1, "*=", 2));
                     if (RegExMatch(str3, "^\\d+$")) {
@@ -1799,7 +2740,7 @@ std::string compiler(std::string code) {
                         out += "lea rdi, [" + str2 + "]" + Chr(10) + "lea rsi, [" + str2 + "_is_negative]" + Chr(10) + "call is_nint_negative" + Chr(10);
                     }
                 }
-                else if (InStr(A_LoopField39, " -= ")) {
+                else if (InStr(A_LoopField69, " -= ")) {
                     str2 = Trim(StrSplit(str1, "-=", 1));
                     str3 = Trim(StrSplit(str1, "-=", 2));
                     if (RegExMatch(str3, "^\\d+$")) {
@@ -1813,21 +2754,22 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (InStr(A_LoopField39, " := ") || InStr(A_LoopField39, " += ") || InStr(A_LoopField39, " -= ") || InStr(A_LoopField39, " *= ")) {
+        else if (InStr(A_LoopField69, " := ") || InStr(A_LoopField69, " += ") || InStr(A_LoopField69, " -= ") || InStr(A_LoopField69, " *= ") || InStr(A_LoopField69, " //= ") || InStr(A_LoopField69, " %= ") || InStr(A_LoopField69, " <<= ") || InStr(A_LoopField69, " >>= ") || InStr(A_LoopField69, " &= ") || InStr(A_LoopField69, " |= ") || InStr(A_LoopField69, " ^= ")) {
             if (is_arm == 1) {
-                if (InStr(A_LoopField39, " := ")) {
-                    str1 = Trim(A_LoopField39);
+                if (InStr(A_LoopField69, " := ")) {
+                    str1 = Trim(A_LoopField69);
                     str2 = Trim(StrSplit(str1, ":=", 1));
                     str3 = Trim(StrSplit(str1, ":=", 2));
                     int isLhsStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index43 = 0; A_Index43 < HTVM_Size(funcArgsArr); A_Index43++) {
-                            if (Trim(funcArgsArr[A_Index43]) == str2) {
+                        for (int A_Index73 = 0; A_Index73 < HTVM_Size(funcArgsArr); A_Index73++) {
+                            if (Trim(funcArgsArr[A_Index73]) == str2) {
                                 isLhsStackVar = 1;
                                 break;
                             }
                         }
                     }
+                    // --- Compute the source value into x9 ---
                     if (str3 == "rax") {
                         out += "    mov x9, x0" + Chr(10);
                     }
@@ -1839,8 +2781,8 @@ std::string compiler(std::string code) {
                     } else {
                         int isRhsStackVar = 0;
                         if (inFunc == 1) {
-                            for (int A_Index44 = 0; A_Index44 < HTVM_Size(funcArgsArr); A_Index44++) {
-                                if (Trim(funcArgsArr[A_Index44]) == str3) {
+                            for (int A_Index74 = 0; A_Index74 < HTVM_Size(funcArgsArr); A_Index74++) {
+                                if (Trim(funcArgsArr[A_Index74]) == str3) {
                                     isRhsStackVar = 1;
                                     break;
                                 }
@@ -1849,43 +2791,79 @@ std::string compiler(std::string code) {
                         if (isRhsStackVar == 1) {
                             out += "    ldr x9, =" + str3 + Chr(10);
                         } else {
-                            out += "    ldr x10, =" + str3 + Chr(10) + Chr(10);
+                            out += "    ldr x10, =" + str3 + Chr(10);
                             out += "    ldr x9, [x10]" + Chr(10);
                         }
                     }
+                    // --- Store x9 to destination ---
                     if (isLhsStackVar == 1) {
+                        // Destination is a function parameter (stored as a global label)
                         out += "    str x9, =" + str2 + Chr(10);
+                    }
+                    else if (str2 == "rax") {
+                        out += "    mov x0, x9" + Chr(10);
                     } else {
-                        out += "    ldr x10, =" + str2 + Chr(10) + Chr(10);
+                        // Destination is a normal global variable
+                        out += "    ldr x10, =" + str2 + Chr(10);
                         out += "    str x9, [x10]" + Chr(10);
                     }
                     if (isNint(str2)) {
-                        out += "    ldr x0, =" + str2 + Chr(10) + "    ldr x1, =" + str2 + "_is_negative" + Chr(10) + "    bl is_nint_negative" + Chr(10);
+                        out += "    ldr x0, =" + str2 + Chr(10);
+                        out += "    ldr x1, =" + str2 + "_is_negative" + Chr(10);
+                        out += "    bl is_nint_negative" + Chr(10);
                     }
                 } else {
-                    // Handles +=, -=, *= []
+                    // Handles +=, -=, *=, //=, %=, <<=, >>=, &=, |=, ^=
                     std::string op = "";
                     std::string op_asm = "";
-                    if (InStr(A_LoopField39, " += ")) {
+                    if (InStr(A_LoopField69, " += ")) {
                         op = "+=";
                         op_asm = "add";
                     }
-                    else if (InStr(A_LoopField39, " -= ")) {
+                    else if (InStr(A_LoopField69, " -= ")) {
                         op = "-=";
                         op_asm = "sub";
                     }
-                    else if (InStr(A_LoopField39, " *= ")) {
+                    else if (InStr(A_LoopField69, " *= ")) {
                         op = "*=";
                         op_asm = "mul";
                     }
-                    str1 = Trim(A_LoopField39);
+                    else if (InStr(A_LoopField69, " //= ")) {
+                        op = "//=";
+                        op_asm = "udiv";
+                    }
+                    else if (InStr(A_LoopField69, " %= ")) {
+                        op = "%=";
+                        op_asm = "mod";
+                    }
+                    else if (InStr(A_LoopField69, " <<= ")) {
+                        op = "<<=";
+                        op_asm = "lsl";
+                    }
+                    else if (InStr(A_LoopField69, " >>= ")) {
+                        op = ">>=";
+                        op_asm = "lsr";
+                    }
+                    else if (InStr(A_LoopField69, " &= ")) {
+                        op = "&=";
+                        op_asm = "and";
+                    }
+                    else if (InStr(A_LoopField69, " |= ")) {
+                        op = "|=";
+                        op_asm = "orr";
+                    }
+                    else if (InStr(A_LoopField69, " ^= ")) {
+                        op = "^=";
+                        op_asm = "eor";
+                    }
+                    str1 = Trim(A_LoopField69);
                     str2 = Trim(StrSplit(str1, op, 1));
                     str3 = Trim(StrSplit(str1, op, 2));
                     // --- Load Destination Value into x9 ---
                     int isLhsStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index45 = 0; A_Index45 < HTVM_Size(funcArgsArr); A_Index45++) {
-                            if (Trim(funcArgsArr[A_Index45]) == str2) {
+                        for (int A_Index75 = 0; A_Index75 < HTVM_Size(funcArgsArr); A_Index75++) {
+                            if (Trim(funcArgsArr[A_Index75]) == str2) {
                                 isLhsStackVar = 1;
                                 break;
                             }
@@ -1899,23 +2877,42 @@ std::string compiler(std::string code) {
                     }
                     // --- Load Source Value into x11 and perform operation ---
                     if (str3 == "rax") {
-                        out += "    " + op_asm + " x9, x9, x0" + Chr(10);
+                        if (op_asm == "mod") {
+                            out += "    udiv x12, x9, x0" + Chr(10);
+                            out += "    msub x9, x12, x0, x9" + Chr(10);
+                        } else {
+                            out += "    " + op_asm + " x9, x9, x0" + Chr(10);
+                        }
                     }
                     else if (str3 == "A_Index") {
-                        out += "    " + op_asm + " x9, x9, x20" + Chr(10);
+                        if (op_asm == "mod") {
+                            out += "    udiv x12, x9, x20" + Chr(10);
+                            out += "    msub x9, x12, x20, x9" + Chr(10);
+                        } else {
+                            out += "    " + op_asm + " x9, x9, x20" + Chr(10);
+                        }
                     }
                     else if (RegExMatch(str3, "^\\d+$")) {
-                        if (op_asm == "mul") {
+                        // ARM cannot 'udiv' or 'mul' an immediate number directly!
+                        // We must move it to x11 first.
+                        if (op_asm == "mul" || op_asm == "udiv" || op_asm == "mod" || op_asm == "lsl" || op_asm == "lsr" || op_asm == "and" || op_asm == "orr" || op_asm == "eor") {
                             out += "    mov x11, #" + str3 + Chr(10) + Chr(10);
-                            out += "    " + op_asm + " x9, x9, x11" + Chr(10);
+                            if (op_asm == "mod") {
+                                out += "    udiv x12, x9, x11" + Chr(10);
+                                out += "    msub x9, x12, x11, x9" + Chr(10);
+                            } else {
+                                out += "    " + op_asm + " x9, x9, x11" + Chr(10);
+                            }
                         } else {
+                            // add and sub CAN take immediate numbers directly
                             out += "    " + op_asm + " x9, x9, #" + str3 + Chr(10);
                         }
                     } else {
+                        // Right hand side is a standard variable
                         int isRhsStackVar = 0;
                         if (inFunc == 1) {
-                            for (int A_Index46 = 0; A_Index46 < HTVM_Size(funcArgsArr); A_Index46++) {
-                                if (Trim(funcArgsArr[A_Index46]) == str3) {
+                            for (int A_Index76 = 0; A_Index76 < HTVM_Size(funcArgsArr); A_Index76++) {
+                                if (Trim(funcArgsArr[A_Index76]) == str3) {
                                     isRhsStackVar = 1;
                                     break;
                                 }
@@ -1923,10 +2920,14 @@ std::string compiler(std::string code) {
                         }
                         if (isRhsStackVar == 1) {
                             out += "    ldr x11, =" + str3 + Chr(10) + Chr(10);
-                            out += "    " + op_asm + " x9, x9, x11" + Chr(10);
                         } else {
                             out += "    ldr x11, =" + str3 + Chr(10) + Chr(10);
                             out += "    ldr x11, [x11]" + Chr(10) + Chr(10);
+                        }
+                        if (op_asm == "mod") {
+                            out += "    udiv x12, x9, x11" + Chr(10);
+                            out += "    msub x9, x12, x11, x9" + Chr(10);
+                        } else {
                             out += "    " + op_asm + " x9, x9, x11" + Chr(10);
                         }
                     }
@@ -1942,10 +2943,10 @@ std::string compiler(std::string code) {
                 }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR GENERATION (assignments) ---
-                if (InStr(A_LoopField39, " := ")) {
-                    str1 = Trim(A_LoopField39);
+                if (InStr(A_LoopField69, " := ")) {
+                    str1 = Trim(A_LoopField69);
                     str2 = Trim(StrSplit(str1, ":=", 1));
                     str3 = Trim(StrSplit(str1, ":=", 2));
                     strSrc = str3;
@@ -1962,22 +2963,50 @@ std::string compiler(std::string code) {
                         // out .= "cmp " . str2 . ", 0" ... (VM handles signs, skipping)
                     }
                 } else {
-                    // Handles +=, -=, *=
+                    // Handles +=, -=, *=, //=, %=, <<=, >>=, &=, |=, ^=
                     std::string op = "";
                     std::string op_asm = "";
-                    if (InStr(A_LoopField39, " += ")) {
+                    if (InStr(A_LoopField69, " += ")) {
                         op = "+=";
                         op_asm = "add";
                     }
-                    else if (InStr(A_LoopField39, " -= ")) {
+                    else if (InStr(A_LoopField69, " -= ")) {
                         op = "-=";
                         op_asm = "sub";
                     }
-                    else if (InStr(A_LoopField39, " *= ")) {
+                    else if (InStr(A_LoopField69, " *= ")) {
                         op = "*=";
                         op_asm = "mul";
                     }
-                    str1 = Trim(A_LoopField39);
+                    else if (InStr(A_LoopField69, " //= ")) {
+                        op = "//=";
+                        op_asm = "div_floor";
+                    }
+                    else if (InStr(A_LoopField69, " %= ")) {
+                        op = "%=";
+                        op_asm = "mod";
+                    }
+                    else if (InStr(A_LoopField69, " <<= ")) {
+                        op = "<<=";
+                        op_asm = "shl";
+                    }
+                    else if (InStr(A_LoopField69, " >>= ")) {
+                        op = ">>=";
+                        op_asm = "shr";
+                    }
+                    else if (InStr(A_LoopField69, " &= ")) {
+                        op = "&=";
+                        op_asm = "and";
+                    }
+                    else if (InStr(A_LoopField69, " |= ")) {
+                        op = "|=";
+                        op_asm = "or";
+                    }
+                    else if (InStr(A_LoopField69, " ^= ")) {
+                        op = "^=";
+                        op_asm = "xor";
+                    }
+                    str1 = Trim(A_LoopField69);
                     str2 = Trim(StrSplit(str1, op, 1));
                     str3 = Trim(StrSplit(str1, op, 2));
                     strSrc = str3;
@@ -1991,8 +3020,8 @@ std::string compiler(std::string code) {
                 }
             } else {
                 // --- YOUR EXISTING X86 CODE - UNCHANGED ---
-                if (InStr(A_LoopField39, " := ")) {
-                    str1 = Trim(A_LoopField39);
+                if (InStr(A_LoopField69, " := ")) {
+                    str1 = Trim(A_LoopField69);
                     str2 = Trim(StrSplit(str1, ":=", 1));
                     str3 = Trim(StrSplit(str1, ":=", 2));
                     if (RegExMatch(str3, "^\\d+$")) {
@@ -2008,8 +3037,8 @@ std::string compiler(std::string code) {
                         }
                     }
                 }
-                else if (InStr(A_LoopField39, " += ")) {
-                    str1 = Trim(A_LoopField39);
+                else if (InStr(A_LoopField69, " += ")) {
+                    str1 = Trim(A_LoopField69);
                     str2 = Trim(StrSplit(str1, "+=", 1));
                     str3 = Trim(StrSplit(str1, "+=", 2));
                     if (RegExMatch(str3, "^\\d+$")) {
@@ -2025,8 +3054,8 @@ std::string compiler(std::string code) {
                         }
                     }
                 }
-                else if (InStr(A_LoopField39, " *= ")) {
-                    str1 = Trim(A_LoopField39);
+                else if (InStr(A_LoopField69, " *= ")) {
+                    str1 = Trim(A_LoopField69);
                     str2 = Trim(StrSplit(str1, "*=", 1));
                     str3 = Trim(StrSplit(str1, "*=", 2));
                     if (RegExMatch(str3, "^\\d+$")) {
@@ -2045,8 +3074,8 @@ std::string compiler(std::string code) {
                         }
                     }
                 }
-                else if (InStr(A_LoopField39, " -= ")) {
-                    str1 = Trim(A_LoopField39);
+                else if (InStr(A_LoopField69, " -= ")) {
+                    str1 = Trim(A_LoopField69);
                     str2 = Trim(StrSplit(str1, "-=", 1));
                     str3 = Trim(StrSplit(str1, "-=", 2));
                     if (RegExMatch(str3, "^\\d+$")) {
@@ -2062,10 +3091,111 @@ std::string compiler(std::string code) {
                         }
                     }
                 }
+                // ====== THE NEW DIVISION MAGIC ======
+                else if (InStr(A_LoopField69, " //= ")) {
+                    str1 = Trim(A_LoopField69);
+                    str2 = Trim(StrSplit(str1, "//=", 1));
+                    str3 = Trim(StrSplit(str1, "//=", 2));
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "xor rdx, rdx" + Chr(10);
+                    if (RegExMatch(str3, "^\\d+$")) {
+                        out += "mov rdi, " + str3 + Chr(10) + "div rdi" + Chr(10);
+                    } else {
+                        out += "mov rdi, [" + str3 + "]" + Chr(10) + "div rdi" + Chr(10);
+                    }
+                    out += "mov [" + str2 + "], rax" + Chr(10);
+                    if (isNint(str2)) {
+                        out += "lea rdi, [" + str2 + "]" + Chr(10) + "lea rsi, [" + str2 + "_is_negative]" + Chr(10) + "call is_nint_negative" + Chr(10);
+                    }
+                }
+                else if (InStr(A_LoopField69, " %= ")) {
+                    str1 = Trim(A_LoopField69);
+                    str2 = Trim(StrSplit(str1, "%=", 1));
+                    str3 = Trim(StrSplit(str1, "%=", 2));
+                    out += "mov rax, [" + str2 + "]" + Chr(10) + "xor rdx, rdx" + Chr(10);
+                    if (RegExMatch(str3, "^\\d+$")) {
+                        out += "mov rdi, " + str3 + Chr(10) + "div rdi" + Chr(10);
+                    } else {
+                        out += "mov rdi, [" + str3 + "]" + Chr(10) + "div rdi" + Chr(10);
+                    }
+                    out += "mov [" + str2 + "], rdx" + Chr(10);
+                    if (isNint(str2)) {
+                        out += "lea rdi, [" + str2 + "]" + Chr(10) + "lea rsi, [" + str2 + "_is_negative]" + Chr(10) + "call is_nint_negative" + Chr(10);
+                    }
+                }
+                else if (InStr(A_LoopField69, " <<= ")) {
+                    str1 = Trim(A_LoopField69);
+                    str2 = Trim(StrSplit(str1, "<<=", 1));
+                    str3 = Trim(StrSplit(str1, "<<=", 2));
+                    if (RegExMatch(str3, "^\\d+$")) {
+                        out += "shl qword [" + str2 + "], " + str3 + Chr(10);
+                    } else {
+                        out += "mov rdi, [" + str3 + "]" + Chr(10);
+                        out += "shl qword [" + str2 + "], rdi" + Chr(10);
+                    }
+                    if (isNint(str2)) {
+                        out += "lea rdi, [" + str2 + "]" + Chr(10) + "lea rsi, [" + str2 + "_is_negative]" + Chr(10) + "call is_nint_negative" + Chr(10);
+                    }
+                }
+                else if (InStr(A_LoopField69, " >>= ")) {
+                    str1 = Trim(A_LoopField69);
+                    str2 = Trim(StrSplit(str1, ">>=", 1));
+                    str3 = Trim(StrSplit(str1, ">>=", 2));
+                    if (RegExMatch(str3, "^\\d+$")) {
+                        out += "shr qword [" + str2 + "], " + str3 + Chr(10);
+                    } else {
+                        out += "mov rdi, [" + str3 + "]" + Chr(10);
+                        out += "shr qword [" + str2 + "], rdi" + Chr(10);
+                    }
+                    if (isNint(str2)) {
+                        out += "lea rdi, [" + str2 + "]" + Chr(10) + "lea rsi, [" + str2 + "_is_negative]" + Chr(10) + "call is_nint_negative" + Chr(10);
+                    }
+                }
+                else if (InStr(A_LoopField69, " &= ")) {
+                    str1 = Trim(A_LoopField69);
+                    str2 = Trim(StrSplit(str1, "&=", 1));
+                    str3 = Trim(StrSplit(str1, "&=", 2));
+                    if (RegExMatch(str3, "^\\d+$")) {
+                        out += "and qword [" + str2 + "], " + str3 + Chr(10);
+                    } else {
+                        out += "mov rdi, [" + str3 + "]" + Chr(10);
+                        out += "and qword [" + str2 + "], rdi" + Chr(10);
+                    }
+                    if (isNint(str2)) {
+                        out += "lea rdi, [" + str2 + "]" + Chr(10) + "lea rsi, [" + str2 + "_is_negative]" + Chr(10) + "call is_nint_negative" + Chr(10);
+                    }
+                }
+                else if (InStr(A_LoopField69, " |= ")) {
+                    str1 = Trim(A_LoopField69);
+                    str2 = Trim(StrSplit(str1, "|=", 1));
+                    str3 = Trim(StrSplit(str1, "|=", 2));
+                    if (RegExMatch(str3, "^\\d+$")) {
+                        out += "or qword [" + str2 + "], " + str3 + Chr(10);
+                    } else {
+                        out += "mov rdi, [" + str3 + "]" + Chr(10);
+                        out += "or qword [" + str2 + "], rdi" + Chr(10);
+                    }
+                    if (isNint(str2)) {
+                        out += "lea rdi, [" + str2 + "]" + Chr(10) + "lea rsi, [" + str2 + "_is_negative]" + Chr(10) + "call is_nint_negative" + Chr(10);
+                    }
+                }
+                else if (InStr(A_LoopField69, " ^= ")) {
+                    str1 = Trim(A_LoopField69);
+                    str2 = Trim(StrSplit(str1, "^=", 1));
+                    str3 = Trim(StrSplit(str1, "^=", 2));
+                    if (RegExMatch(str3, "^\\d+$")) {
+                        out += "xor qword [" + str2 + "], " + str3 + Chr(10);
+                    } else {
+                        out += "mov rdi, [" + str3 + "]" + Chr(10);
+                        out += "xor qword [" + str2 + "], rdi" + Chr(10);
+                    }
+                    if (isNint(str2)) {
+                        out += "lea rdi, [" + str2 + "]" + Chr(10) + "lea rsi, [" + str2 + "_is_negative]" + Chr(10) + "call is_nint_negative" + Chr(10);
+                    }
+                }
             }
         }
-        else if (InStr(A_LoopField39, "++")) {
-            str1 = Trim(A_LoopField39);
+        else if (InStr(A_LoopField69, "++")) {
+            str1 = Trim(A_LoopField69);
             str1 = StringTrimRight(str1, 2);
             str1 = Trim(str1);
             if (is_arm == 1) {
@@ -2077,8 +3207,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index47 = 0; A_Index47 < HTVM_Size(funcArgsArr); A_Index47++) {
-                            if (Trim(funcArgsArr[A_Index47]) == str1) {
+                        for (int A_Index77 = 0; A_Index77 < HTVM_Size(funcArgsArr); A_Index77++) {
+                            if (Trim(funcArgsArr[A_Index77]) == str1) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -2100,7 +3230,7 @@ std::string compiler(std::string code) {
                 }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (++) ---
                 if (str1 == "rax") {
                     out += "inc r0" + Chr(10);
@@ -2117,8 +3247,8 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (InStr(A_LoopField39, "--")) {
-            str1 = Trim(A_LoopField39);
+        else if (InStr(A_LoopField69, "--")) {
+            str1 = Trim(A_LoopField69);
             str1 = StringTrimRight(str1, 2);
             str1 = Trim(str1);
             if (is_arm == 1) {
@@ -2130,8 +3260,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index48 = 0; A_Index48 < HTVM_Size(funcArgsArr); A_Index48++) {
-                            if (Trim(funcArgsArr[A_Index48]) == str1) {
+                        for (int A_Index78 = 0; A_Index78 < HTVM_Size(funcArgsArr); A_Index78++) {
+                            if (Trim(funcArgsArr[A_Index78]) == str1) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -2153,7 +3283,7 @@ std::string compiler(std::string code) {
                 }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (--) ---
                 if (str1 == "rax") {
                     out += "dec r0" + Chr(10);
@@ -2170,8 +3300,8 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (SubStr(A_LoopField39, 1, 6) == "print(") {
-            str1 = StringTrimLeft(A_LoopField39, 6);
+        else if (SubStr(A_LoopField69, 1, 6) == "print(") {
+            str1 = StringTrimLeft(A_LoopField69, 6);
             str1 = StringTrimRight(str1, 1);
             if (is_arm == 1) {
                 if (str1 == "rax") {
@@ -2207,8 +3337,8 @@ std::string compiler(std::string code) {
                     // --- START FIX ---
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index49 = 0; A_Index49 < HTVM_Size(funcArgsArr); A_Index49++) {
-                            if (Trim(str1) == funcArgsArr[A_Index49]) {
+                        for (int A_Index79 = 0; A_Index79 < HTVM_Size(funcArgsArr); A_Index79++) {
+                            if (Trim(str1) == funcArgsArr[A_Index79]) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -2236,7 +3366,7 @@ std::string compiler(std::string code) {
                 }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (print) ---
                 if (str1 == "rax") {
                     out += "mov r1, r0" + Chr(10);
@@ -2273,13 +3403,13 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (Trim(A_LoopField39) == "print_rax_as_char") {
+        else if (Trim(A_LoopField69) == "print_rax_as_char") {
             if (is_arm == 1) {
                 // rax maps to x0, which is already the first argument for print_char
                 out += "    bl print_char" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // rax maps to r0. print_char likely expects argument in r1 (standard convention)
                 // or if your VM has a specific 'print_char' that takes r0, adjust accordingly.
                 // Assuming r1 is the argument register for syscalls:
@@ -2289,212 +3419,217 @@ std::string compiler(std::string code) {
                 out += "mov rdi, rax" + Chr(10) + "push rcx" + Chr(10) + "call print_char" + Chr(10) + "pop rcx" + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "continue" || StrLower(Trim(A_LoopField39)) == "continue1") {
+        else if (StrLower(Trim(A_LoopField69)) == "continue" || StrLower(Trim(A_LoopField69)) == "continue1") {
             if (is_arm == 1) {
                 out += "    b .cloop1_end" + STR(loopCount1) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // Oryx uses 'jmp' just like x86
                 out += "jmp cloop1_end" + STR(loopCount1) + Chr(10);
             } else {
                 out += "jmp .cloop1_end" + STR(loopCount1) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "continue2") {
+        else if (StrLower(Trim(A_LoopField69)) == "continue2") {
             if (is_arm == 1) {
                 out += "    b .cloop2_end" + STR(loopCount2) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp cloop2_end" + STR(loopCount2) + Chr(10);
             } else {
                 out += "jmp .cloop2_end" + STR(loopCount2) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "continue3") {
+        else if (StrLower(Trim(A_LoopField69)) == "continue3") {
             if (is_arm == 1) {
                 out += "    b .cloop3_end" + STR(loopCount3) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp cloop3_end" + STR(loopCount3) + Chr(10);
             } else {
                 out += "jmp .cloop3_end" + STR(loopCount3) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "continue4") {
+        else if (StrLower(Trim(A_LoopField69)) == "continue4") {
             if (is_arm == 1) {
                 out += "    b .cloop4_end" + STR(loopCount4) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp cloop4_end" + STR(loopCount4) + Chr(10);
             } else {
                 out += "jmp .cloop4_end" + STR(loopCount4) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "continue5") {
+        else if (StrLower(Trim(A_LoopField69)) == "continue5") {
             if (is_arm == 1) {
                 out += "    b .cloop5_end" + STR(loopCount5) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp cloop5_end" + STR(loopCount5) + Chr(10);
             } else {
                 out += "jmp .cloop5_end" + STR(loopCount5) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "continue6") {
+        else if (StrLower(Trim(A_LoopField69)) == "continue6") {
             if (is_arm == 1) {
                 out += "    b .cloop6_end" + STR(loopCount6) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp cloop6_end" + STR(loopCount6) + Chr(10);
             } else {
                 out += "jmp .cloop6_end" + STR(loopCount6) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "continue7") {
+        else if (StrLower(Trim(A_LoopField69)) == "continue7") {
             if (is_arm == 1) {
                 out += "    b .cloop7_end" + STR(loopCount7) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp cloop7_end" + STR(loopCount7) + Chr(10);
             } else {
                 out += "jmp .cloop7_end" + STR(loopCount7) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "continue8") {
+        else if (StrLower(Trim(A_LoopField69)) == "continue8") {
             if (is_arm == 1) {
                 out += "    b .cloop8_end" + STR(loopCount8) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp cloop8_end" + STR(loopCount8) + Chr(10);
             } else {
                 out += "jmp .cloop8_end" + STR(loopCount8) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "continue9") {
+        else if (StrLower(Trim(A_LoopField69)) == "continue9") {
             if (is_arm == 1) {
                 out += "    b .cloop9_end" + STR(loopCount9) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp cloop9_end" + STR(loopCount9) + Chr(10);
             } else {
                 out += "jmp .cloop9_end" + STR(loopCount9) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "break" || StrLower(Trim(A_LoopField39)) == "break1") {
+        else if (StrLower(Trim(A_LoopField69)) == "break" || StrLower(Trim(A_LoopField69)) == "break1") {
             if (is_arm == 1) {
                 out += "    b .loop1_end" + STR(loopCount1) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp loop1_end" + STR(loopCount1) + Chr(10);
             } else {
                 out += "jmp .loop1_end" + STR(loopCount1) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "break2") {
+        else if (StrLower(Trim(A_LoopField69)) == "break2") {
             if (is_arm == 1) {
                 out += "    b .loop2_end" + STR(loopCount2) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp loop2_end" + STR(loopCount2) + Chr(10);
             } else {
                 out += "jmp .loop2_end" + STR(loopCount2) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "break3") {
+        else if (StrLower(Trim(A_LoopField69)) == "break3") {
             if (is_arm == 1) {
                 out += "    b .loop3_end" + STR(loopCount3) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp loop3_end" + STR(loopCount3) + Chr(10);
             } else {
                 out += "jmp .loop3_end" + STR(loopCount3) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "break4") {
+        else if (StrLower(Trim(A_LoopField69)) == "break4") {
             if (is_arm == 1) {
                 out += "    b .loop4_end" + STR(loopCount4) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp loop4_end" + STR(loopCount4) + Chr(10);
             } else {
                 out += "jmp .loop4_end" + STR(loopCount4) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "break5") {
+        else if (StrLower(Trim(A_LoopField69)) == "break5") {
             if (is_arm == 1) {
                 out += "    b .loop5_end" + STR(loopCount5) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp loop5_end" + STR(loopCount5) + Chr(10);
             } else {
                 out += "jmp .loop5_end" + STR(loopCount5) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "break6") {
+        else if (StrLower(Trim(A_LoopField69)) == "break6") {
             if (is_arm == 1) {
                 out += "    b .loop6_end" + STR(loopCount6) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp loop6_end" + STR(loopCount6) + Chr(10);
             } else {
                 out += "jmp .loop6_end" + STR(loopCount6) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "break7") {
+        else if (StrLower(Trim(A_LoopField69)) == "break7") {
             if (is_arm == 1) {
                 out += "    b .loop7_end" + STR(loopCount7) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp loop7_end" + STR(loopCount7) + Chr(10);
             } else {
                 out += "jmp .loop7_end" + STR(loopCount7) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "break8") {
+        else if (StrLower(Trim(A_LoopField69)) == "break8") {
             if (is_arm == 1) {
                 out += "    b .loop8_end" + STR(loopCount8) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp loop8_end" + STR(loopCount8) + Chr(10);
             } else {
                 out += "jmp .loop8_end" + STR(loopCount8) + Chr(10);
             }
         }
-        else if (StrLower(Trim(A_LoopField39)) == "break9") {
+        else if (StrLower(Trim(A_LoopField69)) == "break9") {
             if (is_arm == 1) {
                 out += "    b .loop9_end" + STR(loopCount9) + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp loop9_end" + STR(loopCount9) + Chr(10);
             } else {
                 out += "jmp .loop9_end" + STR(loopCount9) + Chr(10);
             }
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 6) == "loop, " || SubStr(StrLower(A_LoopField39), 1, 7) == "loop1, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField39), 6));
+        else if (SubStr(StrLower(A_LoopField69), 1, 6) == "loop, " || SubStr(StrLower(A_LoopField69), 1, 7) == "loop1, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField69), 6));
+            is_inf_loop = 0;
             if (is_arm == 1) {
                 out += "    stp x19, x20, [sp, #-16]!" + Chr(10);
                 out += "    mov x20, xzr" + Chr(10);
                 if (Trim(str1) == "rax") {
                     out += "    mov x19, x0" + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
+                    out += "    mov x19, #0" + Chr(10);
                 }
                 else if (RegExMatch(str1, "^\\d+$")) {
                     out += "    mov x19, #" + str1 + Chr(10);
@@ -2504,8 +3639,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index50 = 0; A_Index50 < HTVM_Size(funcArgsArr); A_Index50++) {
-                            if (Trim(funcArgsArr[A_Index50]) == str1) {
+                        for (int A_Index80 = 0; A_Index80 < HTVM_Size(funcArgsArr); A_Index80++) {
+                            if (Trim(funcArgsArr[A_Index80]) == str1) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -2517,10 +3652,14 @@ std::string compiler(std::string code) {
                         out += "    ldr x9, =" + str1 + Chr(10) + "    ldr x19, [x9]" + Chr(10);
                     }
                 }
-                out += ".loop1_" + STR(loopCount1) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop1_end" + STR(loopCount1) + Chr(10);
+                if (is_inf_loop == 1) {
+                    out += ".loop1_" + STR(loopCount1) + ":" + Chr(10);
+                } else {
+                    out += ".loop1_" + STR(loopCount1) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop1_end" + STR(loopCount1) + Chr(10);
+                }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (Loop 1) ---
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
@@ -2528,30 +3667,38 @@ std::string compiler(std::string code) {
                 if (str1 == "rax") {
                     strSrc = "r0";
                 }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
+                }
                 else if (str1 == "A_Index") {
                     strSrc = "r20";
                 }
                 out += "mov r90, " + strSrc + Chr(10);
                 out += "mov r91, 0" + Chr(10);
                 out += "loop1_" + STR(loopCount1) + ":" + Chr(10);
-                out += "cmp r91, r90" + Chr(10);
-                out += "jge loop1_end" + STR(loopCount1) + Chr(10);
+                if (is_inf_loop != 1) {
+                    out += "cmp r91, r90" + Chr(10);
+                    out += "jge loop1_end" + STR(loopCount1) + Chr(10);
+                }
                 // Update A_Index alias (r20) to current loop iterator (r91)
                 out += "mov r20, r91" + Chr(10);
             } else {
                 if (RegExMatch(str1, "^\\d+$")) {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop1_" + STR(loopCount1) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop1_end" + STR(loopCount1) + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, 0" + Chr(10) + ".loop1_" + STR(loopCount1) + ":" + Chr(10);
                 } else {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop1_" + STR(loopCount1) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop1_end" + STR(loopCount1) + Chr(10);
                 }
             }
         }
-        else if (Trim(A_LoopField39) == "loopend" || Trim(A_LoopField39) == "endloop" || Trim(A_LoopField39) == "loopend1" || Trim(A_LoopField39) == "endloop1") {
+        else if (Trim(A_LoopField69) == "loopend" || Trim(A_LoopField69) == "endloop" || Trim(A_LoopField69) == "loopend1" || Trim(A_LoopField69) == "endloop1") {
             if (is_arm == 1) {
                 out += ".cloop1_end" + STR(loopCount1) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop1_" + STR(loopCount1) + Chr(10) + ".loop1_end" + STR(loopCount1) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (Loop 1 End) ---
                 out += "cloop1_end" + STR(loopCount1) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -2564,13 +3711,18 @@ std::string compiler(std::string code) {
             }
             loopCount1++;
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 7) == "loop2, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField39), 7));
+        else if (SubStr(StrLower(A_LoopField69), 1, 7) == "loop2, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField69), 7));
+            is_inf_loop = 0;
             if (is_arm == 1) {
                 out += "    stp x19, x20, [sp, #-16]!" + Chr(10);
                 out += "    mov x20, xzr" + Chr(10);
                 if (Trim(str1) == "rax") {
                     out += "    mov x19, x0" + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
+                    out += "    mov x19, #0" + Chr(10);
                 }
                 else if (RegExMatch(str1, "^\\d+$")) {
                     out += "    mov x19, #" + str1 + Chr(10);
@@ -2580,8 +3732,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index51 = 0; A_Index51 < HTVM_Size(funcArgsArr); A_Index51++) {
-                            if (Trim(funcArgsArr[A_Index51]) == str1) {
+                        for (int A_Index81 = 0; A_Index81 < HTVM_Size(funcArgsArr); A_Index81++) {
+                            if (Trim(funcArgsArr[A_Index81]) == str1) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -2593,17 +3745,22 @@ std::string compiler(std::string code) {
                         out += "    ldr x9, =" + str1 + Chr(10) + "    ldr x19, [x9]" + Chr(10);
                     }
                 }
-                out += ".loop2_" + STR(loopCount2) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop2_end" + STR(loopCount2) + Chr(10);
+                if (is_inf_loop == 1) {
+                    out += ".loop2_" + STR(loopCount2) + ":" + Chr(10);
+                } else {
+                    out += ".loop2_" + STR(loopCount2) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop2_end" + STR(loopCount2) + Chr(10);
+                }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
-                // --- ORYX IR (Loop 2) ---
-                // Reuse r90 (Limit) and r91 (Iterator), save previous values to stack
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
                 strSrc = str1;
                 if (str1 == "rax") {
                     strSrc = "r0";
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
                 }
                 else if (str1 == "A_Index") {
                     strSrc = "r20";
@@ -2611,24 +3768,28 @@ std::string compiler(std::string code) {
                 out += "mov r90, " + strSrc + Chr(10);
                 out += "mov r91, 0" + Chr(10);
                 out += "loop2_" + STR(loopCount2) + ":" + Chr(10);
-                out += "cmp r91, r90" + Chr(10);
-                out += "jge loop2_end" + STR(loopCount2) + Chr(10);
-                // Update A_Index alias (r20) to current loop iterator
+                if (is_inf_loop != 1) {
+                    out += "cmp r91, r90" + Chr(10);
+                    out += "jge loop2_end" + STR(loopCount2) + Chr(10);
+                }
                 out += "mov r20, r91" + Chr(10);
             } else {
                 if (RegExMatch(str1, "^\\d+$")) {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop2_" + STR(loopCount2) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop2_end" + STR(loopCount2) + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, 0" + Chr(10) + ".loop2_" + STR(loopCount2) + ":" + Chr(10);
                 } else {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop2_" + STR(loopCount2) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop2_end" + STR(loopCount2) + Chr(10);
                 }
             }
         }
-        else if (Trim(A_LoopField39) == "loopend2" || Trim(A_LoopField39) == "endloop2") {
+        else if (Trim(A_LoopField69) == "loopend2" || Trim(A_LoopField69) == "endloop2") {
             if (is_arm == 1) {
                 out += ".cloop2_end" + STR(loopCount2) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop2_" + STR(loopCount2) + Chr(10) + ".loop2_end" + STR(loopCount2) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (Loop 2 End) ---
                 out += "cloop2_end" + STR(loopCount2) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -2643,13 +3804,18 @@ std::string compiler(std::string code) {
             }
             loopCount2++;
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 7) == "loop3, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField39), 7));
+        else if (SubStr(StrLower(A_LoopField69), 1, 7) == "loop3, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField69), 7));
+            is_inf_loop = 0;
             if (is_arm == 1) {
                 out += "    stp x19, x20, [sp, #-16]!" + Chr(10);
                 out += "    mov x20, xzr" + Chr(10);
                 if (Trim(str1) == "rax") {
                     out += "    mov x19, x0" + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
+                    out += "    mov x19, #0" + Chr(10);
                 }
                 else if (RegExMatch(str1, "^\\d+$")) {
                     out += "    mov x19, #" + str1 + Chr(10);
@@ -2659,8 +3825,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index52 = 0; A_Index52 < HTVM_Size(funcArgsArr); A_Index52++) {
-                            if (Trim(funcArgsArr[A_Index52]) == str1) {
+                        for (int A_Index82 = 0; A_Index82 < HTVM_Size(funcArgsArr); A_Index82++) {
+                            if (Trim(funcArgsArr[A_Index82]) == str1) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -2672,16 +3838,22 @@ std::string compiler(std::string code) {
                         out += "    ldr x9, =" + str1 + Chr(10) + "    ldr x19, [x9]" + Chr(10);
                     }
                 }
-                out += ".loop3_" + STR(loopCount3) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop3_end" + STR(loopCount3) + Chr(10);
+                if (is_inf_loop == 1) {
+                    out += ".loop3_" + STR(loopCount3) + ":" + Chr(10);
+                } else {
+                    out += ".loop3_" + STR(loopCount3) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop3_end" + STR(loopCount3) + Chr(10);
+                }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
-                // --- ORYX IR (Loop 3) ---
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
                 strSrc = str1;
                 if (str1 == "rax") {
                     strSrc = "r0";
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
                 }
                 else if (str1 == "A_Index") {
                     strSrc = "r20";
@@ -2689,23 +3861,28 @@ std::string compiler(std::string code) {
                 out += "mov r90, " + strSrc + Chr(10);
                 out += "mov r91, 0" + Chr(10);
                 out += "loop3_" + STR(loopCount3) + ":" + Chr(10);
-                out += "cmp r91, r90" + Chr(10);
-                out += "jge loop3_end" + STR(loopCount3) + Chr(10);
+                if (is_inf_loop != 1) {
+                    out += "cmp r91, r90" + Chr(10);
+                    out += "jge loop3_end" + STR(loopCount3) + Chr(10);
+                }
                 out += "mov r20, r91" + Chr(10);
             } else {
                 if (RegExMatch(str1, "^\\d+$")) {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop3_" + STR(loopCount3) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop3_end" + STR(loopCount3) + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, 0" + Chr(10) + ".loop3_" + STR(loopCount3) + ":" + Chr(10);
                 } else {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop3_" + STR(loopCount3) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop3_end" + STR(loopCount3) + Chr(10);
                 }
             }
         }
-        else if (Trim(A_LoopField39) == "loopend3" || Trim(A_LoopField39) == "endloop3") {
+        else if (Trim(A_LoopField69) == "loopend3" || Trim(A_LoopField69) == "endloop3") {
             if (is_arm == 1) {
                 out += ".cloop3_end" + STR(loopCount3) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop3_" + STR(loopCount3) + Chr(10) + ".loop3_end" + STR(loopCount3) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (Loop 3 End) ---
                 out += "cloop3_end" + STR(loopCount3) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -2719,13 +3896,18 @@ std::string compiler(std::string code) {
             }
             loopCount3++;
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 7) == "loop4, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField39), 7));
+        else if (SubStr(StrLower(A_LoopField69), 1, 7) == "loop4, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField69), 7));
+            is_inf_loop = 0;
             if (is_arm == 1) {
                 out += "    stp x19, x20, [sp, #-16]!" + Chr(10);
                 out += "    mov x20, xzr" + Chr(10);
                 if (Trim(str1) == "rax") {
                     out += "    mov x19, x0" + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
+                    out += "    mov x19, #0" + Chr(10);
                 }
                 else if (RegExMatch(str1, "^\\d+$")) {
                     out += "    mov x19, #" + str1 + Chr(10);
@@ -2735,8 +3917,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index53 = 0; A_Index53 < HTVM_Size(funcArgsArr); A_Index53++) {
-                            if (Trim(funcArgsArr[A_Index53]) == str1) {
+                        for (int A_Index83 = 0; A_Index83 < HTVM_Size(funcArgsArr); A_Index83++) {
+                            if (Trim(funcArgsArr[A_Index83]) == str1) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -2748,16 +3930,22 @@ std::string compiler(std::string code) {
                         out += "    ldr x9, =" + str1 + Chr(10) + "    ldr x19, [x9]" + Chr(10);
                     }
                 }
-                out += ".loop4_" + STR(loopCount4) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop4_end" + STR(loopCount4) + Chr(10);
+                if (is_inf_loop == 1) {
+                    out += ".loop4_" + STR(loopCount4) + ":" + Chr(10);
+                } else {
+                    out += ".loop4_" + STR(loopCount4) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop4_end" + STR(loopCount4) + Chr(10);
+                }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
-                // --- ORYX IR (Loop 4) ---
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
                 strSrc = str1;
                 if (str1 == "rax") {
                     strSrc = "r0";
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
                 }
                 else if (str1 == "A_Index") {
                     strSrc = "r20";
@@ -2765,23 +3953,28 @@ std::string compiler(std::string code) {
                 out += "mov r90, " + strSrc + Chr(10);
                 out += "mov r91, 0" + Chr(10);
                 out += "loop4_" + STR(loopCount4) + ":" + Chr(10);
-                out += "cmp r91, r90" + Chr(10);
-                out += "jge loop4_end" + STR(loopCount4) + Chr(10);
+                if (is_inf_loop != 1) {
+                    out += "cmp r91, r90" + Chr(10);
+                    out += "jge loop4_end" + STR(loopCount4) + Chr(10);
+                }
                 out += "mov r20, r91" + Chr(10);
             } else {
                 if (RegExMatch(str1, "^\\d+$")) {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop4_" + STR(loopCount4) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop4_end" + STR(loopCount4) + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, 0" + Chr(10) + ".loop4_" + STR(loopCount4) + ":" + Chr(10);
                 } else {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop4_" + STR(loopCount4) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop4_end" + STR(loopCount4) + Chr(10);
                 }
             }
         }
-        else if (Trim(A_LoopField39) == "loopend4" || Trim(A_LoopField39) == "endloop4") {
+        else if (Trim(A_LoopField69) == "loopend4" || Trim(A_LoopField69) == "endloop4") {
             if (is_arm == 1) {
                 out += ".cloop4_end" + STR(loopCount4) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop4_" + STR(loopCount4) + Chr(10) + ".loop4_end" + STR(loopCount4) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (Loop 4 End) ---
                 out += "cloop4_end" + STR(loopCount4) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -2795,13 +3988,18 @@ std::string compiler(std::string code) {
             }
             loopCount4++;
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 7) == "loop5, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField39), 7));
+        else if (SubStr(StrLower(A_LoopField69), 1, 7) == "loop5, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField69), 7));
+            is_inf_loop = 0;
             if (is_arm == 1) {
                 out += "    stp x19, x20, [sp, #-16]!" + Chr(10);
                 out += "    mov x20, xzr" + Chr(10);
                 if (Trim(str1) == "rax") {
                     out += "    mov x19, x0" + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
+                    out += "    mov x19, #0" + Chr(10);
                 }
                 else if (RegExMatch(str1, "^\\d+$")) {
                     out += "    mov x19, #" + str1 + Chr(10);
@@ -2811,8 +4009,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index54 = 0; A_Index54 < HTVM_Size(funcArgsArr); A_Index54++) {
-                            if (Trim(funcArgsArr[A_Index54]) == str1) {
+                        for (int A_Index84 = 0; A_Index84 < HTVM_Size(funcArgsArr); A_Index84++) {
+                            if (Trim(funcArgsArr[A_Index84]) == str1) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -2824,16 +4022,22 @@ std::string compiler(std::string code) {
                         out += "    ldr x9, =" + str1 + Chr(10) + "    ldr x19, [x9]" + Chr(10);
                     }
                 }
-                out += ".loop5_" + STR(loopCount5) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop5_end" + STR(loopCount5) + Chr(10);
+                if (is_inf_loop == 1) {
+                    out += ".loop5_" + STR(loopCount5) + ":" + Chr(10);
+                } else {
+                    out += ".loop5_" + STR(loopCount5) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop5_end" + STR(loopCount5) + Chr(10);
+                }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
-                // --- ORYX IR (Loop 5) ---
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
                 strSrc = str1;
                 if (str1 == "rax") {
                     strSrc = "r0";
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
                 }
                 else if (str1 == "A_Index") {
                     strSrc = "r20";
@@ -2841,23 +4045,28 @@ std::string compiler(std::string code) {
                 out += "mov r90, " + strSrc + Chr(10);
                 out += "mov r91, 0" + Chr(10);
                 out += "loop5_" + STR(loopCount5) + ":" + Chr(10);
-                out += "cmp r91, r90" + Chr(10);
-                out += "jge loop5_end" + STR(loopCount5) + Chr(10);
+                if (is_inf_loop != 1) {
+                    out += "cmp r91, r90" + Chr(10);
+                    out += "jge loop5_end" + STR(loopCount5) + Chr(10);
+                }
                 out += "mov r20, r91" + Chr(10);
             } else {
                 if (RegExMatch(str1, "^\\d+$")) {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop5_" + STR(loopCount5) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop5_end" + STR(loopCount5) + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, 0" + Chr(10) + ".loop5_" + STR(loopCount5) + ":" + Chr(10);
                 } else {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop5_" + STR(loopCount5) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop5_end" + STR(loopCount5) + Chr(10);
                 }
             }
         }
-        else if (Trim(A_LoopField39) == "loopend5" || Trim(A_LoopField39) == "endloop5") {
+        else if (Trim(A_LoopField69) == "loopend5" || Trim(A_LoopField69) == "endloop5") {
             if (is_arm == 1) {
                 out += ".cloop5_end" + STR(loopCount5) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop5_" + STR(loopCount5) + Chr(10) + ".loop5_end" + STR(loopCount5) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (Loop 5 End) ---
                 out += "cloop5_end" + STR(loopCount5) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -2871,13 +4080,18 @@ std::string compiler(std::string code) {
             }
             loopCount5++;
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 7) == "loop6, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField39), 7));
+        else if (SubStr(StrLower(A_LoopField69), 1, 7) == "loop6, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField69), 7));
+            is_inf_loop = 0;
             if (is_arm == 1) {
                 out += "    stp x19, x20, [sp, #-16]!" + Chr(10);
                 out += "    mov x20, xzr" + Chr(10);
                 if (Trim(str1) == "rax") {
                     out += "    mov x19, x0" + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
+                    out += "    mov x19, #0" + Chr(10);
                 }
                 else if (RegExMatch(str1, "^\\d+$")) {
                     out += "    mov x19, #" + str1 + Chr(10);
@@ -2887,8 +4101,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index55 = 0; A_Index55 < HTVM_Size(funcArgsArr); A_Index55++) {
-                            if (Trim(funcArgsArr[A_Index55]) == str1) {
+                        for (int A_Index85 = 0; A_Index85 < HTVM_Size(funcArgsArr); A_Index85++) {
+                            if (Trim(funcArgsArr[A_Index85]) == str1) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -2900,16 +4114,22 @@ std::string compiler(std::string code) {
                         out += "    ldr x9, =" + str1 + Chr(10) + "    ldr x19, [x9]" + Chr(10);
                     }
                 }
-                out += ".loop6_" + STR(loopCount6) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop6_end" + STR(loopCount6) + Chr(10);
+                if (is_inf_loop == 1) {
+                    out += ".loop6_" + STR(loopCount6) + ":" + Chr(10);
+                } else {
+                    out += ".loop6_" + STR(loopCount6) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop6_end" + STR(loopCount6) + Chr(10);
+                }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
-                // --- ORYX IR (Loop 6) ---
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
                 strSrc = str1;
                 if (str1 == "rax") {
                     strSrc = "r0";
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
                 }
                 else if (str1 == "A_Index") {
                     strSrc = "r20";
@@ -2917,23 +4137,28 @@ std::string compiler(std::string code) {
                 out += "mov r90, " + strSrc + Chr(10);
                 out += "mov r91, 0" + Chr(10);
                 out += "loop6_" + STR(loopCount6) + ":" + Chr(10);
-                out += "cmp r91, r90" + Chr(10);
-                out += "jge loop6_end" + STR(loopCount6) + Chr(10);
+                if (is_inf_loop != 1) {
+                    out += "cmp r91, r90" + Chr(10);
+                    out += "jge loop6_end" + STR(loopCount6) + Chr(10);
+                }
                 out += "mov r20, r91" + Chr(10);
             } else {
                 if (RegExMatch(str1, "^\\d+$")) {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop6_" + STR(loopCount6) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop6_end" + STR(loopCount6) + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, 0" + Chr(10) + ".loop6_" + STR(loopCount6) + ":" + Chr(10);
                 } else {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop6_" + STR(loopCount6) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop6_end" + STR(loopCount6) + Chr(10);
                 }
             }
         }
-        else if (Trim(A_LoopField39) == "loopend6" || Trim(A_LoopField39) == "endloop6") {
+        else if (Trim(A_LoopField69) == "loopend6" || Trim(A_LoopField69) == "endloop6") {
             if (is_arm == 1) {
                 out += ".cloop6_end" + STR(loopCount6) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop6_" + STR(loopCount6) + Chr(10) + ".loop6_end" + STR(loopCount6) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (Loop 6 End) ---
                 out += "cloop6_end" + STR(loopCount6) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -2947,13 +4172,18 @@ std::string compiler(std::string code) {
             }
             loopCount6++;
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 7) == "loop7, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField39), 7));
+        else if (SubStr(StrLower(A_LoopField69), 1, 7) == "loop7, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField69), 7));
+            is_inf_loop = 0;
             if (is_arm == 1) {
                 out += "    stp x19, x20, [sp, #-16]!" + Chr(10);
                 out += "    mov x20, xzr" + Chr(10);
                 if (Trim(str1) == "rax") {
                     out += "    mov x19, x0" + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
+                    out += "    mov x19, #0" + Chr(10);
                 }
                 else if (RegExMatch(str1, "^\\d+$")) {
                     out += "    mov x19, #" + str1 + Chr(10);
@@ -2963,8 +4193,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index56 = 0; A_Index56 < HTVM_Size(funcArgsArr); A_Index56++) {
-                            if (Trim(funcArgsArr[A_Index56]) == str1) {
+                        for (int A_Index86 = 0; A_Index86 < HTVM_Size(funcArgsArr); A_Index86++) {
+                            if (Trim(funcArgsArr[A_Index86]) == str1) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -2976,16 +4206,22 @@ std::string compiler(std::string code) {
                         out += "    ldr x9, =" + str1 + Chr(10) + "    ldr x19, [x9]" + Chr(10);
                     }
                 }
-                out += ".loop7_" + STR(loopCount7) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop7_end" + STR(loopCount7) + Chr(10);
+                if (is_inf_loop == 1) {
+                    out += ".loop7_" + STR(loopCount7) + ":" + Chr(10);
+                } else {
+                    out += ".loop7_" + STR(loopCount7) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop7_end" + STR(loopCount7) + Chr(10);
+                }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
-                // --- ORYX IR (Loop 7) ---
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
                 strSrc = str1;
                 if (str1 == "rax") {
                     strSrc = "r0";
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
                 }
                 else if (str1 == "A_Index") {
                     strSrc = "r20";
@@ -2993,23 +4229,28 @@ std::string compiler(std::string code) {
                 out += "mov r90, " + strSrc + Chr(10);
                 out += "mov r91, 0" + Chr(10);
                 out += "loop7_" + STR(loopCount7) + ":" + Chr(10);
-                out += "cmp r91, r90" + Chr(10);
-                out += "jge loop7_end" + STR(loopCount7) + Chr(10);
+                if (is_inf_loop != 1) {
+                    out += "cmp r91, r90" + Chr(10);
+                    out += "jge loop7_end" + STR(loopCount7) + Chr(10);
+                }
                 out += "mov r20, r91" + Chr(10);
             } else {
                 if (RegExMatch(str1, "^\\d+$")) {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop7_" + STR(loopCount7) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop7_end" + STR(loopCount7) + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, 0" + Chr(10) + ".loop7_" + STR(loopCount7) + ":" + Chr(10);
                 } else {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop7_" + STR(loopCount7) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop7_end" + STR(loopCount7) + Chr(10);
                 }
             }
         }
-        else if (Trim(A_LoopField39) == "loopend7" || Trim(A_LoopField39) == "endloop7") {
+        else if (Trim(A_LoopField69) == "loopend7" || Trim(A_LoopField69) == "endloop7") {
             if (is_arm == 1) {
                 out += ".cloop7_end" + STR(loopCount7) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop7_" + STR(loopCount7) + Chr(10) + ".loop7_end" + STR(loopCount7) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (Loop 7 End) ---
                 out += "cloop7_end" + STR(loopCount7) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -3023,13 +4264,18 @@ std::string compiler(std::string code) {
             }
             loopCount7++;
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 7) == "loop8, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField39), 7));
+        else if (SubStr(StrLower(A_LoopField69), 1, 7) == "loop8, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField69), 7));
+            is_inf_loop = 0;
             if (is_arm == 1) {
                 out += "    stp x19, x20, [sp, #-16]!" + Chr(10);
                 out += "    mov x20, xzr" + Chr(10);
                 if (Trim(str1) == "rax") {
                     out += "    mov x19, x0" + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
+                    out += "    mov x19, #0" + Chr(10);
                 }
                 else if (RegExMatch(str1, "^\\d+$")) {
                     out += "    mov x19, #" + str1 + Chr(10);
@@ -3039,8 +4285,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index57 = 0; A_Index57 < HTVM_Size(funcArgsArr); A_Index57++) {
-                            if (Trim(funcArgsArr[A_Index57]) == str1) {
+                        for (int A_Index87 = 0; A_Index87 < HTVM_Size(funcArgsArr); A_Index87++) {
+                            if (Trim(funcArgsArr[A_Index87]) == str1) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -3052,16 +4298,22 @@ std::string compiler(std::string code) {
                         out += "    ldr x9, =" + str1 + Chr(10) + "    ldr x19, [x9]" + Chr(10);
                     }
                 }
-                out += ".loop8_" + STR(loopCount8) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop8_end" + STR(loopCount8) + Chr(10);
+                if (is_inf_loop == 1) {
+                    out += ".loop8_" + STR(loopCount8) + ":" + Chr(10);
+                } else {
+                    out += ".loop8_" + STR(loopCount8) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop8_end" + STR(loopCount8) + Chr(10);
+                }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
-                // --- ORYX IR (Loop 8) ---
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
                 strSrc = str1;
                 if (str1 == "rax") {
                     strSrc = "r0";
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
                 }
                 else if (str1 == "A_Index") {
                     strSrc = "r20";
@@ -3069,23 +4321,28 @@ std::string compiler(std::string code) {
                 out += "mov r90, " + strSrc + Chr(10);
                 out += "mov r91, 0" + Chr(10);
                 out += "loop8_" + STR(loopCount8) + ":" + Chr(10);
-                out += "cmp r91, r90" + Chr(10);
-                out += "jge loop8_end" + STR(loopCount8) + Chr(10);
+                if (is_inf_loop != 1) {
+                    out += "cmp r91, r90" + Chr(10);
+                    out += "jge loop8_end" + STR(loopCount8) + Chr(10);
+                }
                 out += "mov r20, r91" + Chr(10);
             } else {
                 if (RegExMatch(str1, "^\\d+$")) {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop8_" + STR(loopCount8) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop8_end" + STR(loopCount8) + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, 0" + Chr(10) + ".loop8_" + STR(loopCount8) + ":" + Chr(10);
                 } else {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop8_" + STR(loopCount8) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop8_end" + STR(loopCount8) + Chr(10);
                 }
             }
         }
-        else if (Trim(A_LoopField39) == "loopend8" || Trim(A_LoopField39) == "endloop8") {
+        else if (Trim(A_LoopField69) == "loopend8" || Trim(A_LoopField69) == "endloop8") {
             if (is_arm == 1) {
                 out += ".cloop8_end" + STR(loopCount8) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop8_" + STR(loopCount8) + Chr(10) + ".loop8_end" + STR(loopCount8) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (Loop 8 End) ---
                 out += "cloop8_end" + STR(loopCount8) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -3099,13 +4356,18 @@ std::string compiler(std::string code) {
             }
             loopCount8++;
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 7) == "loop9, ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField39), 7));
+        else if (SubStr(StrLower(A_LoopField69), 1, 7) == "loop9, ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField69), 7));
+            is_inf_loop = 0;
             if (is_arm == 1) {
                 out += "    stp x19, x20, [sp, #-16]!" + Chr(10);
                 out += "    mov x20, xzr" + Chr(10);
                 if (Trim(str1) == "rax") {
                     out += "    mov x19, x0" + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
+                    out += "    mov x19, #0" + Chr(10);
                 }
                 else if (RegExMatch(str1, "^\\d+$")) {
                     out += "    mov x19, #" + str1 + Chr(10);
@@ -3115,8 +4377,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index58 = 0; A_Index58 < HTVM_Size(funcArgsArr); A_Index58++) {
-                            if (Trim(funcArgsArr[A_Index58]) == str1) {
+                        for (int A_Index88 = 0; A_Index88 < HTVM_Size(funcArgsArr); A_Index88++) {
+                            if (Trim(funcArgsArr[A_Index88]) == str1) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -3128,16 +4390,22 @@ std::string compiler(std::string code) {
                         out += "    ldr x9, =" + str1 + Chr(10) + "    ldr x19, [x9]" + Chr(10);
                     }
                 }
-                out += ".loop9_" + STR(loopCount9) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop9_end" + STR(loopCount9) + Chr(10);
+                if (is_inf_loop == 1) {
+                    out += ".loop9_" + STR(loopCount9) + ":" + Chr(10);
+                } else {
+                    out += ".loop9_" + STR(loopCount9) + ":" + Chr(10) + "    cmp x19, #0" + Chr(10) + "    b.eq .loop9_end" + STR(loopCount9) + Chr(10);
+                }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
-                // --- ORYX IR (Loop 9) ---
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "push r90" + Chr(10);
                 out += "push r91" + Chr(10);
                 strSrc = str1;
                 if (str1 == "rax") {
                     strSrc = "r0";
+                }
+                else if (str1 == "-1") {
+                    is_inf_loop = 1;
                 }
                 else if (str1 == "A_Index") {
                     strSrc = "r20";
@@ -3145,23 +4413,28 @@ std::string compiler(std::string code) {
                 out += "mov r90, " + strSrc + Chr(10);
                 out += "mov r91, 0" + Chr(10);
                 out += "loop9_" + STR(loopCount9) + ":" + Chr(10);
-                out += "cmp r91, r90" + Chr(10);
-                out += "jge loop9_end" + STR(loopCount9) + Chr(10);
+                if (is_inf_loop != 1) {
+                    out += "cmp r91, r90" + Chr(10);
+                    out += "jge loop9_end" + STR(loopCount9) + Chr(10);
+                }
                 out += "mov r20, r91" + Chr(10);
             } else {
                 if (RegExMatch(str1, "^\\d+$")) {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, " + str1 + Chr(10) + ".loop9_" + STR(loopCount9) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop9_end" + STR(loopCount9) + Chr(10);
+                }
+                else if (str1 == "-1") {
+                    out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, 0" + Chr(10) + ".loop9_" + STR(loopCount9) + ":" + Chr(10);
                 } else {
                     out += "push r12" + Chr(10) + "push r13" + Chr(10) + "xor r13, r13" + Chr(10) + "mov r12, [" + str1 + "]" + Chr(10) + ".loop9_" + STR(loopCount9) + ":" + Chr(10) + "cmp r12, 0" + Chr(10) + "je .loop9_end" + STR(loopCount9) + Chr(10);
                 }
             }
         }
-        else if (Trim(A_LoopField39) == "loopend9" || Trim(A_LoopField39) == "endloop9") {
+        else if (Trim(A_LoopField69) == "loopend9" || Trim(A_LoopField69) == "endloop9") {
             if (is_arm == 1) {
                 out += ".cloop9_end" + STR(loopCount9) + ":" + Chr(10) + "    add x20, x20, #1" + Chr(10) + "    sub x19, x19, #1" + Chr(10) + "    b .loop9_" + STR(loopCount9) + Chr(10) + ".loop9_end" + STR(loopCount9) + ":" + Chr(10) + "    ldp x19, x20, [sp], #16" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (Loop 9 End) ---
                 out += "cloop9_end" + STR(loopCount9) + ":" + Chr(10);
                 out += "inc r91" + Chr(10);
@@ -3175,9 +4448,9 @@ std::string compiler(std::string code) {
             }
             loopCount9++;
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 3) == "if " || SubStr(StrLower(A_LoopField39), 1, 4) == "if1 ") {
+        else if (SubStr(StrLower(A_LoopField69), 1, 3) == "if " || SubStr(StrLower(A_LoopField69), 1, 4) == "if1 ") {
             isNum = 0;
-            str1 = Trim(StringTrimLeft(A_LoopField39, 3));
+            str1 = Trim(StringTrimLeft(A_LoopField69, 3));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
@@ -3188,8 +4461,8 @@ std::string compiler(std::string code) {
                     // --- LHS (str2) ---
                     int isLhsStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index59 = 0; A_Index59 < HTVM_Size(funcArgsArr); A_Index59++) {
-                            if (Trim(funcArgsArr[A_Index59]) == str2) {
+                        for (int A_Index89 = 0; A_Index89 < HTVM_Size(funcArgsArr); A_Index89++) {
+                            if (Trim(funcArgsArr[A_Index89]) == str2) {
                                 isLhsStackVar = 1;
                                 break;
                             }
@@ -3209,8 +4482,8 @@ std::string compiler(std::string code) {
                     // --- RHS (str3) ---
                     int isRhsStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index60 = 0; A_Index60 < HTVM_Size(funcArgsArr); A_Index60++) {
-                            if (Trim(funcArgsArr[A_Index60]) == str3) {
+                        for (int A_Index90 = 0; A_Index90 < HTVM_Size(funcArgsArr); A_Index90++) {
+                            if (Trim(funcArgsArr[A_Index90]) == str3) {
                                 isRhsStackVar = 1;
                                 break;
                             }
@@ -3233,7 +4506,7 @@ std::string compiler(std::string code) {
                     out += "    cmp x9, x10" + Chr(10) + "    b.ne .end_if1_" + STR(ifCount1) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     // --- ORYX IR (if = -> jne) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -3262,1206 +4535,6 @@ std::string compiler(std::string code) {
             else if (InStr(str1, " != ")) {
                 str2 = Trim(StrSplit(str1, " != ", 1));
                 str3 = Trim(StrSplit(str1, " != ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index61 = 0; A_Index61 < HTVM_Size(funcArgsArr); A_Index61++) {
-                            if (Trim(funcArgsArr[A_Index61]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index62 = 0; A_Index62 < HTVM_Size(funcArgsArr); A_Index62++) {
-                                if (Trim(funcArgsArr[A_Index62]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10) + "    b.eq .end_if1_" + STR(ifCount1) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    // --- ORYX IR (if != -> je) ---
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "je end_if1_" + STR(ifCount1) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "je .end_if1_" + STR(ifCount1) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "je .end_if1_" + STR(ifCount1) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " > ")) {
-                str2 = Trim(StrSplit(str1, " > ", 1));
-                str3 = Trim(StrSplit(str1, " > ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index63 = 0; A_Index63 < HTVM_Size(funcArgsArr); A_Index63++) {
-                            if (Trim(funcArgsArr[A_Index63]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index64 = 0; A_Index64 < HTVM_Size(funcArgsArr); A_Index64++) {
-                                if (Trim(funcArgsArr[A_Index64]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10) + "    b.le .end_if1_" + STR(ifCount1) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    // --- ORYX IR (if > -> jle) ---
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jle end_if1_" + STR(ifCount1) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jle .end_if1_" + STR(ifCount1) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jle .end_if1_" + STR(ifCount1) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " < ")) {
-                str2 = Trim(StrSplit(str1, " < ", 1));
-                str3 = Trim(StrSplit(str1, " < ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index65 = 0; A_Index65 < HTVM_Size(funcArgsArr); A_Index65++) {
-                            if (Trim(funcArgsArr[A_Index65]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index66 = 0; A_Index66 < HTVM_Size(funcArgsArr); A_Index66++) {
-                                if (Trim(funcArgsArr[A_Index66]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10) + "    b.ge .end_if1_" + STR(ifCount1) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    // --- ORYX IR (if < -> jge) ---
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jge end_if1_" + STR(ifCount1) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jge .end_if1_" + STR(ifCount1) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jge .end_if1_" + STR(ifCount1) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " >= ")) {
-                str2 = Trim(StrSplit(str1, " >= ", 1));
-                str3 = Trim(StrSplit(str1, " >= ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index67 = 0; A_Index67 < HTVM_Size(funcArgsArr); A_Index67++) {
-                            if (Trim(funcArgsArr[A_Index67]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index68 = 0; A_Index68 < HTVM_Size(funcArgsArr); A_Index68++) {
-                                if (Trim(funcArgsArr[A_Index68]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10) + "    b.lt .end_if1_" + STR(ifCount1) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    // --- ORYX IR (if >= -> jl) ---
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jl end_if1_" + STR(ifCount1) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jl .end_if1_" + STR(ifCount1) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jl .end_if1_" + STR(ifCount1) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " <= ")) {
-                str2 = Trim(StrSplit(str1, " <= ", 1));
-                str3 = Trim(StrSplit(str1, " <= ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index69 = 0; A_Index69 < HTVM_Size(funcArgsArr); A_Index69++) {
-                            if (Trim(funcArgsArr[A_Index69]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index70 = 0; A_Index70 < HTVM_Size(funcArgsArr); A_Index70++) {
-                                if (Trim(funcArgsArr[A_Index70]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10) + "    b.gt .end_if1_" + STR(ifCount1) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    // --- ORYX IR (if <= -> jg) ---
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jg end_if1_" + STR(ifCount1) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jg .end_if1_" + STR(ifCount1) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jg .end_if1_" + STR(ifCount1) + Chr(10);
-                    }
-                }
-            }
-        }
-        else if (Trim(A_LoopField39) == "ifend" || Trim(A_LoopField39) == "endif" || Trim(A_LoopField39) == "ifend1" || Trim(A_LoopField39) == "endif1") {
-            if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
-                out += "end_if1_" + STR(ifCount1) + ":" + Chr(10);
-            } else {
-                out += ".end_if1_" + STR(ifCount1) + ":" + Chr(10);
-            }
-            ifCount1++;
-        }
-        else if (SubStr(StrLower(A_LoopField39), 1, 4) == "if2 ") {
-            isNum = 0;
-            str1 = Trim(StringTrimLeft(A_LoopField39, 4));
-            str1 = StringTrimLeft(str1, 1);
-            str1 = StringTrimRight(str1, 1);
-            if (InStr(str1, " = ")) {
-                str2 = Trim(StrSplit(str1, " = ", 1));
-                str3 = Trim(StrSplit(str1, " = ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    // --- LHS (str2) ---
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index71 = 0; A_Index71 < HTVM_Size(funcArgsArr); A_Index71++) {
-                            if (Trim(funcArgsArr[A_Index71]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
-                    }
-                    // --- RHS (str3) ---
-                    int isRhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index72 = 0; A_Index72 < HTVM_Size(funcArgsArr); A_Index72++) {
-                            if (Trim(funcArgsArr[A_Index72]) == str3) {
-                                isRhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str3 == "rax") {
-                        out += "    mov x10, x0" + Chr(10);
-                    }
-                    else if (str3 == "A_Index") {
-                        out += "    mov x10, x20" + Chr(10);
-                    }
-                    else if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    }
-                    else if (isRhsStackVar == 1) {
-                        out += "    ldr x10, =" + str3 + Chr(10);
-                    } else {
-                        out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
-                    }
-                    out += "    cmp x9, x10" + Chr(10) + "    b.ne .end_if2_" + STR(ifCount2) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    // --- ORYX IR (if2 = -> jne) ---
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jne end_if2_" + STR(ifCount2) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jne .end_if2_" + STR(ifCount2) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jne .end_if2_" + STR(ifCount2) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " != ")) {
-                str2 = Trim(StrSplit(str1, " != ", 1));
-                str3 = Trim(StrSplit(str1, " != ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index73 = 0; A_Index73 < HTVM_Size(funcArgsArr); A_Index73++) {
-                            if (Trim(funcArgsArr[A_Index73]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index74 = 0; A_Index74 < HTVM_Size(funcArgsArr); A_Index74++) {
-                                if (Trim(funcArgsArr[A_Index74]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10) + "    b.eq .end_if2_" + STR(ifCount2) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    // --- ORYX IR (if2 != -> je) ---
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "je end_if2_" + STR(ifCount2) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "je .end_if2_" + STR(ifCount2) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "je .end_if2_" + STR(ifCount2) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " > ")) {
-                str2 = Trim(StrSplit(str1, " > ", 1));
-                str3 = Trim(StrSplit(str1, " > ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index75 = 0; A_Index75 < HTVM_Size(funcArgsArr); A_Index75++) {
-                            if (Trim(funcArgsArr[A_Index75]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index76 = 0; A_Index76 < HTVM_Size(funcArgsArr); A_Index76++) {
-                                if (Trim(funcArgsArr[A_Index76]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10) + "    b.le .end_if2_" + STR(ifCount2) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    // --- ORYX IR (if2 > -> jle) ---
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jle end_if2_" + STR(ifCount2) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jle .end_if2_" + STR(ifCount2) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jle .end_if2_" + STR(ifCount2) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " < ")) {
-                str2 = Trim(StrSplit(str1, " < ", 1));
-                str3 = Trim(StrSplit(str1, " < ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index77 = 0; A_Index77 < HTVM_Size(funcArgsArr); A_Index77++) {
-                            if (Trim(funcArgsArr[A_Index77]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index78 = 0; A_Index78 < HTVM_Size(funcArgsArr); A_Index78++) {
-                                if (Trim(funcArgsArr[A_Index78]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10) + "    b.ge .end_if2_" + STR(ifCount2) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    // --- ORYX IR (if2 < -> jge) ---
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jge end_if2_" + STR(ifCount2) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jge .end_if2_" + STR(ifCount2) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jge .end_if2_" + STR(ifCount2) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " >= ")) {
-                str2 = Trim(StrSplit(str1, " >= ", 1));
-                str3 = Trim(StrSplit(str1, " >= ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index79 = 0; A_Index79 < HTVM_Size(funcArgsArr); A_Index79++) {
-                            if (Trim(funcArgsArr[A_Index79]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index80 = 0; A_Index80 < HTVM_Size(funcArgsArr); A_Index80++) {
-                                if (Trim(funcArgsArr[A_Index80]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10) + "    b.lt .end_if2_" + STR(ifCount2) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    // --- ORYX IR (if2 >= -> jl) ---
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jl end_if2_" + STR(ifCount2) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jl .end_if2_" + STR(ifCount2) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jl .end_if2_" + STR(ifCount2) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " <= ")) {
-                str2 = Trim(StrSplit(str1, " <= ", 1));
-                str3 = Trim(StrSplit(str1, " <= ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index81 = 0; A_Index81 < HTVM_Size(funcArgsArr); A_Index81++) {
-                            if (Trim(funcArgsArr[A_Index81]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index82 = 0; A_Index82 < HTVM_Size(funcArgsArr); A_Index82++) {
-                                if (Trim(funcArgsArr[A_Index82]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10) + "    b.gt .end_if2_" + STR(ifCount2) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    // --- ORYX IR (if2 <= -> jg) ---
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jg end_if2_" + STR(ifCount2) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jg .end_if2_" + STR(ifCount2) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jg .end_if2_" + STR(ifCount2) + Chr(10);
-                    }
-                }
-            }
-        }
-        else if (Trim(A_LoopField39) == "ifend2" || Trim(A_LoopField39) == "endif2") {
-            if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
-                out += "end_if2_" + STR(ifCount2) + ":" + Chr(10);
-            } else {
-                out += ".end_if2_" + STR(ifCount2) + ":" + Chr(10);
-            }
-            ifCount2++;
-        }
-        else if (SubStr(StrLower(A_LoopField39), 1, 4) == "if3 ") {
-            isNum = 0;
-            str1 = Trim(StringTrimLeft(A_LoopField39, 4));
-            str1 = StringTrimLeft(str1, 1);
-            str1 = StringTrimRight(str1, 1);
-            if (InStr(str1, " = ")) {
-                str2 = Trim(StrSplit(str1, " = ", 1));
-                str3 = Trim(StrSplit(str1, " = ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index83 = 0; A_Index83 < HTVM_Size(funcArgsArr); A_Index83++) {
-                            if (Trim(funcArgsArr[A_Index83]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
-                    }
-                    int isRhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index84 = 0; A_Index84 < HTVM_Size(funcArgsArr); A_Index84++) {
-                            if (Trim(funcArgsArr[A_Index84]) == str3) {
-                                isRhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str3 == "rax") {
-                        out += "    mov x10, x0" + Chr(10);
-                    }
-                    else if (str3 == "A_Index") {
-                        out += "    mov x10, x20" + Chr(10);
-                    }
-                    else if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    }
-                    else if (isRhsStackVar == 1) {
-                        out += "    ldr x10, =" + str3 + Chr(10);
-                    } else {
-                        out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
-                    }
-                    out += "    cmp x9, x10" + Chr(10) + "    b.ne .end_if3_" + STR(ifCount3) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    // --- ORYX IR (if3 = -> jne) ---
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jne end_if3_" + STR(ifCount3) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jne .end_if3_" + STR(ifCount3) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jne .end_if3_" + STR(ifCount3) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " != ")) {
-                str2 = Trim(StrSplit(str1, " != ", 1));
-                str3 = Trim(StrSplit(str1, " != ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index85 = 0; A_Index85 < HTVM_Size(funcArgsArr); A_Index85++) {
-                            if (Trim(funcArgsArr[A_Index85]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index86 = 0; A_Index86 < HTVM_Size(funcArgsArr); A_Index86++) {
-                                if (Trim(funcArgsArr[A_Index86]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10) + "    b.eq .end_if3_" + STR(ifCount3) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    // --- ORYX IR (if3 != -> je) ---
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "je end_if3_" + STR(ifCount3) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "je .end_if3_" + STR(ifCount3) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "je .end_if3_" + STR(ifCount3) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " > ")) {
-                str2 = Trim(StrSplit(str1, " > ", 1));
-                str3 = Trim(StrSplit(str1, " > ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index87 = 0; A_Index87 < HTVM_Size(funcArgsArr); A_Index87++) {
-                            if (Trim(funcArgsArr[A_Index87]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index88 = 0; A_Index88 < HTVM_Size(funcArgsArr); A_Index88++) {
-                                if (Trim(funcArgsArr[A_Index88]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10) + "    b.le .end_if3_" + STR(ifCount3) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    // --- ORYX IR (if3 > -> jle) ---
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jle end_if3_" + STR(ifCount3) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jle .end_if3_" + STR(ifCount3) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jle .end_if3_" + STR(ifCount3) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " < ")) {
-                str2 = Trim(StrSplit(str1, " < ", 1));
-                str3 = Trim(StrSplit(str1, " < ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index89 = 0; A_Index89 < HTVM_Size(funcArgsArr); A_Index89++) {
-                            if (Trim(funcArgsArr[A_Index89]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index90 = 0; A_Index90 < HTVM_Size(funcArgsArr); A_Index90++) {
-                                if (Trim(funcArgsArr[A_Index90]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10) + "    b.ge .end_if3_" + STR(ifCount3) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    // --- ORYX IR (if3 < -> jge) ---
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jge end_if3_" + STR(ifCount3) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jge .end_if3_" + STR(ifCount3) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jge .end_if3_" + STR(ifCount3) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " >= ")) {
-                str2 = Trim(StrSplit(str1, " >= ", 1));
-                str3 = Trim(StrSplit(str1, " >= ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -4508,11 +4581,11 @@ std::string compiler(std::string code) {
                             out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
                         }
                     }
-                    out += "    cmp x9, x10" + Chr(10) + "    b.lt .end_if3_" + STR(ifCount3) + Chr(10);
+                    out += "    cmp x9, x10" + Chr(10) + "    b.eq .end_if1_" + STR(ifCount1) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    // --- ORYX IR (if3 >= -> jl) ---
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    // --- ORYX IR (if != -> je) ---
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -4528,18 +4601,18 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jl end_if3_" + STR(ifCount3) + Chr(10);
+                    out += "je end_if1_" + STR(ifCount1) + Chr(10);
                 } else {
                     if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jl .end_if3_" + STR(ifCount3) + Chr(10);
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "je .end_if1_" + STR(ifCount1) + Chr(10);
                     } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jl .end_if3_" + STR(ifCount3) + Chr(10);
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "je .end_if1_" + STR(ifCount1) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " <= ")) {
-                str2 = Trim(StrSplit(str1, " <= ", 1));
-                str3 = Trim(StrSplit(str1, " <= ", 2));
+            else if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -4586,10 +4659,1210 @@ std::string compiler(std::string code) {
                             out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
                         }
                     }
+                    out += "    cmp x9, x10" + Chr(10) + "    b.le .end_if1_" + STR(ifCount1) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    // --- ORYX IR (if > -> jle) ---
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jle end_if1_" + STR(ifCount1) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jle .end_if1_" + STR(ifCount1) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jle .end_if1_" + STR(ifCount1) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index95 = 0; A_Index95 < HTVM_Size(funcArgsArr); A_Index95++) {
+                            if (Trim(funcArgsArr[A_Index95]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index96 = 0; A_Index96 < HTVM_Size(funcArgsArr); A_Index96++) {
+                                if (Trim(funcArgsArr[A_Index96]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10) + "    b.ge .end_if1_" + STR(ifCount1) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    // --- ORYX IR (if < -> jge) ---
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jge end_if1_" + STR(ifCount1) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jge .end_if1_" + STR(ifCount1) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jge .end_if1_" + STR(ifCount1) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index97 = 0; A_Index97 < HTVM_Size(funcArgsArr); A_Index97++) {
+                            if (Trim(funcArgsArr[A_Index97]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index98 = 0; A_Index98 < HTVM_Size(funcArgsArr); A_Index98++) {
+                                if (Trim(funcArgsArr[A_Index98]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10) + "    b.lt .end_if1_" + STR(ifCount1) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    // --- ORYX IR (if >= -> jl) ---
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jl end_if1_" + STR(ifCount1) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jl .end_if1_" + STR(ifCount1) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jl .end_if1_" + STR(ifCount1) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index99 = 0; A_Index99 < HTVM_Size(funcArgsArr); A_Index99++) {
+                            if (Trim(funcArgsArr[A_Index99]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index100 = 0; A_Index100 < HTVM_Size(funcArgsArr); A_Index100++) {
+                                if (Trim(funcArgsArr[A_Index100]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10) + "    b.gt .end_if1_" + STR(ifCount1) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    // --- ORYX IR (if <= -> jg) ---
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jg end_if1_" + STR(ifCount1) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jg .end_if1_" + STR(ifCount1) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jg .end_if1_" + STR(ifCount1) + Chr(10);
+                    }
+                }
+            }
+        }
+        else if (Trim(A_LoopField69) == "ifend" || Trim(A_LoopField69) == "endif" || Trim(A_LoopField69) == "ifend1" || Trim(A_LoopField69) == "endif1") {
+            if (is_oryx == 1) {
+                out += "meta " + A_LoopField69 + Chr(10);
+                out += "end_if1_" + STR(ifCount1) + ":" + Chr(10);
+            } else {
+                out += ".end_if1_" + STR(ifCount1) + ":" + Chr(10);
+            }
+            ifCount1++;
+        }
+        else if (SubStr(StrLower(A_LoopField69), 1, 4) == "if2 ") {
+            isNum = 0;
+            str1 = Trim(StringTrimLeft(A_LoopField69, 4));
+            str1 = StringTrimLeft(str1, 1);
+            str1 = StringTrimRight(str1, 1);
+            if (InStr(str1, " = ")) {
+                str2 = Trim(StrSplit(str1, " = ", 1));
+                str3 = Trim(StrSplit(str1, " = ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    // --- LHS (str2) ---
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index101 = 0; A_Index101 < HTVM_Size(funcArgsArr); A_Index101++) {
+                            if (Trim(funcArgsArr[A_Index101]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
+                    }
+                    // --- RHS (str3) ---
+                    int isRhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index102 = 0; A_Index102 < HTVM_Size(funcArgsArr); A_Index102++) {
+                            if (Trim(funcArgsArr[A_Index102]) == str3) {
+                                isRhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str3 == "rax") {
+                        out += "    mov x10, x0" + Chr(10);
+                    }
+                    else if (str3 == "A_Index") {
+                        out += "    mov x10, x20" + Chr(10);
+                    }
+                    else if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    }
+                    else if (isRhsStackVar == 1) {
+                        out += "    ldr x10, =" + str3 + Chr(10);
+                    } else {
+                        out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
+                    }
+                    out += "    cmp x9, x10" + Chr(10) + "    b.ne .end_if2_" + STR(ifCount2) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    // --- ORYX IR (if2 = -> jne) ---
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jne end_if2_" + STR(ifCount2) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jne .end_if2_" + STR(ifCount2) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jne .end_if2_" + STR(ifCount2) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " != ")) {
+                str2 = Trim(StrSplit(str1, " != ", 1));
+                str3 = Trim(StrSplit(str1, " != ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index103 = 0; A_Index103 < HTVM_Size(funcArgsArr); A_Index103++) {
+                            if (Trim(funcArgsArr[A_Index103]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index104 = 0; A_Index104 < HTVM_Size(funcArgsArr); A_Index104++) {
+                                if (Trim(funcArgsArr[A_Index104]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10) + "    b.eq .end_if2_" + STR(ifCount2) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    // --- ORYX IR (if2 != -> je) ---
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "je end_if2_" + STR(ifCount2) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "je .end_if2_" + STR(ifCount2) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "je .end_if2_" + STR(ifCount2) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index105 = 0; A_Index105 < HTVM_Size(funcArgsArr); A_Index105++) {
+                            if (Trim(funcArgsArr[A_Index105]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index106 = 0; A_Index106 < HTVM_Size(funcArgsArr); A_Index106++) {
+                                if (Trim(funcArgsArr[A_Index106]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10) + "    b.le .end_if2_" + STR(ifCount2) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    // --- ORYX IR (if2 > -> jle) ---
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jle end_if2_" + STR(ifCount2) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jle .end_if2_" + STR(ifCount2) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jle .end_if2_" + STR(ifCount2) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index107 = 0; A_Index107 < HTVM_Size(funcArgsArr); A_Index107++) {
+                            if (Trim(funcArgsArr[A_Index107]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index108 = 0; A_Index108 < HTVM_Size(funcArgsArr); A_Index108++) {
+                                if (Trim(funcArgsArr[A_Index108]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10) + "    b.ge .end_if2_" + STR(ifCount2) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    // --- ORYX IR (if2 < -> jge) ---
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jge end_if2_" + STR(ifCount2) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jge .end_if2_" + STR(ifCount2) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jge .end_if2_" + STR(ifCount2) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index109 = 0; A_Index109 < HTVM_Size(funcArgsArr); A_Index109++) {
+                            if (Trim(funcArgsArr[A_Index109]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index110 = 0; A_Index110 < HTVM_Size(funcArgsArr); A_Index110++) {
+                                if (Trim(funcArgsArr[A_Index110]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10) + "    b.lt .end_if2_" + STR(ifCount2) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    // --- ORYX IR (if2 >= -> jl) ---
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jl end_if2_" + STR(ifCount2) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jl .end_if2_" + STR(ifCount2) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jl .end_if2_" + STR(ifCount2) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index111 = 0; A_Index111 < HTVM_Size(funcArgsArr); A_Index111++) {
+                            if (Trim(funcArgsArr[A_Index111]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index112 = 0; A_Index112 < HTVM_Size(funcArgsArr); A_Index112++) {
+                                if (Trim(funcArgsArr[A_Index112]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10) + "    b.gt .end_if2_" + STR(ifCount2) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    // --- ORYX IR (if2 <= -> jg) ---
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jg end_if2_" + STR(ifCount2) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jg .end_if2_" + STR(ifCount2) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jg .end_if2_" + STR(ifCount2) + Chr(10);
+                    }
+                }
+            }
+        }
+        else if (Trim(A_LoopField69) == "ifend2" || Trim(A_LoopField69) == "endif2") {
+            if (is_oryx == 1) {
+                out += "meta " + A_LoopField69 + Chr(10);
+                out += "end_if2_" + STR(ifCount2) + ":" + Chr(10);
+            } else {
+                out += ".end_if2_" + STR(ifCount2) + ":" + Chr(10);
+            }
+            ifCount2++;
+        }
+        else if (SubStr(StrLower(A_LoopField69), 1, 4) == "if3 ") {
+            isNum = 0;
+            str1 = Trim(StringTrimLeft(A_LoopField69, 4));
+            str1 = StringTrimLeft(str1, 1);
+            str1 = StringTrimRight(str1, 1);
+            if (InStr(str1, " = ")) {
+                str2 = Trim(StrSplit(str1, " = ", 1));
+                str3 = Trim(StrSplit(str1, " = ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index113 = 0; A_Index113 < HTVM_Size(funcArgsArr); A_Index113++) {
+                            if (Trim(funcArgsArr[A_Index113]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
+                    }
+                    int isRhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index114 = 0; A_Index114 < HTVM_Size(funcArgsArr); A_Index114++) {
+                            if (Trim(funcArgsArr[A_Index114]) == str3) {
+                                isRhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str3 == "rax") {
+                        out += "    mov x10, x0" + Chr(10);
+                    }
+                    else if (str3 == "A_Index") {
+                        out += "    mov x10, x20" + Chr(10);
+                    }
+                    else if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    }
+                    else if (isRhsStackVar == 1) {
+                        out += "    ldr x10, =" + str3 + Chr(10);
+                    } else {
+                        out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
+                    }
+                    out += "    cmp x9, x10" + Chr(10) + "    b.ne .end_if3_" + STR(ifCount3) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    // --- ORYX IR (if3 = -> jne) ---
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jne end_if3_" + STR(ifCount3) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jne .end_if3_" + STR(ifCount3) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jne .end_if3_" + STR(ifCount3) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " != ")) {
+                str2 = Trim(StrSplit(str1, " != ", 1));
+                str3 = Trim(StrSplit(str1, " != ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index115 = 0; A_Index115 < HTVM_Size(funcArgsArr); A_Index115++) {
+                            if (Trim(funcArgsArr[A_Index115]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index116 = 0; A_Index116 < HTVM_Size(funcArgsArr); A_Index116++) {
+                                if (Trim(funcArgsArr[A_Index116]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10) + "    b.eq .end_if3_" + STR(ifCount3) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    // --- ORYX IR (if3 != -> je) ---
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "je end_if3_" + STR(ifCount3) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "je .end_if3_" + STR(ifCount3) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "je .end_if3_" + STR(ifCount3) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index117 = 0; A_Index117 < HTVM_Size(funcArgsArr); A_Index117++) {
+                            if (Trim(funcArgsArr[A_Index117]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index118 = 0; A_Index118 < HTVM_Size(funcArgsArr); A_Index118++) {
+                                if (Trim(funcArgsArr[A_Index118]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10) + "    b.le .end_if3_" + STR(ifCount3) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    // --- ORYX IR (if3 > -> jle) ---
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jle end_if3_" + STR(ifCount3) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jle .end_if3_" + STR(ifCount3) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jle .end_if3_" + STR(ifCount3) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index119 = 0; A_Index119 < HTVM_Size(funcArgsArr); A_Index119++) {
+                            if (Trim(funcArgsArr[A_Index119]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index120 = 0; A_Index120 < HTVM_Size(funcArgsArr); A_Index120++) {
+                                if (Trim(funcArgsArr[A_Index120]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10) + "    b.ge .end_if3_" + STR(ifCount3) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    // --- ORYX IR (if3 < -> jge) ---
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jge end_if3_" + STR(ifCount3) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jge .end_if3_" + STR(ifCount3) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jge .end_if3_" + STR(ifCount3) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index121 = 0; A_Index121 < HTVM_Size(funcArgsArr); A_Index121++) {
+                            if (Trim(funcArgsArr[A_Index121]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index122 = 0; A_Index122 < HTVM_Size(funcArgsArr); A_Index122++) {
+                                if (Trim(funcArgsArr[A_Index122]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10) + "    b.lt .end_if3_" + STR(ifCount3) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    // --- ORYX IR (if3 >= -> jl) ---
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jl end_if3_" + STR(ifCount3) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, " + str3 + Chr(10) + "jl .end_if3_" + STR(ifCount3) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10) + "cmp rax, [" + str3 + "]" + Chr(10) + "jl .end_if3_" + STR(ifCount3) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index123 = 0; A_Index123 < HTVM_Size(funcArgsArr); A_Index123++) {
+                            if (Trim(funcArgsArr[A_Index123]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10) + "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index124 = 0; A_Index124 < HTVM_Size(funcArgsArr); A_Index124++) {
+                                if (Trim(funcArgsArr[A_Index124]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10) + "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
                     out += "    cmp x9, x10" + Chr(10) + "    b.gt .end_if3_" + STR(ifCount3) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     // --- ORYX IR (if3 <= -> jg) ---
                     strLhs = str2;
                     if (str2 == "rax") {
@@ -4616,19 +5889,19 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (Trim(A_LoopField39) == "ifend3" || Trim(A_LoopField39) == "endif3") {
+        else if (Trim(A_LoopField69) == "ifend3" || Trim(A_LoopField69) == "endif3") {
             if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "end_if3_" + STR(ifCount3) + ":" + Chr(10);
             } else {
                 out += ".end_if3_" + STR(ifCount3) + ":" + Chr(10);
             }
             ifCount3++;
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 4) == "if4 ") {
+        else if (SubStr(StrLower(A_LoopField69), 1, 4) == "if4 ") {
             isNum = 0;
-            str1 = Trim(StringTrimLeft(A_LoopField39, 4));
+            str1 = Trim(StringTrimLeft(A_LoopField69, 4));
             str1 = StringTrimLeft(str1, 1);
             str1 = StringTrimRight(str1, 1);
             if (InStr(str1, " = ")) {
@@ -4638,8 +5911,8 @@ std::string compiler(std::string code) {
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index95 = 0; A_Index95 < HTVM_Size(funcArgsArr); A_Index95++) {
-                            if (Trim(funcArgsArr[A_Index95]) == str2) {
+                        for (int A_Index125 = 0; A_Index125 < HTVM_Size(funcArgsArr); A_Index125++) {
+                            if (Trim(funcArgsArr[A_Index125]) == str2) {
                                 isLhsStackVar = 1;
                                 break;
                             }
@@ -4659,8 +5932,8 @@ std::string compiler(std::string code) {
                     }
                     int isRhsStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index96 = 0; A_Index96 < HTVM_Size(funcArgsArr); A_Index96++) {
-                            if (Trim(funcArgsArr[A_Index96]) == str3) {
+                        for (int A_Index126 = 0; A_Index126 < HTVM_Size(funcArgsArr); A_Index126++) {
+                            if (Trim(funcArgsArr[A_Index126]) == str3) {
                                 isRhsStackVar = 1;
                                 break;
                             }
@@ -4685,7 +5958,7 @@ std::string compiler(std::string code) {
                     out += "    b.ne .end_if4_" + STR(ifCount4) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -4717,1294 +5990,6 @@ std::string compiler(std::string code) {
             else if (InStr(str1, " != ")) {
                 str2 = Trim(StrSplit(str1, " != ", 1));
                 str3 = Trim(StrSplit(str1, " != ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index97 = 0; A_Index97 < HTVM_Size(funcArgsArr); A_Index97++) {
-                            if (Trim(funcArgsArr[A_Index97]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                        out += "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index98 = 0; A_Index98 < HTVM_Size(funcArgsArr); A_Index98++) {
-                                if (Trim(funcArgsArr[A_Index98]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                            out += "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.eq .end_if4_" + STR(ifCount4) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "je end_if4_" + STR(ifCount4) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, " + str3 + Chr(10);
-                        out += "je .end_if4_" + STR(ifCount4) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "je .end_if4_" + STR(ifCount4) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " > ")) {
-                str2 = Trim(StrSplit(str1, " > ", 1));
-                str3 = Trim(StrSplit(str1, " > ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index99 = 0; A_Index99 < HTVM_Size(funcArgsArr); A_Index99++) {
-                            if (Trim(funcArgsArr[A_Index99]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                        out += "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index100 = 0; A_Index100 < HTVM_Size(funcArgsArr); A_Index100++) {
-                                if (Trim(funcArgsArr[A_Index100]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                            out += "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.le .end_if4_" + STR(ifCount4) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jle end_if4_" + STR(ifCount4) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, " + str3 + Chr(10);
-                        out += "jle .end_if4_" + STR(ifCount4) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jle .end_if4_" + STR(ifCount4) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " < ")) {
-                str2 = Trim(StrSplit(str1, " < ", 1));
-                str3 = Trim(StrSplit(str1, " < ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index101 = 0; A_Index101 < HTVM_Size(funcArgsArr); A_Index101++) {
-                            if (Trim(funcArgsArr[A_Index101]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                        out += "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index102 = 0; A_Index102 < HTVM_Size(funcArgsArr); A_Index102++) {
-                                if (Trim(funcArgsArr[A_Index102]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                            out += "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.ge .end_if4_" + STR(ifCount4) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jge end_if4_" + STR(ifCount4) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, " + str3 + Chr(10);
-                        out += "jge .end_if4_" + STR(ifCount4) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jge .end_if4_" + STR(ifCount4) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " >= ")) {
-                str2 = Trim(StrSplit(str1, " >= ", 1));
-                str3 = Trim(StrSplit(str1, " >= ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index103 = 0; A_Index103 < HTVM_Size(funcArgsArr); A_Index103++) {
-                            if (Trim(funcArgsArr[A_Index103]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                        out += "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index104 = 0; A_Index104 < HTVM_Size(funcArgsArr); A_Index104++) {
-                                if (Trim(funcArgsArr[A_Index104]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                            out += "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.lt .end_if4_" + STR(ifCount4) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jl end_if4_" + STR(ifCount4) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, " + str3 + Chr(10);
-                        out += "jl .end_if4_" + STR(ifCount4) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jl .end_if4_" + STR(ifCount4) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " <= ")) {
-                str2 = Trim(StrSplit(str1, " <= ", 1));
-                str3 = Trim(StrSplit(str1, " <= ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index105 = 0; A_Index105 < HTVM_Size(funcArgsArr); A_Index105++) {
-                            if (Trim(funcArgsArr[A_Index105]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                        out += "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index106 = 0; A_Index106 < HTVM_Size(funcArgsArr); A_Index106++) {
-                                if (Trim(funcArgsArr[A_Index106]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                            out += "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.gt .end_if4_" + STR(ifCount4) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jg end_if4_" + STR(ifCount4) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, " + str3 + Chr(10);
-                        out += "jg .end_if4_" + STR(ifCount4) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jg .end_if4_" + STR(ifCount4) + Chr(10);
-                    }
-                }
-            }
-        }
-        else if (Trim(A_LoopField39) == "ifend4" || Trim(A_LoopField39) == "endif4") {
-            if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
-                out += "end_if4_" + STR(ifCount4) + ":" + Chr(10);
-            } else {
-                out += ".end_if4_" + STR(ifCount4) + ":" + Chr(10);
-            }
-            ifCount4++;
-        }
-        else if (SubStr(StrLower(A_LoopField39), 1, 4) == "if5 ") {
-            isNum = 0;
-            str1 = Trim(StringTrimLeft(A_LoopField39, 4));
-            str1 = StringTrimLeft(str1, 1);
-            str1 = StringTrimRight(str1, 1);
-            if (InStr(str1, " = ")) {
-                str2 = Trim(StrSplit(str1, " = ", 1));
-                str3 = Trim(StrSplit(str1, " = ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index107 = 0; A_Index107 < HTVM_Size(funcArgsArr); A_Index107++) {
-                            if (Trim(funcArgsArr[A_Index107]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                        out += "    ldr x9, [x9]" + Chr(10);
-                    }
-                    int isRhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index108 = 0; A_Index108 < HTVM_Size(funcArgsArr); A_Index108++) {
-                            if (Trim(funcArgsArr[A_Index108]) == str3) {
-                                isRhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str3 == "rax") {
-                        out += "    mov x10, x0" + Chr(10);
-                    }
-                    else if (str3 == "A_Index") {
-                        out += "    mov x10, x20" + Chr(10);
-                    }
-                    else if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    }
-                    else if (isRhsStackVar == 1) {
-                        out += "    ldr x10, =" + str3 + Chr(10);
-                    } else {
-                        out += "    ldr x10, =" + str3 + Chr(10);
-                        out += "    ldr x10, [x10]" + Chr(10);
-                    }
-                    out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.ne .end_if5_" + STR(ifCount5) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jne end_if5_" + STR(ifCount5) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, " + str3 + Chr(10);
-                        out += "jne .end_if5_" + STR(ifCount5) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jne .end_if5_" + STR(ifCount5) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " != ")) {
-                str2 = Trim(StrSplit(str1, " != ", 1));
-                str3 = Trim(StrSplit(str1, " != ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index109 = 0; A_Index109 < HTVM_Size(funcArgsArr); A_Index109++) {
-                            if (Trim(funcArgsArr[A_Index109]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                        out += "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index110 = 0; A_Index110 < HTVM_Size(funcArgsArr); A_Index110++) {
-                                if (Trim(funcArgsArr[A_Index110]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                            out += "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.eq .end_if5_" + STR(ifCount5) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "je end_if5_" + STR(ifCount5) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, " + str3 + Chr(10);
-                        out += "je .end_if5_" + STR(ifCount5) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "je .end_if5_" + STR(ifCount5) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " > ")) {
-                str2 = Trim(StrSplit(str1, " > ", 1));
-                str3 = Trim(StrSplit(str1, " > ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index111 = 0; A_Index111 < HTVM_Size(funcArgsArr); A_Index111++) {
-                            if (Trim(funcArgsArr[A_Index111]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                        out += "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index112 = 0; A_Index112 < HTVM_Size(funcArgsArr); A_Index112++) {
-                                if (Trim(funcArgsArr[A_Index112]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                            out += "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.le .end_if5_" + STR(ifCount5) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jle end_if5_" + STR(ifCount5) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, " + str3 + Chr(10);
-                        out += "jle .end_if5_" + STR(ifCount5) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jle .end_if5_" + STR(ifCount5) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " < ")) {
-                str2 = Trim(StrSplit(str1, " < ", 1));
-                str3 = Trim(StrSplit(str1, " < ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index113 = 0; A_Index113 < HTVM_Size(funcArgsArr); A_Index113++) {
-                            if (Trim(funcArgsArr[A_Index113]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                        out += "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index114 = 0; A_Index114 < HTVM_Size(funcArgsArr); A_Index114++) {
-                                if (Trim(funcArgsArr[A_Index114]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                            out += "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.ge .end_if5_" + STR(ifCount5) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jge end_if5_" + STR(ifCount5) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, " + str3 + Chr(10);
-                        out += "jge .end_if5_" + STR(ifCount5) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jge .end_if5_" + STR(ifCount5) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " >= ")) {
-                str2 = Trim(StrSplit(str1, " >= ", 1));
-                str3 = Trim(StrSplit(str1, " >= ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index115 = 0; A_Index115 < HTVM_Size(funcArgsArr); A_Index115++) {
-                            if (Trim(funcArgsArr[A_Index115]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                        out += "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index116 = 0; A_Index116 < HTVM_Size(funcArgsArr); A_Index116++) {
-                                if (Trim(funcArgsArr[A_Index116]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                            out += "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.lt .end_if5_" + STR(ifCount5) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jl end_if5_" + STR(ifCount5) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, " + str3 + Chr(10);
-                        out += "jl .end_if5_" + STR(ifCount5) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jl .end_if5_" + STR(ifCount5) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " <= ")) {
-                str2 = Trim(StrSplit(str1, " <= ", 1));
-                str3 = Trim(StrSplit(str1, " <= ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index117 = 0; A_Index117 < HTVM_Size(funcArgsArr); A_Index117++) {
-                            if (Trim(funcArgsArr[A_Index117]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                        out += "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index118 = 0; A_Index118 < HTVM_Size(funcArgsArr); A_Index118++) {
-                                if (Trim(funcArgsArr[A_Index118]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                            out += "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.gt .end_if5_" + STR(ifCount5) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jg end_if5_" + STR(ifCount5) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, " + str3 + Chr(10);
-                        out += "jg .end_if5_" + STR(ifCount5) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jg .end_if5_" + STR(ifCount5) + Chr(10);
-                    }
-                }
-            }
-        }
-        else if (Trim(A_LoopField39) == "ifend5" || Trim(A_LoopField39) == "endif5") {
-            if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
-                out += "end_if5_" + STR(ifCount5) + ":" + Chr(10);
-            } else {
-                out += ".end_if5_" + STR(ifCount5) + ":" + Chr(10);
-            }
-            ifCount5++;
-        }
-        else if (SubStr(StrLower(A_LoopField39), 1, 4) == "if6 ") {
-            isNum = 0;
-            str1 = Trim(StringTrimLeft(A_LoopField39, 4));
-            str1 = StringTrimLeft(str1, 1);
-            str1 = StringTrimRight(str1, 1);
-            if (InStr(str1, " = ")) {
-                str2 = Trim(StrSplit(str1, " = ", 1));
-                str3 = Trim(StrSplit(str1, " = ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index119 = 0; A_Index119 < HTVM_Size(funcArgsArr); A_Index119++) {
-                            if (Trim(funcArgsArr[A_Index119]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                        out += "    ldr x9, [x9]" + Chr(10);
-                    }
-                    int isRhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index120 = 0; A_Index120 < HTVM_Size(funcArgsArr); A_Index120++) {
-                            if (Trim(funcArgsArr[A_Index120]) == str3) {
-                                isRhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str3 == "rax") {
-                        out += "    mov x10, x0" + Chr(10);
-                    }
-                    else if (str3 == "A_Index") {
-                        out += "    mov x10, x20" + Chr(10);
-                    }
-                    else if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    }
-                    else if (isRhsStackVar == 1) {
-                        out += "    ldr x10, =" + str3 + Chr(10);
-                    } else {
-                        out += "    ldr x10, =" + str3 + Chr(10);
-                        out += "    ldr x10, [x10]" + Chr(10);
-                    }
-                    out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.ne .end_if6_" + STR(ifCount6) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jne end_if6_" + STR(ifCount6) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, " + str3 + Chr(10);
-                        out += "jne .end_if6_" + STR(ifCount6) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jne .end_if6_" + STR(ifCount6) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " != ")) {
-                str2 = Trim(StrSplit(str1, " != ", 1));
-                str3 = Trim(StrSplit(str1, " != ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index121 = 0; A_Index121 < HTVM_Size(funcArgsArr); A_Index121++) {
-                            if (Trim(funcArgsArr[A_Index121]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                        out += "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index122 = 0; A_Index122 < HTVM_Size(funcArgsArr); A_Index122++) {
-                                if (Trim(funcArgsArr[A_Index122]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                            out += "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.eq .end_if6_" + STR(ifCount6) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "je end_if6_" + STR(ifCount6) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, " + str3 + Chr(10);
-                        out += "je .end_if6_" + STR(ifCount6) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "je .end_if6_" + STR(ifCount6) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " > ")) {
-                str2 = Trim(StrSplit(str1, " > ", 1));
-                str3 = Trim(StrSplit(str1, " > ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index123 = 0; A_Index123 < HTVM_Size(funcArgsArr); A_Index123++) {
-                            if (Trim(funcArgsArr[A_Index123]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                        out += "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index124 = 0; A_Index124 < HTVM_Size(funcArgsArr); A_Index124++) {
-                                if (Trim(funcArgsArr[A_Index124]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                            out += "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.le .end_if6_" + STR(ifCount6) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jle end_if6_" + STR(ifCount6) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, " + str3 + Chr(10);
-                        out += "jle .end_if6_" + STR(ifCount6) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jle .end_if6_" + STR(ifCount6) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " < ")) {
-                str2 = Trim(StrSplit(str1, " < ", 1));
-                str3 = Trim(StrSplit(str1, " < ", 2));
-                isNum = RegExMatch(str3, "^\\d+$");
-                if (is_arm == 1) {
-                    int isLhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index125 = 0; A_Index125 < HTVM_Size(funcArgsArr); A_Index125++) {
-                            if (Trim(funcArgsArr[A_Index125]) == str2) {
-                                isLhsStackVar = 1;
-                                break;
-                            }
-                        }
-                    }
-                    if (str2 == "rax") {
-                        out += "    mov x9, x0" + Chr(10);
-                    }
-                    else if (str2 == "A_Index") {
-                        out += "    mov x9, x20" + Chr(10);
-                    }
-                    else if (isLhsStackVar == 1) {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                    } else {
-                        out += "    ldr x9, =" + str2 + Chr(10);
-                        out += "    ldr x9, [x9]" + Chr(10);
-                    }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index126 = 0; A_Index126 < HTVM_Size(funcArgsArr); A_Index126++) {
-                                if (Trim(funcArgsArr[A_Index126]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
-                            }
-                        }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                            out += "    ldr x10, [x10]" + Chr(10);
-                        }
-                    }
-                    out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.ge .end_if6_" + STR(ifCount6) + Chr(10);
-                }
-                else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
-                    strLhs = str2;
-                    if (str2 == "rax") {
-                        strLhs = "r0";
-                    }
-                    else if (str2 == "A_Index") {
-                        strLhs = "r20";
-                    }
-                    strRhs = str3;
-                    if (str3 == "rax") {
-                        strRhs = "r0";
-                    }
-                    else if (str3 == "A_Index") {
-                        strRhs = "r20";
-                    }
-                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jge end_if6_" + STR(ifCount6) + Chr(10);
-                } else {
-                    if (isNum == 1) {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, " + str3 + Chr(10);
-                        out += "jge .end_if6_" + STR(ifCount6) + Chr(10);
-                    } else {
-                        out += "mov rax, [" + str2 + "]" + Chr(10);
-                        out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jge .end_if6_" + STR(ifCount6) + Chr(10);
-                    }
-                }
-            }
-            else if (InStr(str1, " >= ")) {
-                str2 = Trim(StrSplit(str1, " >= ", 1));
-                str3 = Trim(StrSplit(str1, " >= ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -6054,10 +6039,10 @@ std::string compiler(std::string code) {
                         }
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.lt .end_if6_" + STR(ifCount6) + Chr(10);
+                    out += "    b.eq .end_if4_" + STR(ifCount4) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6073,22 +6058,22 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jl end_if6_" + STR(ifCount6) + Chr(10);
+                    out += "je end_if4_" + STR(ifCount4) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "jl .end_if6_" + STR(ifCount6) + Chr(10);
+                        out += "je .end_if4_" + STR(ifCount4) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jl .end_if6_" + STR(ifCount6) + Chr(10);
+                        out += "je .end_if4_" + STR(ifCount4) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " <= ")) {
-                str2 = Trim(StrSplit(str1, " <= ", 1));
-                str3 = Trim(StrSplit(str1, " <= ", 2));
+            else if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -6138,10 +6123,10 @@ std::string compiler(std::string code) {
                         }
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.gt .end_if6_" + STR(ifCount6) + Chr(10);
+                    out += "    b.le .end_if4_" + STR(ifCount4) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6157,37 +6142,22 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jg end_if6_" + STR(ifCount6) + Chr(10);
+                    out += "jle end_if4_" + STR(ifCount4) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "jg .end_if6_" + STR(ifCount6) + Chr(10);
+                        out += "jle .end_if4_" + STR(ifCount4) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jg .end_if6_" + STR(ifCount6) + Chr(10);
+                        out += "jle .end_if4_" + STR(ifCount4) + Chr(10);
                     }
                 }
             }
-        }
-        else if (Trim(A_LoopField39) == "ifend6" || Trim(A_LoopField39) == "endif6") {
-            if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
-                out += "end_if6_" + STR(ifCount6) + ":" + Chr(10);
-            } else {
-                out += ".end_if6_" + STR(ifCount6) + ":" + Chr(10);
-            }
-            ifCount6++;
-        }
-        else if (SubStr(StrLower(A_LoopField39), 1, 4) == "if7 ") {
-            isNum = 0;
-            str1 = Trim(StringTrimLeft(A_LoopField39, 4));
-            str1 = StringTrimLeft(str1, 1);
-            str1 = StringTrimRight(str1, 1);
-            if (InStr(str1, " = ")) {
-                str2 = Trim(StrSplit(str1, " = ", 1));
-                str3 = Trim(StrSplit(str1, " = ", 2));
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -6211,35 +6181,36 @@ std::string compiler(std::string code) {
                         out += "    ldr x9, =" + str2 + Chr(10);
                         out += "    ldr x9, [x9]" + Chr(10);
                     }
-                    int isRhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index132 = 0; A_Index132 < HTVM_Size(funcArgsArr); A_Index132++) {
-                            if (Trim(funcArgsArr[A_Index132]) == str3) {
-                                isRhsStackVar = 1;
-                                break;
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index132 = 0; A_Index132 < HTVM_Size(funcArgsArr); A_Index132++) {
+                                if (Trim(funcArgsArr[A_Index132]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
                             }
                         }
-                    }
-                    if (str3 == "rax") {
-                        out += "    mov x10, x0" + Chr(10);
-                    }
-                    else if (str3 == "A_Index") {
-                        out += "    mov x10, x20" + Chr(10);
-                    }
-                    else if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    }
-                    else if (isRhsStackVar == 1) {
-                        out += "    ldr x10, =" + str3 + Chr(10);
-                    } else {
-                        out += "    ldr x10, =" + str3 + Chr(10);
-                        out += "    ldr x10, [x10]" + Chr(10);
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                            out += "    ldr x10, [x10]" + Chr(10);
+                        }
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.ne .end_if7_" + STR(ifCount7) + Chr(10);
+                    out += "    b.ge .end_if4_" + STR(ifCount4) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6255,22 +6226,22 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jne end_if7_" + STR(ifCount7) + Chr(10);
+                    out += "jge end_if4_" + STR(ifCount4) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "jne .end_if7_" + STR(ifCount7) + Chr(10);
+                        out += "jge .end_if4_" + STR(ifCount4) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jne .end_if7_" + STR(ifCount7) + Chr(10);
+                        out += "jge .end_if4_" + STR(ifCount4) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " != ")) {
-                str2 = Trim(StrSplit(str1, " != ", 1));
-                str3 = Trim(StrSplit(str1, " != ", 2));
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -6320,10 +6291,10 @@ std::string compiler(std::string code) {
                         }
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.eq .end_if7_" + STR(ifCount7) + Chr(10);
+                    out += "    b.lt .end_if4_" + STR(ifCount4) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6339,22 +6310,22 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "je end_if7_" + STR(ifCount7) + Chr(10);
+                    out += "jl end_if4_" + STR(ifCount4) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "je .end_if7_" + STR(ifCount7) + Chr(10);
+                        out += "jl .end_if4_" + STR(ifCount4) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "je .end_if7_" + STR(ifCount7) + Chr(10);
+                        out += "jl .end_if4_" + STR(ifCount4) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " > ")) {
-                str2 = Trim(StrSplit(str1, " > ", 1));
-                str3 = Trim(StrSplit(str1, " > ", 2));
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -6404,10 +6375,10 @@ std::string compiler(std::string code) {
                         }
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.le .end_if7_" + STR(ifCount7) + Chr(10);
+                    out += "    b.gt .end_if4_" + STR(ifCount4) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6423,22 +6394,37 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jle end_if7_" + STR(ifCount7) + Chr(10);
+                    out += "jg end_if4_" + STR(ifCount4) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "jle .end_if7_" + STR(ifCount7) + Chr(10);
+                        out += "jg .end_if4_" + STR(ifCount4) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jle .end_if7_" + STR(ifCount7) + Chr(10);
+                        out += "jg .end_if4_" + STR(ifCount4) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " < ")) {
-                str2 = Trim(StrSplit(str1, " < ", 1));
-                str3 = Trim(StrSplit(str1, " < ", 2));
+        }
+        else if (Trim(A_LoopField69) == "ifend4" || Trim(A_LoopField69) == "endif4") {
+            if (is_oryx == 1) {
+                out += "meta " + A_LoopField69 + Chr(10);
+                out += "end_if4_" + STR(ifCount4) + ":" + Chr(10);
+            } else {
+                out += ".end_if4_" + STR(ifCount4) + ":" + Chr(10);
+            }
+            ifCount4++;
+        }
+        else if (SubStr(StrLower(A_LoopField69), 1, 4) == "if5 ") {
+            isNum = 0;
+            str1 = Trim(StringTrimLeft(A_LoopField69, 4));
+            str1 = StringTrimLeft(str1, 1);
+            str1 = StringTrimRight(str1, 1);
+            if (InStr(str1, " = ")) {
+                str2 = Trim(StrSplit(str1, " = ", 1));
+                str3 = Trim(StrSplit(str1, " = ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -6462,36 +6448,35 @@ std::string compiler(std::string code) {
                         out += "    ldr x9, =" + str2 + Chr(10);
                         out += "    ldr x9, [x9]" + Chr(10);
                     }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index138 = 0; A_Index138 < HTVM_Size(funcArgsArr); A_Index138++) {
-                                if (Trim(funcArgsArr[A_Index138]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
+                    int isRhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index138 = 0; A_Index138 < HTVM_Size(funcArgsArr); A_Index138++) {
+                            if (Trim(funcArgsArr[A_Index138]) == str3) {
+                                isRhsStackVar = 1;
+                                break;
                             }
                         }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                            out += "    ldr x10, [x10]" + Chr(10);
-                        }
+                    }
+                    if (str3 == "rax") {
+                        out += "    mov x10, x0" + Chr(10);
+                    }
+                    else if (str3 == "A_Index") {
+                        out += "    mov x10, x20" + Chr(10);
+                    }
+                    else if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    }
+                    else if (isRhsStackVar == 1) {
+                        out += "    ldr x10, =" + str3 + Chr(10);
+                    } else {
+                        out += "    ldr x10, =" + str3 + Chr(10);
+                        out += "    ldr x10, [x10]" + Chr(10);
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.ge .end_if7_" + STR(ifCount7) + Chr(10);
+                    out += "    b.ne .end_if5_" + STR(ifCount5) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6507,22 +6492,22 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jge end_if7_" + STR(ifCount7) + Chr(10);
+                    out += "jne end_if5_" + STR(ifCount5) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "jge .end_if7_" + STR(ifCount7) + Chr(10);
+                        out += "jne .end_if5_" + STR(ifCount5) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jge .end_if7_" + STR(ifCount7) + Chr(10);
+                        out += "jne .end_if5_" + STR(ifCount5) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " >= ")) {
-                str2 = Trim(StrSplit(str1, " >= ", 1));
-                str3 = Trim(StrSplit(str1, " >= ", 2));
+            else if (InStr(str1, " != ")) {
+                str2 = Trim(StrSplit(str1, " != ", 1));
+                str3 = Trim(StrSplit(str1, " != ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -6572,10 +6557,10 @@ std::string compiler(std::string code) {
                         }
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.lt .end_if7_" + STR(ifCount7) + Chr(10);
+                    out += "    b.eq .end_if5_" + STR(ifCount5) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6591,22 +6576,22 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jl end_if7_" + STR(ifCount7) + Chr(10);
+                    out += "je end_if5_" + STR(ifCount5) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "jl .end_if7_" + STR(ifCount7) + Chr(10);
+                        out += "je .end_if5_" + STR(ifCount5) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jl .end_if7_" + STR(ifCount7) + Chr(10);
+                        out += "je .end_if5_" + STR(ifCount5) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " <= ")) {
-                str2 = Trim(StrSplit(str1, " <= ", 1));
-                str3 = Trim(StrSplit(str1, " <= ", 2));
+            else if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -6656,10 +6641,10 @@ std::string compiler(std::string code) {
                         }
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.gt .end_if7_" + STR(ifCount7) + Chr(10);
+                    out += "    b.le .end_if5_" + STR(ifCount5) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6675,37 +6660,22 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jg end_if7_" + STR(ifCount7) + Chr(10);
+                    out += "jle end_if5_" + STR(ifCount5) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "jg .end_if7_" + STR(ifCount7) + Chr(10);
+                        out += "jle .end_if5_" + STR(ifCount5) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jg .end_if7_" + STR(ifCount7) + Chr(10);
+                        out += "jle .end_if5_" + STR(ifCount5) + Chr(10);
                     }
                 }
             }
-        }
-        else if (Trim(A_LoopField39) == "ifend7" || Trim(A_LoopField39) == "endif7") {
-            if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
-                out += "end_if7_" + STR(ifCount7) + ":" + Chr(10);
-            } else {
-                out += ".end_if7_" + STR(ifCount7) + ":" + Chr(10);
-            }
-            ifCount7++;
-        }
-        else if (SubStr(StrLower(A_LoopField39), 1, 4) == "if8 ") {
-            isNum = 0;
-            str1 = Trim(StringTrimLeft(A_LoopField39, 4));
-            str1 = StringTrimLeft(str1, 1);
-            str1 = StringTrimRight(str1, 1);
-            if (InStr(str1, " = ")) {
-                str2 = Trim(StrSplit(str1, " = ", 1));
-                str3 = Trim(StrSplit(str1, " = ", 2));
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -6729,35 +6699,36 @@ std::string compiler(std::string code) {
                         out += "    ldr x9, =" + str2 + Chr(10);
                         out += "    ldr x9, [x9]" + Chr(10);
                     }
-                    int isRhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index144 = 0; A_Index144 < HTVM_Size(funcArgsArr); A_Index144++) {
-                            if (Trim(funcArgsArr[A_Index144]) == str3) {
-                                isRhsStackVar = 1;
-                                break;
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index144 = 0; A_Index144 < HTVM_Size(funcArgsArr); A_Index144++) {
+                                if (Trim(funcArgsArr[A_Index144]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
                             }
                         }
-                    }
-                    if (str3 == "rax") {
-                        out += "    mov x10, x0" + Chr(10);
-                    }
-                    else if (str3 == "A_Index") {
-                        out += "    mov x10, x20" + Chr(10);
-                    }
-                    else if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    }
-                    else if (isRhsStackVar == 1) {
-                        out += "    ldr x10, =" + str3 + Chr(10);
-                    } else {
-                        out += "    ldr x10, =" + str3 + Chr(10);
-                        out += "    ldr x10, [x10]" + Chr(10);
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                            out += "    ldr x10, [x10]" + Chr(10);
+                        }
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.ne .end_if8_" + STR(ifCount8) + Chr(10);
+                    out += "    b.ge .end_if5_" + STR(ifCount5) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6773,22 +6744,22 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jne end_if8_" + STR(ifCount8) + Chr(10);
+                    out += "jge end_if5_" + STR(ifCount5) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "jne .end_if8_" + STR(ifCount8) + Chr(10);
+                        out += "jge .end_if5_" + STR(ifCount5) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jne .end_if8_" + STR(ifCount8) + Chr(10);
+                        out += "jge .end_if5_" + STR(ifCount5) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " != ")) {
-                str2 = Trim(StrSplit(str1, " != ", 1));
-                str3 = Trim(StrSplit(str1, " != ", 2));
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -6838,10 +6809,10 @@ std::string compiler(std::string code) {
                         }
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.eq .end_if8_" + STR(ifCount8) + Chr(10);
+                    out += "    b.lt .end_if5_" + STR(ifCount5) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6857,22 +6828,22 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "je end_if8_" + STR(ifCount8) + Chr(10);
+                    out += "jl end_if5_" + STR(ifCount5) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "je .end_if8_" + STR(ifCount8) + Chr(10);
+                        out += "jl .end_if5_" + STR(ifCount5) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "je .end_if8_" + STR(ifCount8) + Chr(10);
+                        out += "jl .end_if5_" + STR(ifCount5) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " > ")) {
-                str2 = Trim(StrSplit(str1, " > ", 1));
-                str3 = Trim(StrSplit(str1, " > ", 2));
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -6922,10 +6893,10 @@ std::string compiler(std::string code) {
                         }
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.le .end_if8_" + STR(ifCount8) + Chr(10);
+                    out += "    b.gt .end_if5_" + STR(ifCount5) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -6941,22 +6912,37 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jle end_if8_" + STR(ifCount8) + Chr(10);
+                    out += "jg end_if5_" + STR(ifCount5) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "jle .end_if8_" + STR(ifCount8) + Chr(10);
+                        out += "jg .end_if5_" + STR(ifCount5) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jle .end_if8_" + STR(ifCount8) + Chr(10);
+                        out += "jg .end_if5_" + STR(ifCount5) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " < ")) {
-                str2 = Trim(StrSplit(str1, " < ", 1));
-                str3 = Trim(StrSplit(str1, " < ", 2));
+        }
+        else if (Trim(A_LoopField69) == "ifend5" || Trim(A_LoopField69) == "endif5") {
+            if (is_oryx == 1) {
+                out += "meta " + A_LoopField69 + Chr(10);
+                out += "end_if5_" + STR(ifCount5) + ":" + Chr(10);
+            } else {
+                out += ".end_if5_" + STR(ifCount5) + ":" + Chr(10);
+            }
+            ifCount5++;
+        }
+        else if (SubStr(StrLower(A_LoopField69), 1, 4) == "if6 ") {
+            isNum = 0;
+            str1 = Trim(StringTrimLeft(A_LoopField69, 4));
+            str1 = StringTrimLeft(str1, 1);
+            str1 = StringTrimRight(str1, 1);
+            if (InStr(str1, " = ")) {
+                str2 = Trim(StrSplit(str1, " = ", 1));
+                str3 = Trim(StrSplit(str1, " = ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -6980,36 +6966,35 @@ std::string compiler(std::string code) {
                         out += "    ldr x9, =" + str2 + Chr(10);
                         out += "    ldr x9, [x9]" + Chr(10);
                     }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index150 = 0; A_Index150 < HTVM_Size(funcArgsArr); A_Index150++) {
-                                if (Trim(funcArgsArr[A_Index150]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
+                    int isRhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index150 = 0; A_Index150 < HTVM_Size(funcArgsArr); A_Index150++) {
+                            if (Trim(funcArgsArr[A_Index150]) == str3) {
+                                isRhsStackVar = 1;
+                                break;
                             }
                         }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                            out += "    ldr x10, [x10]" + Chr(10);
-                        }
+                    }
+                    if (str3 == "rax") {
+                        out += "    mov x10, x0" + Chr(10);
+                    }
+                    else if (str3 == "A_Index") {
+                        out += "    mov x10, x20" + Chr(10);
+                    }
+                    else if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    }
+                    else if (isRhsStackVar == 1) {
+                        out += "    ldr x10, =" + str3 + Chr(10);
+                    } else {
+                        out += "    ldr x10, =" + str3 + Chr(10);
+                        out += "    ldr x10, [x10]" + Chr(10);
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.ge .end_if8_" + STR(ifCount8) + Chr(10);
+                    out += "    b.ne .end_if6_" + STR(ifCount6) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7025,22 +7010,22 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jge end_if8_" + STR(ifCount8) + Chr(10);
+                    out += "jne end_if6_" + STR(ifCount6) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "jge .end_if8_" + STR(ifCount8) + Chr(10);
+                        out += "jne .end_if6_" + STR(ifCount6) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jge .end_if8_" + STR(ifCount8) + Chr(10);
+                        out += "jne .end_if6_" + STR(ifCount6) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " >= ")) {
-                str2 = Trim(StrSplit(str1, " >= ", 1));
-                str3 = Trim(StrSplit(str1, " >= ", 2));
+            else if (InStr(str1, " != ")) {
+                str2 = Trim(StrSplit(str1, " != ", 1));
+                str3 = Trim(StrSplit(str1, " != ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -7090,10 +7075,10 @@ std::string compiler(std::string code) {
                         }
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.lt .end_if8_" + STR(ifCount8) + Chr(10);
+                    out += "    b.eq .end_if6_" + STR(ifCount6) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7109,22 +7094,22 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jl end_if8_" + STR(ifCount8) + Chr(10);
+                    out += "je end_if6_" + STR(ifCount6) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "jl .end_if8_" + STR(ifCount8) + Chr(10);
+                        out += "je .end_if6_" + STR(ifCount6) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jl .end_if8_" + STR(ifCount8) + Chr(10);
+                        out += "je .end_if6_" + STR(ifCount6) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " <= ")) {
-                str2 = Trim(StrSplit(str1, " <= ", 1));
-                str3 = Trim(StrSplit(str1, " <= ", 2));
+            else if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -7174,10 +7159,10 @@ std::string compiler(std::string code) {
                         }
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.gt .end_if8_" + STR(ifCount8) + Chr(10);
+                    out += "    b.le .end_if6_" + STR(ifCount6) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7193,37 +7178,22 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jg end_if8_" + STR(ifCount8) + Chr(10);
+                    out += "jle end_if6_" + STR(ifCount6) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "jg .end_if8_" + STR(ifCount8) + Chr(10);
+                        out += "jle .end_if6_" + STR(ifCount6) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jg .end_if8_" + STR(ifCount8) + Chr(10);
+                        out += "jle .end_if6_" + STR(ifCount6) + Chr(10);
                     }
                 }
             }
-        }
-        else if (Trim(A_LoopField39) == "ifend8" || Trim(A_LoopField39) == "endif8") {
-            if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
-                out += "end_if8_" + STR(ifCount8) + ":" + Chr(10);
-            } else {
-                out += ".end_if8_" + STR(ifCount8) + ":" + Chr(10);
-            }
-            ifCount8++;
-        }
-        else if (SubStr(StrLower(A_LoopField39), 1, 4) == "if9 ") {
-            isNum = 0;
-            str1 = Trim(StringTrimLeft(A_LoopField39, 4));
-            str1 = StringTrimLeft(str1, 1);
-            str1 = StringTrimRight(str1, 1);
-            if (InStr(str1, " = ")) {
-                str2 = Trim(StrSplit(str1, " = ", 1));
-                str3 = Trim(StrSplit(str1, " = ", 2));
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -7247,35 +7217,36 @@ std::string compiler(std::string code) {
                         out += "    ldr x9, =" + str2 + Chr(10);
                         out += "    ldr x9, [x9]" + Chr(10);
                     }
-                    int isRhsStackVar = 0;
-                    if (inFunc == 1) {
-                        for (int A_Index156 = 0; A_Index156 < HTVM_Size(funcArgsArr); A_Index156++) {
-                            if (Trim(funcArgsArr[A_Index156]) == str3) {
-                                isRhsStackVar = 1;
-                                break;
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index156 = 0; A_Index156 < HTVM_Size(funcArgsArr); A_Index156++) {
+                                if (Trim(funcArgsArr[A_Index156]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
                             }
                         }
-                    }
-                    if (str3 == "rax") {
-                        out += "    mov x10, x0" + Chr(10);
-                    }
-                    else if (str3 == "A_Index") {
-                        out += "    mov x10, x20" + Chr(10);
-                    }
-                    else if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    }
-                    else if (isRhsStackVar == 1) {
-                        out += "    ldr x10, =" + str3 + Chr(10);
-                    } else {
-                        out += "    ldr x10, =" + str3 + Chr(10);
-                        out += "    ldr x10, [x10]" + Chr(10);
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                            out += "    ldr x10, [x10]" + Chr(10);
+                        }
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.ne .end_if9_" + STR(ifCount9) + Chr(10);
+                    out += "    b.ge .end_if6_" + STR(ifCount6) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7291,22 +7262,22 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jne end_if9_" + STR(ifCount9) + Chr(10);
+                    out += "jge end_if6_" + STR(ifCount6) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "jne .end_if9_" + STR(ifCount9) + Chr(10);
+                        out += "jge .end_if6_" + STR(ifCount6) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jne .end_if9_" + STR(ifCount9) + Chr(10);
+                        out += "jge .end_if6_" + STR(ifCount6) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " != ")) {
-                str2 = Trim(StrSplit(str1, " != ", 1));
-                str3 = Trim(StrSplit(str1, " != ", 2));
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -7356,10 +7327,10 @@ std::string compiler(std::string code) {
                         }
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.eq .end_if9_" + STR(ifCount9) + Chr(10);
+                    out += "    b.lt .end_if6_" + STR(ifCount6) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7375,22 +7346,22 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "je end_if9_" + STR(ifCount9) + Chr(10);
+                    out += "jl end_if6_" + STR(ifCount6) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "je .end_if9_" + STR(ifCount9) + Chr(10);
+                        out += "jl .end_if6_" + STR(ifCount6) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "je .end_if9_" + STR(ifCount9) + Chr(10);
+                        out += "jl .end_if6_" + STR(ifCount6) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " > ")) {
-                str2 = Trim(StrSplit(str1, " > ", 1));
-                str3 = Trim(StrSplit(str1, " > ", 2));
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -7440,10 +7411,10 @@ std::string compiler(std::string code) {
                         }
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.le .end_if9_" + STR(ifCount9) + Chr(10);
+                    out += "    b.gt .end_if6_" + STR(ifCount6) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7459,22 +7430,37 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jle end_if9_" + STR(ifCount9) + Chr(10);
+                    out += "jg end_if6_" + STR(ifCount6) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "jle .end_if9_" + STR(ifCount9) + Chr(10);
+                        out += "jg .end_if6_" + STR(ifCount6) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jle .end_if9_" + STR(ifCount9) + Chr(10);
+                        out += "jg .end_if6_" + STR(ifCount6) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " < ")) {
-                str2 = Trim(StrSplit(str1, " < ", 1));
-                str3 = Trim(StrSplit(str1, " < ", 2));
+        }
+        else if (Trim(A_LoopField69) == "ifend6" || Trim(A_LoopField69) == "endif6") {
+            if (is_oryx == 1) {
+                out += "meta " + A_LoopField69 + Chr(10);
+                out += "end_if6_" + STR(ifCount6) + ":" + Chr(10);
+            } else {
+                out += ".end_if6_" + STR(ifCount6) + ":" + Chr(10);
+            }
+            ifCount6++;
+        }
+        else if (SubStr(StrLower(A_LoopField69), 1, 4) == "if7 ") {
+            isNum = 0;
+            str1 = Trim(StringTrimLeft(A_LoopField69, 4));
+            str1 = StringTrimLeft(str1, 1);
+            str1 = StringTrimRight(str1, 1);
+            if (InStr(str1, " = ")) {
+                str2 = Trim(StrSplit(str1, " = ", 1));
+                str3 = Trim(StrSplit(str1, " = ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -7498,36 +7484,35 @@ std::string compiler(std::string code) {
                         out += "    ldr x9, =" + str2 + Chr(10);
                         out += "    ldr x9, [x9]" + Chr(10);
                     }
-                    if (isNum == 1) {
-                        out += "    mov x10, #" + str3 + Chr(10);
-                    } else {
-                        int isRhsStackVar = 0;
-                        if (inFunc == 1) {
-                            for (int A_Index162 = 0; A_Index162 < HTVM_Size(funcArgsArr); A_Index162++) {
-                                if (Trim(funcArgsArr[A_Index162]) == str3) {
-                                    isRhsStackVar = 1;
-                                    break;
-                                }
+                    int isRhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index162 = 0; A_Index162 < HTVM_Size(funcArgsArr); A_Index162++) {
+                            if (Trim(funcArgsArr[A_Index162]) == str3) {
+                                isRhsStackVar = 1;
+                                break;
                             }
                         }
-                        if (str3 == "rax") {
-                            out += "    mov x10, x0" + Chr(10);
-                        }
-                        else if (str3 == "A_Index") {
-                            out += "    mov x10, x20" + Chr(10);
-                        }
-                        else if (isRhsStackVar == 1) {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                        } else {
-                            out += "    ldr x10, =" + str3 + Chr(10);
-                            out += "    ldr x10, [x10]" + Chr(10);
-                        }
+                    }
+                    if (str3 == "rax") {
+                        out += "    mov x10, x0" + Chr(10);
+                    }
+                    else if (str3 == "A_Index") {
+                        out += "    mov x10, x20" + Chr(10);
+                    }
+                    else if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    }
+                    else if (isRhsStackVar == 1) {
+                        out += "    ldr x10, =" + str3 + Chr(10);
+                    } else {
+                        out += "    ldr x10, =" + str3 + Chr(10);
+                        out += "    ldr x10, [x10]" + Chr(10);
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.ge .end_if9_" + STR(ifCount9) + Chr(10);
+                    out += "    b.ne .end_if7_" + STR(ifCount7) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7543,22 +7528,22 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jge end_if9_" + STR(ifCount9) + Chr(10);
+                    out += "jne end_if7_" + STR(ifCount7) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "jge .end_if9_" + STR(ifCount9) + Chr(10);
+                        out += "jne .end_if7_" + STR(ifCount7) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jge .end_if9_" + STR(ifCount9) + Chr(10);
+                        out += "jne .end_if7_" + STR(ifCount7) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " >= ")) {
-                str2 = Trim(StrSplit(str1, " >= ", 1));
-                str3 = Trim(StrSplit(str1, " >= ", 2));
+            else if (InStr(str1, " != ")) {
+                str2 = Trim(StrSplit(str1, " != ", 1));
+                str3 = Trim(StrSplit(str1, " != ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -7608,10 +7593,10 @@ std::string compiler(std::string code) {
                         }
                     }
                     out += "    cmp x9, x10" + Chr(10);
-                    out += "    b.lt .end_if9_" + STR(ifCount9) + Chr(10);
+                    out += "    b.eq .end_if7_" + STR(ifCount7) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7627,22 +7612,22 @@ std::string compiler(std::string code) {
                         strRhs = "r20";
                     }
                     out += "cmp " + strLhs + ", " + strRhs + Chr(10);
-                    out += "jl end_if9_" + STR(ifCount9) + Chr(10);
+                    out += "je end_if7_" + STR(ifCount7) + Chr(10);
                 } else {
                     if (isNum == 1) {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, " + str3 + Chr(10);
-                        out += "jl .end_if9_" + STR(ifCount9) + Chr(10);
+                        out += "je .end_if7_" + STR(ifCount7) + Chr(10);
                     } else {
                         out += "mov rax, [" + str2 + "]" + Chr(10);
                         out += "cmp rax, [" + str3 + "]" + Chr(10);
-                        out += "jl .end_if9_" + STR(ifCount9) + Chr(10);
+                        out += "je .end_if7_" + STR(ifCount7) + Chr(10);
                     }
                 }
             }
-            else if (InStr(str1, " <= ")) {
-                str2 = Trim(StrSplit(str1, " <= ", 1));
-                str3 = Trim(StrSplit(str1, " <= ", 2));
+            else if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
                 isNum = RegExMatch(str3, "^\\d+$");
                 if (is_arm == 1) {
                     int isLhsStackVar = 0;
@@ -7692,10 +7677,1298 @@ std::string compiler(std::string code) {
                         }
                     }
                     out += "    cmp x9, x10" + Chr(10);
+                    out += "    b.le .end_if7_" + STR(ifCount7) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jle end_if7_" + STR(ifCount7) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, " + str3 + Chr(10);
+                        out += "jle .end_if7_" + STR(ifCount7) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, [" + str3 + "]" + Chr(10);
+                        out += "jle .end_if7_" + STR(ifCount7) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index167 = 0; A_Index167 < HTVM_Size(funcArgsArr); A_Index167++) {
+                            if (Trim(funcArgsArr[A_Index167]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                        out += "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index168 = 0; A_Index168 < HTVM_Size(funcArgsArr); A_Index168++) {
+                                if (Trim(funcArgsArr[A_Index168]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                            out += "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10);
+                    out += "    b.ge .end_if7_" + STR(ifCount7) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jge end_if7_" + STR(ifCount7) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, " + str3 + Chr(10);
+                        out += "jge .end_if7_" + STR(ifCount7) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, [" + str3 + "]" + Chr(10);
+                        out += "jge .end_if7_" + STR(ifCount7) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index169 = 0; A_Index169 < HTVM_Size(funcArgsArr); A_Index169++) {
+                            if (Trim(funcArgsArr[A_Index169]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                        out += "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index170 = 0; A_Index170 < HTVM_Size(funcArgsArr); A_Index170++) {
+                                if (Trim(funcArgsArr[A_Index170]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                            out += "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10);
+                    out += "    b.lt .end_if7_" + STR(ifCount7) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jl end_if7_" + STR(ifCount7) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, " + str3 + Chr(10);
+                        out += "jl .end_if7_" + STR(ifCount7) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, [" + str3 + "]" + Chr(10);
+                        out += "jl .end_if7_" + STR(ifCount7) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index171 = 0; A_Index171 < HTVM_Size(funcArgsArr); A_Index171++) {
+                            if (Trim(funcArgsArr[A_Index171]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                        out += "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index172 = 0; A_Index172 < HTVM_Size(funcArgsArr); A_Index172++) {
+                                if (Trim(funcArgsArr[A_Index172]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                            out += "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10);
+                    out += "    b.gt .end_if7_" + STR(ifCount7) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jg end_if7_" + STR(ifCount7) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, " + str3 + Chr(10);
+                        out += "jg .end_if7_" + STR(ifCount7) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, [" + str3 + "]" + Chr(10);
+                        out += "jg .end_if7_" + STR(ifCount7) + Chr(10);
+                    }
+                }
+            }
+        }
+        else if (Trim(A_LoopField69) == "ifend7" || Trim(A_LoopField69) == "endif7") {
+            if (is_oryx == 1) {
+                out += "meta " + A_LoopField69 + Chr(10);
+                out += "end_if7_" + STR(ifCount7) + ":" + Chr(10);
+            } else {
+                out += ".end_if7_" + STR(ifCount7) + ":" + Chr(10);
+            }
+            ifCount7++;
+        }
+        else if (SubStr(StrLower(A_LoopField69), 1, 4) == "if8 ") {
+            isNum = 0;
+            str1 = Trim(StringTrimLeft(A_LoopField69, 4));
+            str1 = StringTrimLeft(str1, 1);
+            str1 = StringTrimRight(str1, 1);
+            if (InStr(str1, " = ")) {
+                str2 = Trim(StrSplit(str1, " = ", 1));
+                str3 = Trim(StrSplit(str1, " = ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index173 = 0; A_Index173 < HTVM_Size(funcArgsArr); A_Index173++) {
+                            if (Trim(funcArgsArr[A_Index173]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                        out += "    ldr x9, [x9]" + Chr(10);
+                    }
+                    int isRhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index174 = 0; A_Index174 < HTVM_Size(funcArgsArr); A_Index174++) {
+                            if (Trim(funcArgsArr[A_Index174]) == str3) {
+                                isRhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str3 == "rax") {
+                        out += "    mov x10, x0" + Chr(10);
+                    }
+                    else if (str3 == "A_Index") {
+                        out += "    mov x10, x20" + Chr(10);
+                    }
+                    else if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    }
+                    else if (isRhsStackVar == 1) {
+                        out += "    ldr x10, =" + str3 + Chr(10);
+                    } else {
+                        out += "    ldr x10, =" + str3 + Chr(10);
+                        out += "    ldr x10, [x10]" + Chr(10);
+                    }
+                    out += "    cmp x9, x10" + Chr(10);
+                    out += "    b.ne .end_if8_" + STR(ifCount8) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jne end_if8_" + STR(ifCount8) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, " + str3 + Chr(10);
+                        out += "jne .end_if8_" + STR(ifCount8) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, [" + str3 + "]" + Chr(10);
+                        out += "jne .end_if8_" + STR(ifCount8) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " != ")) {
+                str2 = Trim(StrSplit(str1, " != ", 1));
+                str3 = Trim(StrSplit(str1, " != ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index175 = 0; A_Index175 < HTVM_Size(funcArgsArr); A_Index175++) {
+                            if (Trim(funcArgsArr[A_Index175]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                        out += "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index176 = 0; A_Index176 < HTVM_Size(funcArgsArr); A_Index176++) {
+                                if (Trim(funcArgsArr[A_Index176]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                            out += "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10);
+                    out += "    b.eq .end_if8_" + STR(ifCount8) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "je end_if8_" + STR(ifCount8) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, " + str3 + Chr(10);
+                        out += "je .end_if8_" + STR(ifCount8) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, [" + str3 + "]" + Chr(10);
+                        out += "je .end_if8_" + STR(ifCount8) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index177 = 0; A_Index177 < HTVM_Size(funcArgsArr); A_Index177++) {
+                            if (Trim(funcArgsArr[A_Index177]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                        out += "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index178 = 0; A_Index178 < HTVM_Size(funcArgsArr); A_Index178++) {
+                                if (Trim(funcArgsArr[A_Index178]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                            out += "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10);
+                    out += "    b.le .end_if8_" + STR(ifCount8) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jle end_if8_" + STR(ifCount8) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, " + str3 + Chr(10);
+                        out += "jle .end_if8_" + STR(ifCount8) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, [" + str3 + "]" + Chr(10);
+                        out += "jle .end_if8_" + STR(ifCount8) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index179 = 0; A_Index179 < HTVM_Size(funcArgsArr); A_Index179++) {
+                            if (Trim(funcArgsArr[A_Index179]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                        out += "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index180 = 0; A_Index180 < HTVM_Size(funcArgsArr); A_Index180++) {
+                                if (Trim(funcArgsArr[A_Index180]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                            out += "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10);
+                    out += "    b.ge .end_if8_" + STR(ifCount8) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jge end_if8_" + STR(ifCount8) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, " + str3 + Chr(10);
+                        out += "jge .end_if8_" + STR(ifCount8) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, [" + str3 + "]" + Chr(10);
+                        out += "jge .end_if8_" + STR(ifCount8) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index181 = 0; A_Index181 < HTVM_Size(funcArgsArr); A_Index181++) {
+                            if (Trim(funcArgsArr[A_Index181]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                        out += "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index182 = 0; A_Index182 < HTVM_Size(funcArgsArr); A_Index182++) {
+                                if (Trim(funcArgsArr[A_Index182]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                            out += "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10);
+                    out += "    b.lt .end_if8_" + STR(ifCount8) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jl end_if8_" + STR(ifCount8) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, " + str3 + Chr(10);
+                        out += "jl .end_if8_" + STR(ifCount8) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, [" + str3 + "]" + Chr(10);
+                        out += "jl .end_if8_" + STR(ifCount8) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index183 = 0; A_Index183 < HTVM_Size(funcArgsArr); A_Index183++) {
+                            if (Trim(funcArgsArr[A_Index183]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                        out += "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index184 = 0; A_Index184 < HTVM_Size(funcArgsArr); A_Index184++) {
+                                if (Trim(funcArgsArr[A_Index184]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                            out += "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10);
+                    out += "    b.gt .end_if8_" + STR(ifCount8) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jg end_if8_" + STR(ifCount8) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, " + str3 + Chr(10);
+                        out += "jg .end_if8_" + STR(ifCount8) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, [" + str3 + "]" + Chr(10);
+                        out += "jg .end_if8_" + STR(ifCount8) + Chr(10);
+                    }
+                }
+            }
+        }
+        else if (Trim(A_LoopField69) == "ifend8" || Trim(A_LoopField69) == "endif8") {
+            if (is_oryx == 1) {
+                out += "meta " + A_LoopField69 + Chr(10);
+                out += "end_if8_" + STR(ifCount8) + ":" + Chr(10);
+            } else {
+                out += ".end_if8_" + STR(ifCount8) + ":" + Chr(10);
+            }
+            ifCount8++;
+        }
+        else if (SubStr(StrLower(A_LoopField69), 1, 4) == "if9 ") {
+            isNum = 0;
+            str1 = Trim(StringTrimLeft(A_LoopField69, 4));
+            str1 = StringTrimLeft(str1, 1);
+            str1 = StringTrimRight(str1, 1);
+            if (InStr(str1, " = ")) {
+                str2 = Trim(StrSplit(str1, " = ", 1));
+                str3 = Trim(StrSplit(str1, " = ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index185 = 0; A_Index185 < HTVM_Size(funcArgsArr); A_Index185++) {
+                            if (Trim(funcArgsArr[A_Index185]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                        out += "    ldr x9, [x9]" + Chr(10);
+                    }
+                    int isRhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index186 = 0; A_Index186 < HTVM_Size(funcArgsArr); A_Index186++) {
+                            if (Trim(funcArgsArr[A_Index186]) == str3) {
+                                isRhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str3 == "rax") {
+                        out += "    mov x10, x0" + Chr(10);
+                    }
+                    else if (str3 == "A_Index") {
+                        out += "    mov x10, x20" + Chr(10);
+                    }
+                    else if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    }
+                    else if (isRhsStackVar == 1) {
+                        out += "    ldr x10, =" + str3 + Chr(10);
+                    } else {
+                        out += "    ldr x10, =" + str3 + Chr(10);
+                        out += "    ldr x10, [x10]" + Chr(10);
+                    }
+                    out += "    cmp x9, x10" + Chr(10);
+                    out += "    b.ne .end_if9_" + STR(ifCount9) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jne end_if9_" + STR(ifCount9) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, " + str3 + Chr(10);
+                        out += "jne .end_if9_" + STR(ifCount9) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, [" + str3 + "]" + Chr(10);
+                        out += "jne .end_if9_" + STR(ifCount9) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " != ")) {
+                str2 = Trim(StrSplit(str1, " != ", 1));
+                str3 = Trim(StrSplit(str1, " != ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index187 = 0; A_Index187 < HTVM_Size(funcArgsArr); A_Index187++) {
+                            if (Trim(funcArgsArr[A_Index187]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                        out += "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index188 = 0; A_Index188 < HTVM_Size(funcArgsArr); A_Index188++) {
+                                if (Trim(funcArgsArr[A_Index188]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                            out += "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10);
+                    out += "    b.eq .end_if9_" + STR(ifCount9) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "je end_if9_" + STR(ifCount9) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, " + str3 + Chr(10);
+                        out += "je .end_if9_" + STR(ifCount9) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, [" + str3 + "]" + Chr(10);
+                        out += "je .end_if9_" + STR(ifCount9) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " > ")) {
+                str2 = Trim(StrSplit(str1, " > ", 1));
+                str3 = Trim(StrSplit(str1, " > ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index189 = 0; A_Index189 < HTVM_Size(funcArgsArr); A_Index189++) {
+                            if (Trim(funcArgsArr[A_Index189]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                        out += "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index190 = 0; A_Index190 < HTVM_Size(funcArgsArr); A_Index190++) {
+                                if (Trim(funcArgsArr[A_Index190]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                            out += "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10);
+                    out += "    b.le .end_if9_" + STR(ifCount9) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jle end_if9_" + STR(ifCount9) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, " + str3 + Chr(10);
+                        out += "jle .end_if9_" + STR(ifCount9) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, [" + str3 + "]" + Chr(10);
+                        out += "jle .end_if9_" + STR(ifCount9) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " < ")) {
+                str2 = Trim(StrSplit(str1, " < ", 1));
+                str3 = Trim(StrSplit(str1, " < ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index191 = 0; A_Index191 < HTVM_Size(funcArgsArr); A_Index191++) {
+                            if (Trim(funcArgsArr[A_Index191]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                        out += "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index192 = 0; A_Index192 < HTVM_Size(funcArgsArr); A_Index192++) {
+                                if (Trim(funcArgsArr[A_Index192]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                            out += "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10);
+                    out += "    b.ge .end_if9_" + STR(ifCount9) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jge end_if9_" + STR(ifCount9) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, " + str3 + Chr(10);
+                        out += "jge .end_if9_" + STR(ifCount9) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, [" + str3 + "]" + Chr(10);
+                        out += "jge .end_if9_" + STR(ifCount9) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " >= ")) {
+                str2 = Trim(StrSplit(str1, " >= ", 1));
+                str3 = Trim(StrSplit(str1, " >= ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index193 = 0; A_Index193 < HTVM_Size(funcArgsArr); A_Index193++) {
+                            if (Trim(funcArgsArr[A_Index193]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                        out += "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index194 = 0; A_Index194 < HTVM_Size(funcArgsArr); A_Index194++) {
+                                if (Trim(funcArgsArr[A_Index194]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                            out += "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10);
+                    out += "    b.lt .end_if9_" + STR(ifCount9) + Chr(10);
+                }
+                else if (is_oryx == 1) {
+                    out += "meta " + A_LoopField69 + Chr(10);
+                    strLhs = str2;
+                    if (str2 == "rax") {
+                        strLhs = "r0";
+                    }
+                    else if (str2 == "A_Index") {
+                        strLhs = "r20";
+                    }
+                    strRhs = str3;
+                    if (str3 == "rax") {
+                        strRhs = "r0";
+                    }
+                    else if (str3 == "A_Index") {
+                        strRhs = "r20";
+                    }
+                    out += "cmp " + strLhs + ", " + strRhs + Chr(10);
+                    out += "jl end_if9_" + STR(ifCount9) + Chr(10);
+                } else {
+                    if (isNum == 1) {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, " + str3 + Chr(10);
+                        out += "jl .end_if9_" + STR(ifCount9) + Chr(10);
+                    } else {
+                        out += "mov rax, [" + str2 + "]" + Chr(10);
+                        out += "cmp rax, [" + str3 + "]" + Chr(10);
+                        out += "jl .end_if9_" + STR(ifCount9) + Chr(10);
+                    }
+                }
+            }
+            else if (InStr(str1, " <= ")) {
+                str2 = Trim(StrSplit(str1, " <= ", 1));
+                str3 = Trim(StrSplit(str1, " <= ", 2));
+                isNum = RegExMatch(str3, "^\\d+$");
+                if (is_arm == 1) {
+                    int isLhsStackVar = 0;
+                    if (inFunc == 1) {
+                        for (int A_Index195 = 0; A_Index195 < HTVM_Size(funcArgsArr); A_Index195++) {
+                            if (Trim(funcArgsArr[A_Index195]) == str2) {
+                                isLhsStackVar = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if (str2 == "rax") {
+                        out += "    mov x9, x0" + Chr(10);
+                    }
+                    else if (str2 == "A_Index") {
+                        out += "    mov x9, x20" + Chr(10);
+                    }
+                    else if (isLhsStackVar == 1) {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                    } else {
+                        out += "    ldr x9, =" + str2 + Chr(10);
+                        out += "    ldr x9, [x9]" + Chr(10);
+                    }
+                    if (isNum == 1) {
+                        out += "    mov x10, #" + str3 + Chr(10);
+                    } else {
+                        int isRhsStackVar = 0;
+                        if (inFunc == 1) {
+                            for (int A_Index196 = 0; A_Index196 < HTVM_Size(funcArgsArr); A_Index196++) {
+                                if (Trim(funcArgsArr[A_Index196]) == str3) {
+                                    isRhsStackVar = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (str3 == "rax") {
+                            out += "    mov x10, x0" + Chr(10);
+                        }
+                        else if (str3 == "A_Index") {
+                            out += "    mov x10, x20" + Chr(10);
+                        }
+                        else if (isRhsStackVar == 1) {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                        } else {
+                            out += "    ldr x10, =" + str3 + Chr(10);
+                            out += "    ldr x10, [x10]" + Chr(10);
+                        }
+                    }
+                    out += "    cmp x9, x10" + Chr(10);
                     out += "    b.gt .end_if9_" + STR(ifCount9) + Chr(10);
                 }
                 else if (is_oryx == 1) {
-                    out += "meta " + A_LoopField39 + Chr(10);
+                    out += "meta " + A_LoopField69 + Chr(10);
                     strLhs = str2;
                     if (str2 == "rax") {
                         strLhs = "r0";
@@ -7725,26 +8998,26 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (Trim(A_LoopField39) == "ifend9" || Trim(A_LoopField39) == "endif9") {
+        else if (Trim(A_LoopField69) == "ifend9" || Trim(A_LoopField69) == "endif9") {
             if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "end_if9_" + STR(ifCount9) + ":" + Chr(10);
             } else {
                 out += ".end_if9_" + STR(ifCount9) + ":" + Chr(10);
             }
             ifCount9++;
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 5) == "func ") {
+        else if (SubStr(StrLower(A_LoopField69), 1, 5) == "func ") {
             // --- YOUR PARSING LOGIC IS UNCHANGED ---
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField39), 5));
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField69), 5));
             str2 = "";
-            std::vector<std::string> items167 = LoopParseFunc(str1);
-            for (size_t A_Index167 = 0; A_Index167 < items167.size(); A_Index167++) {
-                std::string A_LoopField167 = items167[A_Index167 - 0];
-                if (A_LoopField167 == "(") {
+            std::vector<std::string> items197 = LoopParseFunc(str1);
+            for (size_t A_Index197 = 0; A_Index197 < items197.size(); A_Index197++) {
+                std::string A_LoopField197 = items197[A_Index197 - 0];
+                if (A_LoopField197 == "(") {
                     break;
                 } else {
-                    str2 += A_LoopField167;
+                    str2 += A_LoopField197;
                 }
             }
             str2 = Trim(str2);
@@ -7755,20 +9028,20 @@ std::string compiler(std::string code) {
             int2 = 0;
             if (InStr(str1, ",") || InStr(str1, "()") == false) {
                 funcArgsArr = {};
-                std::vector<std::string> items168 = LoopParseFunc(str1);
-                for (size_t A_Index168 = 0; A_Index168 < items168.size(); A_Index168++) {
-                    std::string A_LoopField168 = items168[A_Index168 - 0];
-                    if (A_LoopField168 == ")") {
+                std::vector<std::string> items198 = LoopParseFunc(str1);
+                for (size_t A_Index198 = 0; A_Index198 < items198.size(); A_Index198++) {
+                    std::string A_LoopField198 = items198[A_Index198 - 0];
+                    if (A_LoopField198 == ")") {
                         break;
                     }
-                    if (int1 == 1 && A_LoopField168 != "," && A_LoopField168 != " ") {
-                        funcArgsArr[int2] = funcArgsArr[int2] + A_LoopField168;
+                    if (int1 == 1 && A_LoopField198 != "," && A_LoopField198 != " ") {
+                        funcArgsArr[int2] = funcArgsArr[int2] + A_LoopField198;
                     }
-                    if (A_LoopField168 == ",") {
+                    if (A_LoopField198 == ",") {
                         HTVM_Append(funcArgsArr, "");
                         int2++;
                     }
-                    if (A_LoopField168 == "(") {
+                    if (A_LoopField198 == "(") {
                         HTVM_Append(funcArgsArr, "");
                         int1 = 1;
                     }
@@ -7786,14 +9059,14 @@ std::string compiler(std::string code) {
                 int total_space = ( (localVarNum * 8) + (args_to_save * 8) + 15 ) & ~15;
                 out += "    sub sp, sp, #" + STR(total_space) + Chr(10);
                 // Save the incoming register arguments to the stack
-                for (int A_Index169 = 0; A_Index169 < args_to_save; A_Index169++) {
-                    int offset = (A_Index169 * 8);
-                    out += "    str x" + STR(A_Index169) + ", [sp, #" + STR(offset) + "]" + Chr(10);
+                for (int A_Index199 = 0; A_Index199 < args_to_save; A_Index199++) {
+                    int offset = (A_Index199 * 8);
+                    out += "    str x" + STR(A_Index199) + ", [sp, #" + STR(offset) + "]" + Chr(10);
                 }
                 // --- END NEW LOGIC ---
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 isOryxFuncFirst++;
                 if (isOryxFuncFirst == 1) {
                     out += "jmp _start" + Chr(10);
@@ -7804,21 +9077,21 @@ std::string compiler(std::string code) {
                 out += "jmp " + funcName + "_end_skip_def" + Chr(10);
                 out += funcName + ":" + Chr(10);
                 // Build the map: "param_name" -> "r(50+N)"
-                for (int A_Index170 = 0; A_Index170 < HTVM_Size(funcArgsArr); A_Index170++) {
-                    std::string param_name = Trim(funcArgsArr[A_Index170]);
+                for (int A_Index200 = 0; A_Index200 < HTVM_Size(funcArgsArr); A_Index200++) {
+                    std::string param_name = Trim(funcArgsArr[A_Index200]);
                     // Arg1 -> r50, Arg2 -> r51, etc.
-                    int non_volatile_reg_num = 50 + A_Index170;
+                    int non_volatile_reg_num = 50 + A_Index200;
                     std::string safe_reg_name = "r" + STR(non_volatile_reg_num);
                     HTVM_Append(oryx_param_map, param_name + Chr(254) + safe_reg_name);
                     // Copy the argument from the volatile register (r1, r2...) into the safe register
-                    int arg_reg_num = A_Index170 + 1;
+                    int arg_reg_num = A_Index200 + 1;
                     out += "mov " + safe_reg_name + ", r" + STR(arg_reg_num) + Chr(10);
                 }
             } else {
                 out += str2 + ":" + Chr(10) + "push rbp" + Chr(10) + "mov rbp, rsp" + Chr(10) + "sub rsp, " + STR(8 + (localVarNum * 8)) + Chr(10);
             }
         }
-        else if (Trim(A_LoopField39) == "funcend" || Trim(A_LoopField39) == "endfunc") {
+        else if (Trim(A_LoopField69) == "funcend" || Trim(A_LoopField69) == "endfunc") {
             if (is_arm == 1) {
                 out += "." + funcName + "_return:" + Chr(10);
                 out += "    mov sp, x29" + Chr(10);
@@ -7826,7 +9099,7 @@ std::string compiler(std::string code) {
                 out += "    ret" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 oryx_param_map = {};
                 // --- ORYX IR (Function End) ---
                 out += funcName + "_return:" + Chr(10);
@@ -7837,19 +9110,19 @@ std::string compiler(std::string code) {
             }
             funcCount++;
         }
-        else if (Trim(A_LoopField39) == "return") {
+        else if (Trim(A_LoopField69) == "return") {
             if (is_arm == 1) {
                 out += "    b ." + funcName + "_return" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp " + funcName + "_return" + Chr(10);
             } else {
                 out += "jmp ." + funcName + "_return" + Chr(10);
             }
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 7) == "return ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField39), 7));
+        else if (SubStr(StrLower(A_LoopField69), 1, 7) == "return ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField69), 7));
             if (is_arm == 1) {
                 if (RegExMatch(str1, "^\\d+$")) {
                     out += "    mov x0, #" + str1 + Chr(10);
@@ -7862,8 +9135,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index171 = 0; A_Index171 < HTVM_Size(funcArgsArr); A_Index171++) {
-                            if (Trim(funcArgsArr[A_Index171]) == str1) {
+                        for (int A_Index201 = 0; A_Index201 < HTVM_Size(funcArgsArr); A_Index201++) {
+                            if (Trim(funcArgsArr[A_Index201]) == str1) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -7878,7 +9151,7 @@ std::string compiler(std::string code) {
                 out += "    b ." + funcName + "_return" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (return value) ---
                 if (RegExMatch(str1, "^\\d+$")) {
                     out += "mov r0, " + str1 + Chr(10);
@@ -7901,23 +9174,23 @@ std::string compiler(std::string code) {
                 }
             }
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 4) == "arr ") {
-            str1 = Trim(StringTrimLeft(Trim(A_LoopField39), 4));
+        else if (SubStr(StrLower(A_LoopField69), 1, 4) == "arr ") {
+            str1 = Trim(StringTrimLeft(Trim(A_LoopField69), 4));
             if (is_arm == 1) {
                 // A struct of 3 quadwords is 24 bytes
                 arrBss += ".lcomm " + Trim(str1) + ", 24" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (Array Declaration) ---
                 out += "arr " + Trim(str1) + Chr(10);
             } else {
                 arrBss += "    " + Trim(str1) + " rq 3" + Chr(10);
             }
         }
-        else if (InStr(A_LoopField39, ".add ")) {
-            str1 = Trim(StrSplit(A_LoopField39, ".", 1));
-            str2 = Trim(StrSplit(A_LoopField39, ".add", 2));
+        else if (InStr(A_LoopField69, ".add ")) {
+            str1 = Trim(StrSplit(A_LoopField69, ".", 1));
+            str2 = Trim(StrSplit(A_LoopField69, ".add", 2));
             if (is_arm == 1) {
                 out += "    ldr x0, =" + str1 + Chr(10);
                 if (RegExMatch(str2, "^\\d+$")) {
@@ -7934,8 +9207,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index172 = 0; A_Index172 < HTVM_Size(funcArgsArr); A_Index172++) {
-                            if (Trim(funcArgsArr[A_Index172]) == str2) {
+                        for (int A_Index202 = 0; A_Index202 < HTVM_Size(funcArgsArr); A_Index202++) {
+                            if (Trim(funcArgsArr[A_Index202]) == str2) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -7950,7 +9223,7 @@ std::string compiler(std::string code) {
                 out += "    bl array_append" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (arr.add) ---
                 strVal = str2;
                 if (str2 == "rax") {
@@ -7973,14 +9246,14 @@ std::string compiler(std::string code) {
                 out += str3 + Chr(10) + "call array_append" + Chr(10);
             }
         }
-        else if (InStr(A_LoopField39, ".pop")) {
-            str1 = Trim(StrSplit(A_LoopField39, ".", 1));
+        else if (InStr(A_LoopField69, ".pop")) {
+            str1 = Trim(StrSplit(A_LoopField69, ".", 1));
             if (is_arm == 1) {
                 out += "    ldr x0, =" + str1 + Chr(10);
                 out += "    bl array_pop" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // Oryx doesn't have explicit .pop in your spec, but let's assume it does or map it
                 // If not, we skip or use a custom VM call. Assuming arr.pop exists:
                 out += "arr.pop " + str1 + Chr(10);
@@ -7988,51 +9261,51 @@ std::string compiler(std::string code) {
                 out += "mov rdi, " + str1 + Chr(10) + "call array_pop" + Chr(10);
             }
         }
-        else if (InStr(A_LoopField39, ".clear")) {
-            str1 = Trim(StrSplit(A_LoopField39, ".", 1));
+        else if (InStr(A_LoopField69, ".clear")) {
+            str1 = Trim(StrSplit(A_LoopField69, ".", 1));
             if (is_arm == 1) {
                 out += "    ldr x0, =" + str1 + Chr(10);
                 out += "    bl array_clear" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "arr.clear " + str1 + Chr(10);
             } else {
                 out += "mov rdi, " + str1 + Chr(10) + "call array_clear" + Chr(10);
             }
         }
-        else if (InStr(A_LoopField39, ".copy ")) {
-            str1 = Trim(StrSplit(A_LoopField39, ".", 1));
-            str2 = Trim(StrSplit(A_LoopField39, ".copy", 2));
+        else if (InStr(A_LoopField69, ".copy ")) {
+            str1 = Trim(StrSplit(A_LoopField69, ".", 1));
+            str2 = Trim(StrSplit(A_LoopField69, ".copy", 2));
             if (is_arm == 1) {
                 out += "    ldr x0, =" + str1 + Chr(10);
                 out += "    ldr x1, =" + str2 + Chr(10);
                 out += "    bl array_copy" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "arr.copy " + str2 + ", " + str1 + Chr(10);
             } else {
                 out += "mov rdi, " + str1 + Chr(10) + "mov rsi, " + str2 + Chr(10) + "call array_copy" + Chr(10);
             }
         }
-        else if (InStr(A_LoopField39, ".size")) {
-            str1 = Trim(StrSplit(A_LoopField39, ".", 1));
+        else if (InStr(A_LoopField69, ".size")) {
+            str1 = Trim(StrSplit(A_LoopField69, ".", 1));
             if (is_arm == 1) {
                 out += "    ldr x9, =" + str1 + Chr(10);
                 out += "    ldr x0, [x9, #DynamicArray_size]" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // arr.size <array>, <dest_reg>
                 out += "arr.size " + str1 + ", r0" + Chr(10);
             } else {
                 out += "mov rax, [" + str1 + " + DynamicArray.size]" + Chr(10);
             }
         }
-        else if (InStr(A_LoopField39, ".index ")) {
-            str1 = Trim(StrSplit(A_LoopField39, ".", 1));
-            str2 = Trim(StrSplit(A_LoopField39, ".index", 2));
+        else if (InStr(A_LoopField69, ".index ")) {
+            str1 = Trim(StrSplit(A_LoopField69, ".", 1));
+            str2 = Trim(StrSplit(A_LoopField69, ".index", 2));
             if (is_arm == 1) {
                 if (RegExMatch(str2, "^\\d+$")) {
                     out += "    mov x10, #" + str2 + Chr(10);
@@ -8045,8 +9318,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index173 = 0; A_Index173 < HTVM_Size(funcArgsArr); A_Index173++) {
-                            if (Trim(funcArgsArr[A_Index173]) == str2) {
+                        for (int A_Index203 = 0; A_Index203 < HTVM_Size(funcArgsArr); A_Index203++) {
+                            if (Trim(funcArgsArr[A_Index203]) == str2) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -8063,7 +9336,7 @@ std::string compiler(std::string code) {
                 out += "    ldr x0, [x9, x10, lsl #3]" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // arr.get <array>, <index_src>, <dest_reg>
                 strIndex = str2;
                 if (str2 == "rax") {
@@ -8084,36 +9357,36 @@ std::string compiler(std::string code) {
                 out += str3 + Chr(10) + "mov rbx, [" + str1 + " + DynamicArray.pointer]" + Chr(10) + "mov rax, [rbx + rcx*8]" + Chr(10);
             }
         }
-        else if (InStr(A_LoopField39, ".compile ")) {
+        else if (InStr(A_LoopField69, ".compile ")) {
             // arrName.compile outArr
-            str1 = Trim(StrSplit(A_LoopField39, ".", 1));
-            str2 = Trim(StrSplit(A_LoopField39, ".compile", 2));
+            str1 = Trim(StrSplit(A_LoopField69, ".", 1));
+            str2 = Trim(StrSplit(A_LoopField69, ".compile", 2));
             isDotCompile = 1;
             out += "mov rdi, " + str1 + Chr(10) + "call array_pack_to_bytes" + Chr(10) + "mov [source_ptr], rax" + Chr(10) + "mov rdi, [source_ptr]" + Chr(10) + "call compiler_c" + Chr(10) + "mov [asm_code_ptr], rax" + Chr(10) + "mov rdi, " + str2 + Chr(10) + "mov rsi, [asm_code_ptr]" + Chr(10) + "call array_unpack_from_bytes" + Chr(10) + "mov rdi, [source_ptr]" + Chr(10) + "mov rsi, [source_ptr_size]" + Chr(10) + "call free_packed_string" + Chr(10) + "mov rdi, [asm_code_ptr]" + Chr(10) + "call free_string_c" + Chr(10);
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 5) == "goto ") {
-            str1 = Trim(StringTrimLeft(A_LoopField39, 5));
+        else if (SubStr(StrLower(A_LoopField69), 1, 5) == "goto ") {
+            str1 = Trim(StringTrimLeft(A_LoopField69, 5));
             if (is_arm == 1) {
                 out += "    b .__HTLL_HTLL_" + str1 + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "jmp __HTLL_HTLL_" + str1 + Chr(10);
             } else {
                 out += "jmp .__HTLL_HTLL_" + str1 + Chr(10);
             }
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 5) == "togo ") {
-            str1 = Trim(StringTrimLeft(A_LoopField39, 5));
+        else if (SubStr(StrLower(A_LoopField69), 1, 5) == "togo ") {
+            str1 = Trim(StringTrimLeft(A_LoopField69, 5));
             if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "__HTLL_HTLL_" + str1 + ":" + Chr(10);
             } else {
                 out += ".__HTLL_HTLL_" + str1 + ":" + Chr(10);
             }
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 7) == "sleep, ") {
-            str1 = Trim(StringTrimLeft(A_LoopField39, 7));
+        else if (SubStr(StrLower(A_LoopField69), 1, 7) == "sleep, ") {
+            str1 = Trim(StringTrimLeft(A_LoopField69, 7));
             if (is_arm == 1) {
                 if (RegExMatch(str1, "^\\d+$")) {
                     out += "    mov x0, #" + str1 + Chr(10);
@@ -8123,8 +9396,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index174 = 0; A_Index174 < HTVM_Size(funcArgsArr); A_Index174++) {
-                            if (Trim(funcArgsArr[A_Index174]) == str1) {
+                        for (int A_Index204 = 0; A_Index204 < HTVM_Size(funcArgsArr); A_Index204++) {
+                            if (Trim(funcArgsArr[A_Index204]) == str1) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -8139,7 +9412,7 @@ std::string compiler(std::string code) {
                 out += "    bl sleep_ms" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 if (RegExMatch(str1, "^\\d+$")) {
                     out += "mov r1, " + str1 + Chr(10);
                 }
@@ -8167,8 +9440,8 @@ std::string compiler(std::string code) {
                 out += "call sleep_ms" + Chr(10);
             }
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 13) == "fileread_arr ") {
-            str1 = Trim(StringTrimLeft(A_LoopField39, 13));
+        else if (SubStr(StrLower(A_LoopField69), 1, 13) == "fileread_arr ") {
+            str1 = Trim(StringTrimLeft(A_LoopField69, 13));
             str2 = Trim(StrSplit(str1, ",", 1));
             str3 = Trim(StrSplit(str1, ",", 2));
             if (is_arm == 1) {
@@ -8183,7 +9456,7 @@ std::string compiler(std::string code) {
                 out += "    bl free_packed_string" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "; --- INLINE CONVERT " + str3 + " ---" + Chr(10);
                 out += "arr.size " + str3 + ", r90" + Chr(10);
                 out += "mov __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, " + Chr(34) + Chr(34) + Chr(10);
@@ -8206,8 +9479,8 @@ std::string compiler(std::string code) {
                 out += "mov rdi, [filename_ptr]" + Chr(10) + "mov rsi, [filename_ptr_size]" + Chr(10) + "call free_packed_string" + Chr(10);
             }
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 15) == "fileappend_arr ") {
-            str1 = Trim(StringTrimLeft(A_LoopField39, 15));
+        else if (SubStr(StrLower(A_LoopField69), 1, 15) == "fileappend_arr ") {
+            str1 = Trim(StringTrimLeft(A_LoopField69, 15));
             str2 = Trim(StrSplit(str1, ",", 1));
             str3 = Trim(StrSplit(str1, ",", 2));
             if (is_arm == 1) {
@@ -8222,7 +9495,7 @@ std::string compiler(std::string code) {
                 out += "    bl free_packed_string" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- INLINE CONVERT FILENAME (str2) ---
                 out += "; --- INLINE CONVERT " + str2 + " ---" + Chr(10);
                 out += "arr.size " + str2 + ", r90" + Chr(10);
@@ -8260,8 +9533,8 @@ std::string compiler(std::string code) {
                 out += "mov rdi, [filename_ptr]" + Chr(10) + "mov rsi, [filename_ptr_size]" + Chr(10) + "call free_packed_string" + Chr(10);
             }
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 15) == "filedelete_arr ") {
-            str1 = Trim(StringTrimLeft(A_LoopField39, 15));
+        else if (SubStr(StrLower(A_LoopField69), 1, 15) == "filedelete_arr ") {
+            str1 = Trim(StringTrimLeft(A_LoopField69, 15));
             if (is_arm == 1) {
                 out += "    ldr x0, =" + str1 + Chr(10) + "    bl array_pack_to_bytes" + Chr(10);
                 out += "    ldr x9, =filename_ptr" + Chr(10) + "    str x0, [x9]" + Chr(10);
@@ -8273,7 +9546,7 @@ std::string compiler(std::string code) {
                 out += "    bl free_packed_string" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "; --- INLINE CONVERT " + str1 + " ---" + Chr(10);
                 out += "arr.size " + str1 + ", r90" + Chr(10);
                 out += "mov __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, " + Chr(34) + Chr(34) + Chr(10);
@@ -8296,8 +9569,8 @@ std::string compiler(std::string code) {
                 out += "mov rdi, [filename_ptr]" + Chr(10) + "mov rsi, [filename_ptr_size]" + Chr(10) + "call free_packed_string" + Chr(10);
             }
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 9) == "fileread ") {
-            str1 = Trim(StringTrimLeft(A_LoopField39, 9));
+        else if (SubStr(StrLower(A_LoopField69), 1, 9) == "fileread ") {
+            str1 = Trim(StringTrimLeft(A_LoopField69, 9));
             str2 = Trim(StrSplit(str1, ",", 1));
             str3 = Trim(StrSplit(str1, ",", 2));
             dot_data_print_temp_strings_count++;
@@ -8309,7 +9582,7 @@ std::string compiler(std::string code) {
                 out += "    bl file_read" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // Oryx: file.read dest, "file.txt"
                 out += "file.read " + str2 + ", " + str3 + Chr(10);
             } else {
@@ -8317,8 +9590,8 @@ std::string compiler(std::string code) {
                 out += "mov rdi, " + str2 + Chr(10) + "mov rsi, " + path_label + Chr(10) + "call file_read" + Chr(10);
             }
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 11) == "fileappend ") {
-            str1 = Trim(StringTrimLeft(A_LoopField39, 11));
+        else if (SubStr(StrLower(A_LoopField69), 1, 11) == "fileappend ") {
+            str1 = Trim(StringTrimLeft(A_LoopField69, 11));
             str2 = Trim(StrSplit(str1, ",", 1));
             str3 = Trim(StrSplit(str1, ",", 2));
             dot_data_print_temp_strings_count++;
@@ -8330,15 +9603,15 @@ std::string compiler(std::string code) {
                 out += "    bl file_append" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "file.append " + str2 + ", " + str3 + Chr(10);
             } else {
                 dot_data_print_temp_strings += path_label + " db " + str2 + ", 0" + Chr(10);
                 out += "mov rdi, " + path_label + Chr(10) + "mov rsi, " + str3 + Chr(10) + "call file_append" + Chr(10);
             }
         }
-        else if (SubStr(StrLower(A_LoopField39), 1, 11) == "filedelete ") {
-            str1 = Trim(StringTrimLeft(A_LoopField39, 11));
+        else if (SubStr(StrLower(A_LoopField69), 1, 11) == "filedelete ") {
+            str1 = Trim(StringTrimLeft(A_LoopField69, 11));
             dot_data_print_temp_strings_count++;
             path_label = "FILE_PATH_" + STR(dot_data_print_temp_strings_count);
             if (is_arm == 1) {
@@ -8347,15 +9620,15 @@ std::string compiler(std::string code) {
                 out += "    bl file_delete" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "file.delete " + str1 + Chr(10);
             } else {
                 dot_data_print_temp_strings += path_label + " db " + str1 + ", 0" + Chr(10);
                 out += "mov rdi, " + path_label + Chr(10) + "call file_delete" + Chr(10);
             }
         }
-        else if (SubStr(A_LoopField39, 1, 6) == "input ") {
-            str1 = Trim(StringTrimLeft(A_LoopField39, 6));
+        else if (SubStr(A_LoopField69, 1, 6) == "input ") {
+            str1 = Trim(StringTrimLeft(A_LoopField69, 6));
             str2 = Trim(StrSplit(str1, ",", 1));
             str3 = Trim(StrSplit(str1, ",", 2));
             if (is_arm == 1) {
@@ -8364,7 +9637,7 @@ std::string compiler(std::string code) {
                 out += "    bl get_user_input" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "; --- INLINE CONVERT " + str3 + " ---" + Chr(10);
                 out += "arr.size " + str3 + ", r90" + Chr(10);
                 out += "mov __HTLL_HTLL_HTLL_HTLL_IO_BUFFER, " + Chr(34) + Chr(34) + Chr(10);
@@ -8384,9 +9657,9 @@ std::string compiler(std::string code) {
                 out += "mov rdi, " + str2 + Chr(10) + "mov rsi, " + str3 + Chr(10) + "call get_user_input" + Chr(10);
             }
         }
-        else if (InStr(A_LoopField39, ".set ")) {
-            str1 = Trim(StrSplit(A_LoopField39, ".", 1));
-            str2 = Trim(StringTrimLeft(A_LoopField39, StrLen(str1) + 5));
+        else if (InStr(A_LoopField69, ".set ")) {
+            str1 = Trim(StrSplit(A_LoopField69, ".", 1));
+            str2 = Trim(StringTrimLeft(A_LoopField69, StrLen(str1) + 5));
             str_index = Trim(StrSplit(str2, ",", 1));
             str_value = Trim(StrSplit(str2, ",", 2));
             if (is_arm == 1) {
@@ -8405,8 +9678,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index175 = 0; A_Index175 < HTVM_Size(funcArgsArr); A_Index175++) {
-                            if (Trim(funcArgsArr[A_Index175]) == str_index) {
+                        for (int A_Index205 = 0; A_Index205 < HTVM_Size(funcArgsArr); A_Index205++) {
+                            if (Trim(funcArgsArr[A_Index205]) == str_index) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -8431,8 +9704,8 @@ std::string compiler(std::string code) {
                 } else {
                     int isStackVar = 0;
                     if (inFunc == 1) {
-                        for (int A_Index176 = 0; A_Index176 < HTVM_Size(funcArgsArr); A_Index176++) {
-                            if (Trim(funcArgsArr[A_Index176]) == str_value) {
+                        for (int A_Index206 = 0; A_Index206 < HTVM_Size(funcArgsArr); A_Index206++) {
+                            if (Trim(funcArgsArr[A_Index206]) == str_value) {
                                 isStackVar = 1;
                                 break;
                             }
@@ -8449,7 +9722,7 @@ std::string compiler(std::string code) {
                 out += "    str x11, [x9, x10, lsl #3]" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // arr.set array, index, value
                 // Resolve Index
                 idxSrc = str_index;
@@ -8484,36 +9757,36 @@ std::string compiler(std::string code) {
                 out += "mov [rbx + rcx*8], rsi" + Chr(10);
             }
         }
-        else if (Trim(A_LoopField39) == "rax++") {
+        else if (Trim(A_LoopField69) == "rax++") {
             if (is_arm == 1) {
                 out += "    add x0, x0, #1" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "inc r0" + Chr(10);
             } else {
                 out += "inc rax" + Chr(10);
             }
         }
-        else if (Trim(A_LoopField39) == "rax--") {
+        else if (Trim(A_LoopField69) == "rax--") {
             if (is_arm == 1) {
                 out += "    sub x0, x0, #1" + Chr(10);
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 out += "dec r0" + Chr(10);
             } else {
                 out += "dec rax" + Chr(10);
             }
         }
-        else if (SubStrLastChars(Trim(A_LoopField39), 1) == ")") {
+        else if (SubStrLastChars(Trim(A_LoopField69), 1) == ")") {
             // --- YOUR PARSING LOGIC IS UNCHANGED ---
-            str1 = StringTrimRight(Trim(A_LoopField39), 1);
+            str1 = StringTrimRight(Trim(A_LoopField69), 1);
             str2 = StrSplit(str1, "(", 1);
-            std::vector<std::string> items177 = LoopParseFunc(str2, " ");
-            for (size_t A_Index177 = 0; A_Index177 < items177.size(); A_Index177++) {
-                std::string A_LoopField177 = items177[A_Index177 - 0];
-                str3 = A_LoopField177;
+            std::vector<std::string> items207 = LoopParseFunc(str2, " ");
+            for (size_t A_Index207 = 0; A_Index207 < items207.size(); A_Index207++) {
+                std::string A_LoopField207 = items207[A_Index207 - 0];
+                str3 = A_LoopField207;
             }
             str2 = str3;
             str3 = StrSplit(str1, "(", 2);
@@ -8527,69 +9800,69 @@ std::string compiler(std::string code) {
                 // --- AArch64 CODE GENERATION ---
                 int stack_arg_count = 0;
                 if (int1 == 0) {
-                    std::vector<std::string> items178 = LoopParseFunc(str3, ", ");
-                    for (size_t A_Index178 = 0; A_Index178 < items178.size(); A_Index178++) {
-                        std::string A_LoopField178 = items178[A_Index178 - 0];
-                        if (A_Index178 > 8) {
+                    std::vector<std::string> items208 = LoopParseFunc(str3, ", ");
+                    for (size_t A_Index208 = 0; A_Index208 < items208.size(); A_Index208++) {
+                        std::string A_LoopField208 = items208[A_Index208 - 0];
+                        if (A_Index208 > 8) {
                             stack_arg_count++;
                         }
                     }
                     if (stack_arg_count > 0) {
                         str4 += "    sub sp, sp, #" + STR(stack_arg_count * 8) + Chr(10);
                     }
-                    std::vector<std::string> items179 = LoopParseFunc(str3, ", ");
-                    for (size_t A_Index179 = 0; A_Index179 < items179.size(); A_Index179++) {
-                        std::string A_LoopField179 = items179[A_Index179 - 0];
-                        int current_arg_num = A_Index179;
+                    std::vector<std::string> items209 = LoopParseFunc(str3, ", ");
+                    for (size_t A_Index209 = 0; A_Index209 < items209.size(); A_Index209++) {
+                        std::string A_LoopField209 = items209[A_Index209 - 0];
+                        int current_arg_num = A_Index209;
                         if (current_arg_num < 8) {
-                            if (RegExMatch(A_LoopField179, "^\\d+$")) {
-                                str4 += "    mov x" + STR(current_arg_num) + ", #" + A_LoopField179 + Chr(10);
+                            if (RegExMatch(A_LoopField209, "^\\d+$")) {
+                                str4 += "    mov x" + STR(current_arg_num) + ", #" + A_LoopField209 + Chr(10);
                             }
-                            else if (A_LoopField179 == "rax") {
+                            else if (A_LoopField209 == "rax") {
                                 str4 += "    mov x" + STR(current_arg_num) + ", x0" + Chr(10);
                             }
-                            else if (A_LoopField179 == "A_Index") {
+                            else if (A_LoopField209 == "A_Index") {
                                 str4 += "    mov x" + STR(current_arg_num) + ", x20" + Chr(10);
                             } else {
                                 int isStackVar = 0;
                                 if (inFunc == 1) {
-                                    for (int A_Index180 = 0; A_Index180 < HTVM_Size(funcArgsArr); A_Index180++) {
-                                        if (Trim(funcArgsArr[A_Index180]) == A_LoopField39) {
+                                    for (int A_Index210 = 0; A_Index210 < HTVM_Size(funcArgsArr); A_Index210++) {
+                                        if (Trim(funcArgsArr[A_Index210]) == A_LoopField69) {
                                             isStackVar = 1;
                                             break;
                                         }
                                     }
                                 }
                                 if (isStackVar == 1) {
-                                    str4 += "    ldr x" + STR(current_arg_num) + ", =" + A_LoopField179 + Chr(10);
+                                    str4 += "    ldr x" + STR(current_arg_num) + ", =" + A_LoopField209 + Chr(10);
                                 } else {
-                                    str4 += "    ldr x9, =" + A_LoopField179 + Chr(10) + "    ldr x" + STR(current_arg_num) + ", [x9]" + Chr(10);
+                                    str4 += "    ldr x9, =" + A_LoopField209 + Chr(10) + "    ldr x" + STR(current_arg_num) + ", [x9]" + Chr(10);
                                 }
                             }
                         } else {
                             int stack_offset = (current_arg_num - 8) * 8;
-                            if (RegExMatch(A_LoopField179, "^\\d+$")) {
-                                str4 += "    mov x9, #" + A_LoopField179 + Chr(10);
+                            if (RegExMatch(A_LoopField209, "^\\d+$")) {
+                                str4 += "    mov x9, #" + A_LoopField209 + Chr(10);
                             }
-                            else if (A_LoopField179 == "rax") {
+                            else if (A_LoopField209 == "rax") {
                                 str4 += "    mov x9, x0" + Chr(10);
                             }
-                            else if (A_LoopField179 == "A_Index") {
+                            else if (A_LoopField209 == "A_Index") {
                                 str4 += "    mov x9, x20" + Chr(10);
                             } else {
                                 int isStackVar = 0;
                                 if (inFunc == 1) {
-                                    for (int A_Index181 = 0; A_Index181 < HTVM_Size(funcArgsArr); A_Index181++) {
-                                        if (Trim(funcArgsArr[A_Index181]) == A_LoopField179) {
+                                    for (int A_Index211 = 0; A_Index211 < HTVM_Size(funcArgsArr); A_Index211++) {
+                                        if (Trim(funcArgsArr[A_Index211]) == A_LoopField209) {
                                             isStackVar = 1;
                                             break;
                                         }
                                     }
                                 }
                                 if (isStackVar == 1) {
-                                    str4 += "    ldr x9, =" + A_LoopField179 + Chr(10);
+                                    str4 += "    ldr x9, =" + A_LoopField209 + Chr(10);
                                 } else {
-                                    str4 += "    ldr x10, =" + A_LoopField179 + Chr(10) + "    ldr x9, [x10]" + Chr(10);
+                                    str4 += "    ldr x10, =" + A_LoopField209 + Chr(10) + "    ldr x9, [x10]" + Chr(10);
                                 }
                             }
                             str4 += "    str x9, [sp, #" + STR(stack_offset) + "]" + Chr(10);
@@ -8602,14 +9875,14 @@ std::string compiler(std::string code) {
                 }
             }
             else if (is_oryx == 1) {
-                out += "meta " + A_LoopField39 + Chr(10);
+                out += "meta " + A_LoopField69 + Chr(10);
                 // --- ORYX IR (Function Call) ---
                 if (int1 == 0) {
-                    std::vector<std::string> items182 = LoopParseFunc(str3, ", ");
-                    for (size_t A_Index182 = 0; A_Index182 < items182.size(); A_Index182++) {
-                        std::string A_LoopField182 = items182[A_Index182 - 0];
+                    std::vector<std::string> items212 = LoopParseFunc(str3, ", ");
+                    for (size_t A_Index212 = 0; A_Index212 < items212.size(); A_Index212++) {
+                        std::string A_LoopField212 = items212[A_Index212 - 0];
                         // Move each argument to the corresponding register (r1, r2, etc.)
-                        strArg = A_LoopField182;
+                        strArg = A_LoopField212;
                         strSrc = strArg;
                         if (strArg == "rax") {
                             strSrc = "r0";
@@ -8617,19 +9890,19 @@ std::string compiler(std::string code) {
                         else if (strArg == "A_Index") {
                             strSrc = "r20";
                         }
-                        out += "mov r" + STR(A_Index182 + 1) + ", " + strSrc + Chr(10);
+                        out += "mov r" + STR(A_Index212 + 1) + ", " + strSrc + Chr(10);
                     }
                 }
                 out += "call " + str2 + Chr(10);
             } else {
                 // --- YOUR EXISTING X86 CODE - UNCHANGED ---
-                std::vector<std::string> items183 = LoopParseFunc(str3, ", ");
-                for (size_t A_Index183 = 0; A_Index183 < items183.size(); A_Index183++) {
-                    std::string A_LoopField183 = items183[A_Index183 - 0];
-                    if (RegExMatch(A_LoopField183, "^\\d+$")) {
-                        str4 += "push " + A_LoopField183 + Chr(10);
+                std::vector<std::string> items213 = LoopParseFunc(str3, ", ");
+                for (size_t A_Index213 = 0; A_Index213 < items213.size(); A_Index213++) {
+                    std::string A_LoopField213 = items213[A_Index213 - 0];
+                    if (RegExMatch(A_LoopField213, "^\\d+$")) {
+                        str4 += "push " + A_LoopField213 + Chr(10);
                     } else {
-                        str4 += "push qword [" + A_LoopField183 + "]" + Chr(10);
+                        str4 += "push qword [" + A_LoopField213 + "]" + Chr(10);
                     }
                     int5++;
                 }
@@ -8640,19 +9913,19 @@ std::string compiler(std::string code) {
                 }
             }
         } else {
-            out += A_LoopField39 + Chr(10);
+            out += A_LoopField69 + Chr(10);
         }
         // Place this AFTER your main compilation loop finishes generating 'out'
-        for (int A_Index184 = 0; A_Index184 < HTVM_Size(funcArgsArr); A_Index184++) {
+        for (int A_Index214 = 0; A_Index214 < HTVM_Size(funcArgsArr); A_Index214++) {
             if (is_arm == 1) {
-                out = RegExReplace(out, Chr(61) + "\\b" + Trim(funcArgsArr[A_Index184]) + "\\b", "[sp, #" + STR(8 + ( (HTVM_Size(funcArgsArr) - A_Index184) * 8 )) + "]");
+                out = RegExReplace(out, Chr(61) + "\\b" + Trim(funcArgsArr[A_Index214]) + "\\b", "[sp, #" + STR((A_Index214 * 8)) + "]");
             }
             if (is_arm == 0 && is_oryx == 1) {
-                out = RegExReplace(out, "\\b" + Trim(funcArgsArr[A_Index184]) + "\\b", "r" + STR(A_Index184 + 50));
+                out = RegExReplace(out, "\\b" + Trim(funcArgsArr[A_Index214]) + "\\b", "r" + STR(A_Index214 + 50));
             }
             if (is_arm == 0 && is_oryx == 0) {
                 // Your existing x86 formula
-                out = RegExReplace(out, "\\b" + Trim(funcArgsArr[A_Index184]) + "\\b", "rbp + " + STR(8 + ( (HTVM_Size(funcArgsArr) - A_Index184) * 8 )));
+                out = RegExReplace(out, "\\b" + Trim(funcArgsArr[A_Index214]) + "\\b", "rbp + " + STR(8 + ( (HTVM_Size(funcArgsArr) - A_Index214) * 8 )));
             }
         }
         // ... after the main compilation loop ...
@@ -8671,16 +9944,16 @@ std::string compiler(std::string code) {
     std::vector<std::string> allFuncCALLS;
     std::vector<std::string> allFuncCALLS_alredy;
     std::string code_TEMP = code + Chr(10) + main_syntax;
-    std::vector<std::string> items185 = LoopParseFunc(code_TEMP, "\n", "\r");
-    for (size_t A_Index185 = 0; A_Index185 < items185.size(); A_Index185++) {
-        std::string A_LoopField185 = items185[A_Index185 - 0];
+    std::vector<std::string> items215 = LoopParseFunc(code_TEMP, "\n", "\r");
+    for (size_t A_Index215 = 0; A_Index215 < items215.size(); A_Index215++) {
+        std::string A_LoopField215 = items215[A_Index215 - 0];
         if (is_arm == 1) {
-            if (SubStr(Trim(A_LoopField185), 1, 3) == "bl " || SubStr(Trim(A_LoopField185), 1, 2) == "b ") {
-                HTVM_Append(allFuncCALLS, Trim(StringTrimLeft(Trim(A_LoopField185), 2)));
+            if (SubStr(Trim(A_LoopField215), 1, 3) == "bl " || SubStr(Trim(A_LoopField215), 1, 2) == "b ") {
+                HTVM_Append(allFuncCALLS, Trim(StringTrimLeft(Trim(A_LoopField215), 2)));
             }
         } else {
-            if (SubStr(Trim(A_LoopField185), 1, 5) == "call " || SubStr(Trim(A_LoopField185), 1, 4) == "jmp ") {
-                HTVM_Append(allFuncCALLS, Trim(StringTrimLeft(Trim(A_LoopField185), 4)));
+            if (SubStr(Trim(A_LoopField215), 1, 5) == "call " || SubStr(Trim(A_LoopField215), 1, 4) == "jmp ") {
+                HTVM_Append(allFuncCALLS, Trim(StringTrimLeft(Trim(A_LoopField215), 4)));
             }
         }
     }
@@ -8691,25 +9964,25 @@ std::string compiler(std::string code) {
     //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    std::vector<std::string> items186 = LoopParseFunc(HTLL_Libs_x86, "\n", "\r");
-    for (size_t A_Index186 = 0; A_Index186 < items186.size(); A_Index186++) {
-        std::string A_LoopField186 = items186[A_Index186 - 0];
-        if (InStr(A_LoopField186, "$$$$") == false && InStr(A_LoopField186, "%%%%") == false && temp_in_funcName == 1 && canWeGetFunc == 1) {
-            HTLL_Libs_x86_new += A_LoopField186 + Chr(10);
+    std::vector<std::string> items216 = LoopParseFunc(HTLL_Libs_x86, "\n", "\r");
+    for (size_t A_Index216 = 0; A_Index216 < items216.size(); A_Index216++) {
+        std::string A_LoopField216 = items216[A_Index216 - 0];
+        if (InStr(A_LoopField216, "$$$$") == false && InStr(A_LoopField216, "%%%%") == false && temp_in_funcName == 1 && canWeGetFunc == 1) {
+            HTLL_Libs_x86_new += A_LoopField216 + Chr(10);
         }
-        if (InStr(A_LoopField186, "$$$$")) {
-            temp_funcName = StringTrimLeft(StringTrimRight(Trim(A_LoopField186), 4), 4);
+        if (InStr(A_LoopField216, "$$$$")) {
+            temp_funcName = StringTrimLeft(StringTrimRight(Trim(A_LoopField216), 4), 4);
             temp_in_funcName = 1;
             canWeGetFunc = 0;
-            for (int A_Index187 = 0; A_Index187 < HTVM_Size(allFuncCALLS); A_Index187++) {
-                if (temp_funcName == allFuncCALLS[A_Index187]) {
+            for (int A_Index217 = 0; A_Index217 < HTVM_Size(allFuncCALLS); A_Index217++) {
+                if (temp_funcName == allFuncCALLS[A_Index217]) {
                     canWeGetFunc = 1;
                     HTVM_Append(allFuncCALLS_alredy, temp_funcName);
                     break;
                 }
             }
         }
-        else if (InStr(A_LoopField186, "%%%%")) {
+        else if (InStr(A_LoopField216, "%%%%")) {
             temp_in_funcName = 0;
         }
     }
@@ -8719,15 +9992,15 @@ std::string compiler(std::string code) {
     allFuncCALLS = {};
     int anotherVar_INT_HELP_BUILD_IN_FUNCS_INT = 0;
     std::string ALoopField = "";
-    std::vector<std::string> items188 = LoopParseFunc(HTLL_Libs_x86_new, "\n", "\r");
-    for (size_t A_Index188 = 0; A_Index188 < items188.size(); A_Index188++) {
-        std::string A_LoopField188 = items188[A_Index188 - 0];
-        ALoopField = A_LoopField188;
+    std::vector<std::string> items218 = LoopParseFunc(HTLL_Libs_x86_new, "\n", "\r");
+    for (size_t A_Index218 = 0; A_Index218 < items218.size(); A_Index218++) {
+        std::string A_LoopField218 = items218[A_Index218 - 0];
+        ALoopField = A_LoopField218;
         if (is_arm == 1) {
-            if (SubStr(Trim(A_LoopField188), 1, 3) == "bl " || SubStr(Trim(A_LoopField188), 1, 2) == "b ") {
+            if (SubStr(Trim(A_LoopField218), 1, 3) == "bl " || SubStr(Trim(A_LoopField218), 1, 2) == "b ") {
                 anotherVar_INT_HELP_BUILD_IN_FUNCS_INT = 1;
-                for (int A_Index189 = 0; A_Index189 < HTVM_Size(allFuncCALLS_alredy); A_Index189++) {
-                    if (allFuncCALLS_alredy[A_Index189] == Trim(StringTrimLeft(Trim(ALoopField), 2))) {
+                for (int A_Index219 = 0; A_Index219 < HTVM_Size(allFuncCALLS_alredy); A_Index219++) {
+                    if (allFuncCALLS_alredy[A_Index219] == Trim(StringTrimLeft(Trim(ALoopField), 2))) {
                         anotherVar_INT_HELP_BUILD_IN_FUNCS_INT = 0;
                     }
                 }
@@ -8736,10 +10009,10 @@ std::string compiler(std::string code) {
                 }
             }
         } else {
-            if (SubStr(Trim(A_LoopField188), 1, 5) == "call " || SubStr(Trim(A_LoopField188), 1, 4) == "jmp ") {
+            if (SubStr(Trim(A_LoopField218), 1, 5) == "call " || SubStr(Trim(A_LoopField218), 1, 4) == "jmp ") {
                 anotherVar_INT_HELP_BUILD_IN_FUNCS_INT = 1;
-                for (int A_Index190 = 0; A_Index190 < HTVM_Size(allFuncCALLS_alredy); A_Index190++) {
-                    if (allFuncCALLS_alredy[A_Index190] == Trim(StringTrimLeft(Trim(ALoopField), 4))) {
+                for (int A_Index220 = 0; A_Index220 < HTVM_Size(allFuncCALLS_alredy); A_Index220++) {
+                    if (allFuncCALLS_alredy[A_Index220] == Trim(StringTrimLeft(Trim(ALoopField), 4))) {
                         anotherVar_INT_HELP_BUILD_IN_FUNCS_INT = 0;
                     }
                 }
@@ -8755,24 +10028,24 @@ std::string compiler(std::string code) {
     //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    std::vector<std::string> items191 = LoopParseFunc(HTLL_Libs_x86, "\n", "\r");
-    for (size_t A_Index191 = 0; A_Index191 < items191.size(); A_Index191++) {
-        std::string A_LoopField191 = items191[A_Index191 - 0];
-        if (InStr(A_LoopField191, "$$$$") == false && InStr(A_LoopField191, "%%%%") == false && temp_in_funcName == 1 && canWeGetFunc == 1) {
-            HTLL_Libs_x86_new += A_LoopField191 + Chr(10);
+    std::vector<std::string> items221 = LoopParseFunc(HTLL_Libs_x86, "\n", "\r");
+    for (size_t A_Index221 = 0; A_Index221 < items221.size(); A_Index221++) {
+        std::string A_LoopField221 = items221[A_Index221 - 0];
+        if (InStr(A_LoopField221, "$$$$") == false && InStr(A_LoopField221, "%%%%") == false && temp_in_funcName == 1 && canWeGetFunc == 1) {
+            HTLL_Libs_x86_new += A_LoopField221 + Chr(10);
         }
-        if (InStr(A_LoopField191, "$$$$")) {
-            temp_funcName = StringTrimLeft(StringTrimRight(Trim(A_LoopField191), 4), 4);
+        if (InStr(A_LoopField221, "$$$$")) {
+            temp_funcName = StringTrimLeft(StringTrimRight(Trim(A_LoopField221), 4), 4);
             temp_in_funcName = 1;
             canWeGetFunc = 0;
-            for (int A_Index192 = 0; A_Index192 < HTVM_Size(allFuncCALLS); A_Index192++) {
-                if (temp_funcName == allFuncCALLS[A_Index192]) {
+            for (int A_Index222 = 0; A_Index222 < HTVM_Size(allFuncCALLS); A_Index222++) {
+                if (temp_funcName == allFuncCALLS[A_Index222]) {
                     canWeGetFunc = 1;
                     break;
                 }
             }
         }
-        else if (InStr(A_LoopField191, "%%%%")) {
+        else if (InStr(A_LoopField221, "%%%%")) {
             temp_in_funcName = 0;
         }
     }
@@ -8940,11 +10213,11 @@ std::string compiler(std::string code) {
     }
     codeOUT = StrReplace(codeOUT, " [rax]", " rax");
     //;;;;;;;;;;;;;;;;;;;;;;;;;
-    for (int A_Index193 = 0; A_Index193 < theIdNumOfThe34; A_Index193++) {
-        if (theIdNumOfThe34 == A_Index193 + 1) {
-            codeOUT = StrReplace(codeOUT, "VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFC" + Chr(65) + Chr(65) + STR(A_Index193 + 1) + Chr(65) + Chr(65), StrReplace(theIdNumOfThe34theVar[A_Index193 + 1], keyWordEscpaeChar, "\\") + Chr(34));
+    for (int A_Index223 = 0; A_Index223 < theIdNumOfThe34; A_Index223++) {
+        if (theIdNumOfThe34 == A_Index223 + 1) {
+            codeOUT = StrReplace(codeOUT, "VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFC" + Chr(65) + Chr(65) + STR(A_Index223 + 1) + Chr(65) + Chr(65), StrReplace(theIdNumOfThe34theVar[A_Index223 + 1], keyWordEscpaeChar, "\\") + Chr(34));
         } else {
-            codeOUT = StrReplace(codeOUT, "VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFC" + Chr(65) + Chr(65) + STR(A_Index193 + 1) + Chr(65) + Chr(65), StrReplace(theIdNumOfThe34theVar[A_Index193 + 1], keyWordEscpaeChar, "\\"));
+            codeOUT = StrReplace(codeOUT, "VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFC" + Chr(65) + Chr(65) + STR(A_Index223 + 1) + Chr(65) + Chr(65), StrReplace(theIdNumOfThe34theVar[A_Index223 + 1], keyWordEscpaeChar, "\\"));
         }
     }
     int is_1_optimize = 0;
@@ -8973,73 +10246,73 @@ std::string compiler(std::string code) {
     std::string allInOne_temp = "";
     int aredy_int = 0;
     if (is_arm == 0 && is_oryx == 0) {
-        std::vector<std::string> items194 = LoopParseFunc(codeOUT, "\n", "\r");
-        for (size_t A_Index194 = 0; A_Index194 < items194.size(); A_Index194++) {
-            std::string A_LoopField194 = items194[A_Index194 - 0];
-            if (SubStr(Trim(A_LoopField194), 1, 2) != "; ") {
-                allInOne_temp += Trim(A_LoopField194) + Chr(10);
+        std::vector<std::string> items224 = LoopParseFunc(codeOUT, "\n", "\r");
+        for (size_t A_Index224 = 0; A_Index224 < items224.size(); A_Index224++) {
+            std::string A_LoopField224 = items224[A_Index224 - 0];
+            if (SubStr(Trim(A_LoopField224), 1, 2) != "; ") {
+                allInOne_temp += Trim(A_LoopField224) + Chr(10);
                 // Ignore definitions so they don't count as usage
-                if (InStr(A_LoopField194, " db ") == 0 && InStr(A_LoopField194, " rb ") == 0 && InStr(A_LoopField194, " rq ") == 0 && InStr(A_LoopField194, " dq ") == 0 && InStr(A_LoopField194, " = ") == 0) {
+                if (InStr(A_LoopField224, " db ") == 0 && InStr(A_LoopField224, " rb ") == 0 && InStr(A_LoopField224, " rq ") == 0 && InStr(A_LoopField224, " dq ") == 0 && InStr(A_LoopField224, " = ") == 0) {
                     // CHANGED ALL "else if" TO "if" TO PREVENT OVERLAPPING REGEX BUGS
-                    if (RegExMatch(A_LoopField194, "\\bDynamicArray.pointer\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\bDynamicArray.pointer\\b")) {
                         is_1_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\bDynamicArray.size\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\bDynamicArray.size\\b")) {
                         is_2_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\bDynamicArray.capacity\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\bDynamicArray.capacity\\b")) {
                         is_3_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\bsizeof.DynamicArray\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\bsizeof.DynamicArray\\b")) {
                         is_4_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\bSCALE" + Chr(95) + "FACTOR\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\bSCALE" + Chr(95) + "FACTOR\\b")) {
                         is_5_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\bINITIAL" + Chr(95) + "CAPACITY\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\bINITIAL" + Chr(95) + "CAPACITY\\b")) {
                         is_6_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\bprint" + Chr(95) + "buffer\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\bprint" + Chr(95) + "buffer\\b")) {
                         is_7_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\bdot\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\bdot\\b")) {
                         is_8_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\bminus" + Chr(95) + "sign\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\bminus" + Chr(95) + "sign\\b")) {
                         is_9_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\b" + Chr(110) + Chr(108) + "\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\b" + Chr(110) + Chr(108) + "\\b")) {
                         is_10_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\binput" + Chr(95) + "buffer\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\binput" + Chr(95) + "buffer\\b")) {
                         is_11_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\bfile" + Chr(95) + "read" + Chr(95) + "buffer\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\bfile" + Chr(95) + "read" + Chr(95) + "buffer\\b")) {
                         is_12_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\binput" + Chr(95) + "len\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\binput" + Chr(95) + "len\\b")) {
                         is_13_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\bfilename" + Chr(95) + "ptr" + Chr(95) + "size\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\bfilename" + Chr(95) + "ptr" + Chr(95) + "size\\b")) {
                         is_14_optimize = 1;
                     }
                     // FIXED REGEX FOR SOURCE_PTR (is_15)
-                    if (RegExMatch(A_LoopField194, "\\bsource" + Chr(95) + "ptr\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\bsource" + Chr(95) + "ptr\\b")) {
                         is_15_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\bsource" + Chr(95) + "ptr" + Chr(95) + "size\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\bsource" + Chr(95) + "ptr" + Chr(95) + "size\\b")) {
                         is_16_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\bargs" + Chr(95) + "array\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\bargs" + Chr(95) + "array\\b")) {
                         is_17_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\bfilename" + Chr(95) + "ptr\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\bfilename" + Chr(95) + "ptr\\b")) {
                         is_18_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\basm" + Chr(95) + "code" + Chr(95) + "ptr\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\basm" + Chr(95) + "code" + Chr(95) + "ptr\\b")) {
                         is_19_optimize = 1;
                     }
-                    if (RegExMatch(A_LoopField194, "\\bprint" + Chr(95) + "buffer" + Chr(95) + "n\\b")) {
+                    if (RegExMatch(A_LoopField224, "\\bprint" + Chr(95) + "buffer" + Chr(95) + "n\\b")) {
                         is_20_optimize = 1;
                     }
                 }
@@ -9048,75 +10321,132 @@ std::string compiler(std::string code) {
         codeOUT = Trim(allInOne_temp);
         allInOne_temp = "";
         aredy_int = 0;
-        std::vector<std::string> items195 = LoopParseFunc(codeOUT, "\n", "\r");
-        for (size_t A_Index195 = 0; A_Index195 < items195.size(); A_Index195++) {
-            std::string A_LoopField195 = items195[A_Index195 - 0];
+        std::vector<std::string> items225 = LoopParseFunc(codeOUT, "\n", "\r");
+        for (size_t A_Index225 = 0; A_Index225 < items225.size(); A_Index225++) {
+            std::string A_LoopField225 = items225[A_Index225 - 0];
             aredy_int = 0;
-            if (Trim(A_LoopField195) == "DynamicArray.pointer  = 0" && is_1_optimize == 0) {
+            if (Trim(A_LoopField225) == "DynamicArray.pointer  = 0" && is_1_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "DynamicArray.size     = 8" && is_2_optimize == 0) {
+            else if (Trim(A_LoopField225) == "DynamicArray.size     = 8" && is_2_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "DynamicArray.capacity = 16" && is_3_optimize == 0) {
+            else if (Trim(A_LoopField225) == "DynamicArray.capacity = 16" && is_3_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "sizeof.DynamicArray   = 24" && is_4_optimize == 0) {
+            else if (Trim(A_LoopField225) == "sizeof.DynamicArray   = 24" && is_4_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "SCALE_FACTOR   dq 1000000" && is_5_optimize == 0) {
+            else if (Trim(A_LoopField225) == "SCALE_FACTOR   dq 1000000" && is_5_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "INITIAL_CAPACITY = 2" && is_6_optimize == 0) {
+            else if (Trim(A_LoopField225) == "INITIAL_CAPACITY = 2" && is_6_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "print_buffer   rb 21" && is_7_optimize == 0) {
+            else if (Trim(A_LoopField225) == "print_buffer   rb 21" && is_7_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "dot            db " + Chr(39) + "." + Chr(39) + "" && is_8_optimize == 0) {
+            else if (Trim(A_LoopField225) == "dot            db " + Chr(39) + "." + Chr(39) + "" && is_8_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "minus_sign     db " + Chr(39) + Chr(45) + Chr(39) && is_9_optimize == 0) {
+            else if (Trim(A_LoopField225) == "minus_sign     db " + Chr(39) + Chr(45) + Chr(39) && is_9_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == Chr(110) + Chr(108) + "   db 10" && is_10_optimize == 0) {
+            else if (Trim(A_LoopField225) == Chr(110) + Chr(108) + "   db 10" && is_10_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "input_buffer rb 256" && is_11_optimize == 0) {
+            else if (Trim(A_LoopField225) == "input_buffer rb 256" && is_11_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "file_read_buffer rb 4096" && is_12_optimize == 0) {
+            else if (Trim(A_LoopField225) == "file_read_buffer rb 4096" && is_12_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "input_len    rq 1" && is_13_optimize == 0) {
+            else if (Trim(A_LoopField225) == "input_len    rq 1" && is_13_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "filename_ptr_size  rq 1" && is_14_optimize == 0) {
+            else if (Trim(A_LoopField225) == "filename_ptr_size  rq 1" && is_14_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "source_ptr      rq 1" && is_15_optimize == 0) {
+            else if (Trim(A_LoopField225) == "source_ptr      rq 1" && is_15_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "source_ptr_size rq 1" && is_16_optimize == 0) {
+            else if (Trim(A_LoopField225) == "source_ptr_size rq 1" && is_16_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "args_array rq 3" && is_17_optimize == 0) {
+            else if (Trim(A_LoopField225) == "args_array rq 3" && is_17_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "filename_ptr      rq 1" && is_18_optimize == 0) {
+            else if (Trim(A_LoopField225) == "filename_ptr      rq 1" && is_18_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "asm_code_ptr    rq 1" && is_19_optimize == 0) {
+            else if (Trim(A_LoopField225) == "asm_code_ptr    rq 1" && is_19_optimize == 0) {
                 aredy_int = 1;
             }
-            else if (Trim(A_LoopField195) == "print_buffer_n rb 20" && is_20_optimize == 0) {
+            else if (Trim(A_LoopField225) == "print_buffer_n rb 20" && is_20_optimize == 0) {
                 aredy_int = 1;
             }
             if (aredy_int == 0) {
-                allInOne_temp += A_LoopField195 + Chr(10);
+                allInOne_temp += A_LoopField225 + Chr(10);
             }
         }
         codeOUT = Trim(allInOne_temp);
+    }
+    if (COUNT_programmingBlock_InTheTranspiledLang != 0) {
+        for (int A_Index226 = 0; A_Index226 < COUNT_programmingBlock_InTheTranspiledLang; A_Index226++) {
+            codeOUT = StrReplace(codeOUT, "programmingBlock_InTheTranspiledLang-programmingBlock_InTheTranspiledLang-AA" + STR(A_Index226 + 1) + "AA", programmingBlock_InTheTranspiledLang[A_Index226]);
+        }
+    }
+    if (langToConvertTo == "x86-64") {
+        if (COUNT_programmingBlock_CPP != 0) {
+            for (int A_Index227 = 0; A_Index227 < COUNT_programmingBlock_CPP; A_Index227++) {
+                codeOUT = StrReplace(codeOUT, "programmingBlock_CPP-programmingBlock_CPP-AA" + STR(A_Index227 + 1) + "AA", programmingBlock_CPP[A_Index227]);
+            }
+        }
+    } else {
+        if (COUNT_programmingBlock_CPP != 0) {
+            for (int A_Index228 = 0; A_Index228 < COUNT_programmingBlock_CPP; A_Index228++) {
+                codeOUT = StrReplace(codeOUT, "programmingBlock_CPP-programmingBlock_CPP-AA" + STR(A_Index228 + 1) + "AA", Chr(10));
+            }
+        }
+    }
+    if (langToConvertTo == "arm") {
+        if (COUNT_programmingBlock_PY != 0) {
+            for (int A_Index229 = 0; A_Index229 < COUNT_programmingBlock_PY; A_Index229++) {
+                codeOUT = StrReplace(codeOUT, "programmingBlock_PY-programmingBlock_PY-AA" + STR(A_Index229 + 1) + "AA", programmingBlock_PY[A_Index229]);
+            }
+        }
+    } else {
+        if (COUNT_programmingBlock_PY != 0) {
+            for (int A_Index230 = 0; A_Index230 < COUNT_programmingBlock_PY; A_Index230++) {
+                codeOUT = StrReplace(codeOUT, "programmingBlock_PY-programmingBlock_PY-AA" + STR(A_Index230 + 1) + "AA", Chr(10));
+            }
+        }
+    }
+    if (langToConvertTo == "oryx") {
+        if (COUNT_programmingBlock_JS != 0) {
+            for (int A_Index231 = 0; A_Index231 < COUNT_programmingBlock_JS; A_Index231++) {
+                codeOUT = StrReplace(codeOUT, "programmingBlock_JS-programmingBlock_JS-AA" + STR(A_Index231 + 1) + "AA", programmingBlock_JS[A_Index231]);
+            }
+        }
+    } else {
+        if (COUNT_programmingBlock_JS != 0) {
+            for (int A_Index232 = 0; A_Index232 < COUNT_programmingBlock_JS; A_Index232++) {
+                codeOUT = StrReplace(codeOUT, "programmingBlock_JS-programmingBlock_JS-AA" + STR(A_Index232 + 1) + "AA", Chr(10));
+            }
+        }
+    }
+    if (langToConvertTo == "x86-64-ring0") {
+        if (COUNT_programmingBlock_GO != 0) {
+            for (int A_Index233 = 0; A_Index233 < COUNT_programmingBlock_GO; A_Index233++) {
+                codeOUT = StrReplace(codeOUT, "programmingBlock_GO-programmingBlock_GO-AA" + STR(A_Index233 + 1) + "AA", programmingBlock_GO[A_Index233]);
+            }
+        }
+    } else {
+        if (COUNT_programmingBlock_GO != 0) {
+            for (int A_Index234 = 0; A_Index234 < COUNT_programmingBlock_GO; A_Index234++) {
+                codeOUT = StrReplace(codeOUT, "programmingBlock_GO-programmingBlock_GO-AA" + STR(A_Index234 + 1) + "AA", Chr(10));
+            }
+        }
     }
     return codeOUT;
 }
@@ -9130,14 +10460,15 @@ int main(int argc, char* argv[]) {
     else if (InStr(params, Chr(10)) == false) {
         print("Usage:" + Chr(10) + "./HTLL your_file.htll <target>" + Chr(10) + "Targets: x86-64, arm, oryx, x86-64-ring0");
     } else {
-        std::vector<std::string> items196 = LoopParseFunc(params, "\n", "\r");
-        for (size_t A_Index196 = 0; A_Index196 < items196.size(); A_Index196++) {
-            std::string A_LoopField196 = items196[A_Index196 - 0];
-            paramsTemp = Trim(A_LoopField196);
-            if (A_Index196 == 0) {
+        std::vector<std::string> items235 = LoopParseFunc(params, "\n", "\r");
+        for (size_t A_Index235 = 0; A_Index235 < items235.size(); A_Index235++) {
+            std::string A_LoopField235 = items235[A_Index235 - 0];
+            paramsTemp = Trim(A_LoopField235);
+            if (A_Index235 == 0) {
                 paramsTemp_fileName = Trim(StringTrimRight(paramsTemp, 5));
             }
-            if (A_Index196 == 1) {
+            if (A_Index235 == 1) {
+                langToConvertTo = paramsTemp;
                 if (paramsTemp == "x86-64") {
                     is_arm = 0;
                     is_oryx = 0;

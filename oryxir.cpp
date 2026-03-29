@@ -1051,6 +1051,43 @@ std::string Oryx_interpreter(std::string code) {
             float val2 = FLOAT(get_value(op2));
             set_value(op1, STR(val1 / val2));
         }
+        if (SubStr(current_line, 1, 4) == "mod ") {
+            // This is our new 'mod' instruction handler
+            str1 = StringTrimLeft(current_line, 4);
+            std::string op1 = Trim(get_token(str1, ",", 1));
+            std::string op2 = Trim(get_token(str1, ",", 2));
+
+            // Get the values as floats, just like before
+            float val1 = FLOAT(get_value(op1));
+            float val2 = FLOAT(get_value(op2));
+
+            // --- THE MAGIC: NO DOT NUM NUM NUM ---
+            // We cast the floats to integers to force C++ to do integer modulo
+            long long int_val1 = static_cast<long long>(val1);
+            long long int_val2 = static_cast<long long>(val2);
+            
+            // Perform the integer modulo operation to get the remainder
+            long long remainder = int_val1 % int_val2;
+            
+            // Store the whole number result back into the variable
+            set_value(op1, STR(remainder));
+        }
+        if (SubStr(current_line, 1, 10) == "div_floor ") {
+            str1 = StringTrimLeft(current_line, 10);
+            std::string op1 = Trim(get_token(str1, ",", 1));
+            std::string op2 = Trim(get_token(str1, ",", 2));
+
+            float val1 = FLOAT(get_value(op1));
+            float val2 = FLOAT(get_value(op2));
+            
+            // Cast to integers to force integer division
+            long long int_val1 = static_cast<long long>(val1);
+            long long int_val2 = static_cast<long long>(val2);
+            
+            long long quotient = int_val1 / int_val2;
+            
+            set_value(op1, STR(quotient));
+        }
         if (SubStr(current_line, 1, 8) == "add_str ") {
             str1 = StringTrimLeft(current_line, 8);
             std::string op1 = "";

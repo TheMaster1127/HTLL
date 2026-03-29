@@ -26,6 +26,37 @@ int is_oryx := 0
 int ring0 := 0
 arr str nintArr
 
+
+str langToConvertTo := ""
+arr str programmingBlock_InTheTranspiledLang
+arr str programmingBlock_CPP
+arr str programmingBlock_PY
+arr str programmingBlock_JS
+arr str programmingBlock_GO
+
+str keyWordCodeInTheTranspiledLangStart := "___start asm"
+str keyWordCodeInTheTranspiledLangStartCPP := "___start x86-64"
+str keyWordCodeInTheTranspiledLangStartPY := "___start arm"
+str keyWordCodeInTheTranspiledLangStartJS := "___start oryx"
+str keyWordCodeInTheTranspiledLangStartGO := "___start x86-64-ring0"
+
+str keyWordCodeInTheTranspiledLangEnd := "___end asm"
+str keyWordCodeInTheTranspiledLangEndCPP := "___end x86-64"
+str keyWordCodeInTheTranspiledLangEndPY := "___end arm"
+str keyWordCodeInTheTranspiledLangEndJS := "___end oryx"
+str keyWordCodeInTheTranspiledLangEndGO := "___end x86-64-ring0"
+
+
+int COUNT_programmingBlock_InTheTranspiledLang := 0
+int COUNT_programmingBlock_CPP := 0
+int COUNT_programmingBlock_PY := 0
+int COUNT_programmingBlock_JS := 0
+int COUNT_programmingBlock_GO := 0
+
+str programmingBlocksTemp := ""
+int inProgarmmingBlock := 0
+str holdTempDataProgrammingBlockThenPutInArr := ""
+
 func str SubStrLastChars(str text, int numOfChars) {
     str LastOut := ""
     int NumOfChars := 0
@@ -166,43 +197,1287 @@ func str transformBracesToHTLL(str code) {
 
     return Trim(out)
 }
+
+
+
+func bool isFuncRetARR(str line) {
+
+    if (InStr(line, "__HTLL_param_")) {
+        return true
+    }
+
+    return false
+}
+
+func bool isFuncRetARR2(str line) {
+
+    if (InStr(line, "__HTLL_flocal_")) {
+        return true
+    }
+
+    return false
+}
+
+func bool isFuncRetARR3(str line, arr str arrays_from_global_scope_ARR) {
+
+    Loop, arrays_from_global_scope_ARR.size() {
+        if (Trim(StringTrimLeft(Trim(line), 7)) = arrays_from_global_scope_ARR[A_Index]) {
+            return true
+        }
+    }
+
+    return false
+}
+
+func bool doseHaveInclude(str TheCodeThatMightHaveInclude) {
+
+    str keyWordInclude := "include"
+
+    Loop, Parse, TheCodeThatMightHaveInclude, `n, `r {
+    
+        if (SubStr(StrLower(Trim(A_LoopField)), 1, StrLen(StrLower(keyWordInclude . " "))) = StrLower(keyWordInclude . " ")) 
+        {
+            return true
+        }
+    }
+    
+    
+    return false
+}
+
+
 func str HTLL_Lang(str code) {
 str out := ""
+
+; PROGRAMMING BLOCK
+; PROGRAMMING BLOCK
+; PROGRAMMING BLOCK
+; PROGRAMMING BLOCK
+
+
+Loop, Parse, code, `n, `r
+{
+
+if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangEnd))
+{
+
+COUNT_programmingBlock_InTheTranspiledLang++
+StringTrimRight, holdTempDataProgrammingBlockThenPutInArr, holdTempDataProgrammingBlockThenPutInArr, 1
+programmingBlocksTemp .= "programmingBlock_InTheTranspiledLang-programmingBlock_InTheTranspiledLang-AA" . STR(COUNT_programmingBlock_InTheTranspiledLang) . "AA" . Chr(10)
+programmingBlock_InTheTranspiledLang.add(holdTempDataProgrammingBlockThenPutInArr)
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 0
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangEndCPP))
+{
+
+COUNT_programmingBlock_CPP++
+StringTrimRight, holdTempDataProgrammingBlockThenPutInArr, holdTempDataProgrammingBlockThenPutInArr, 1
+programmingBlocksTemp .= "programmingBlock_CPP-programmingBlock_CPP-AA" . STR(COUNT_programmingBlock_CPP) . "AA" . Chr(10)
+programmingBlock_CPP.add(holdTempDataProgrammingBlockThenPutInArr)
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 0
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangEndPY))
+{
+
+COUNT_programmingBlock_PY++
+StringTrimRight, holdTempDataProgrammingBlockThenPutInArr, holdTempDataProgrammingBlockThenPutInArr, 1
+programmingBlocksTemp .= "programmingBlock_PY-programmingBlock_PY-AA" . STR(COUNT_programmingBlock_PY) . "AA" . Chr(10)
+programmingBlock_PY.add(holdTempDataProgrammingBlockThenPutInArr)
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 0
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangEndJS))
+{
+
+COUNT_programmingBlock_JS++
+StringTrimRight, holdTempDataProgrammingBlockThenPutInArr, holdTempDataProgrammingBlockThenPutInArr, 1
+programmingBlocksTemp .= "programmingBlock_JS-programmingBlock_JS-AA" . STR(COUNT_programmingBlock_JS) . "AA" . Chr(10)
+programmingBlock_JS.add(holdTempDataProgrammingBlockThenPutInArr)
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 0
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangEndGO))
+{
+
+COUNT_programmingBlock_GO++
+StringTrimRight, holdTempDataProgrammingBlockThenPutInArr, holdTempDataProgrammingBlockThenPutInArr, 1
+programmingBlocksTemp .= "programmingBlock_GO-programmingBlock_GO-AA" . STR(COUNT_programmingBlock_GO) . "AA" . Chr(10)
+programmingBlock_GO.add(holdTempDataProgrammingBlockThenPutInArr)
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 0
+}
+
+else if (inProgarmmingBlock = 1)
+{
+holdTempDataProgrammingBlockThenPutInArr .= A_LoopField . Chr(10)
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangStart))
+{
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 1
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangStartCPP))
+{
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 1
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangStartPY))
+{
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 1
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangStartJS))
+{
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 1
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangStartGO))
+{
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 1
+}
+else
+{
+programmingBlocksTemp .= A_LoopField . Chr(10)
+}
+
+}
+StringTrimRight, code, programmingBlocksTemp, 1
+
+;programmingBlock_InTheTranspiledLang
+;programmingBlock_CPP
+;programmingBlock_PY
+;programmingBlock_JS
+;programmingBlock_GO
+
+; PROGRAMMING BLOCK
+; PROGRAMMING BLOCK
+; PROGRAMMING BLOCK
+; PROGRAMMING BLOCK
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+; this is the start of include
+; this is the start of include
+; this is the start of include
+; this is the start of include
+
+arr str includedFilePaths
+bool includesWereFoundInPass := false
+str reconstructedCode := ""
+str currentLine := ""
+str filePathToInclude := ""
+bool isAlreadyIncluded := false
+str fileContent := ""
+
+str keyWordInclude := "include"
+str keyWordComment := ";"
+
+if (doseHaveInclude(code))
+{
+    ; Loop up to 10000 times to resolve nested includes. Each pass processes one level of includes.
+    Loop, 10000 {
+        ; Reset the flag and the temporary code string for this pass.
+        includesWereFoundInPass := false
+        reconstructedCode := ""
+
+        ; Iterate through each line of the current code.
+        Loop, Parse, code, `n, `r {
+            currentLine := A_LoopField
+
+            ; Check if the current line is an 'include' directive.
+            if (SubStr(StrLower(Trim(currentLine)), 1, StrLen(keyWordInclude . " ")) = StrLower(keyWordInclude . " "))
+            {
+                includesWereFoundInPass := true
+                filePathToInclude := StrReplace(StringTrimLeft(Trim(currentLine), StrLen(keyWordInclude . " ")), Chr(34), "")
+
+                ; Reset flag for the inner loop.
+                isAlreadyIncluded := false
+                ; NOTE: Both this loop's A_Index and the array access are 0-based, which is correct.
+                Loop, % includedFilePaths.size() {
+                    if (filePathToInclude = includedFilePaths[A_Index]) {
+                        isAlreadyIncluded := true
+                        break
+                    }
+                }
+
+                if (isAlreadyIncluded = false) {
+                    fileContent := Trim(FileRead(filePathToInclude))
+                    ; The 'include' line is replaced by the file's content in the reconstructed code.
+                    reconstructedCode := reconstructedCode . Chr(10) . keyWordComment . " start of " . filePathToInclude + Chr(10) . fileContent . Chr(10) . keyWordComment . " end of " . filePathToInclude . Chr(10) . Chr(10)
+                    includedFilePaths.add(filePathToInclude)
+                }
+            }
+            else {
+                ; If it's not an include directive, just copy the line as is.
+                reconstructedCode := reconstructedCode . currentLine . Chr(10)
+            }
+        }
+
+        ; --- Cleanup and Preparation for Next Pass ---
+        ; Replace the old code with the newly reconstructed code. This "clears up" the processed includes.
+        code := reconstructedCode
+
+        ; If no includes were found in this entire pass, all directives are resolved. Exit the loop.
+        if (includesWereFoundInPass = false) {
+            break
+        }
+    }
+}
+
+; this is the end of include
+;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+programmingBlocksTemp := ""
+inProgarmmingBlock := 0
+holdTempDataProgrammingBlockThenPutInArr := ""
+
+Loop, Parse, code, `n, `r
+{
+
+if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangEnd))
+{
+
+COUNT_programmingBlock_InTheTranspiledLang++
+StringTrimRight, holdTempDataProgrammingBlockThenPutInArr, holdTempDataProgrammingBlockThenPutInArr, 1
+programmingBlocksTemp .= "programmingBlock_InTheTranspiledLang-programmingBlock_InTheTranspiledLang-AA" . STR(COUNT_programmingBlock_InTheTranspiledLang) . "AA" . Chr(10)
+programmingBlock_InTheTranspiledLang.add(holdTempDataProgrammingBlockThenPutInArr)
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 0
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangEndCPP))
+{
+
+COUNT_programmingBlock_CPP++
+StringTrimRight, holdTempDataProgrammingBlockThenPutInArr, holdTempDataProgrammingBlockThenPutInArr, 1
+programmingBlocksTemp .= "programmingBlock_CPP-programmingBlock_CPP-AA" . STR(COUNT_programmingBlock_CPP) . "AA" . Chr(10)
+programmingBlock_CPP.add(holdTempDataProgrammingBlockThenPutInArr)
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 0
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangEndPY))
+{
+
+COUNT_programmingBlock_PY++
+StringTrimRight, holdTempDataProgrammingBlockThenPutInArr, holdTempDataProgrammingBlockThenPutInArr, 1
+programmingBlocksTemp .= "programmingBlock_PY-programmingBlock_PY-AA" . STR(COUNT_programmingBlock_PY) . "AA" . Chr(10)
+programmingBlock_PY.add(holdTempDataProgrammingBlockThenPutInArr)
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 0
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangEndJS))
+{
+
+COUNT_programmingBlock_JS++
+StringTrimRight, holdTempDataProgrammingBlockThenPutInArr, holdTempDataProgrammingBlockThenPutInArr, 1
+programmingBlocksTemp .= "programmingBlock_JS-programmingBlock_JS-AA" . STR(COUNT_programmingBlock_JS) . "AA" . Chr(10)
+programmingBlock_JS.add(holdTempDataProgrammingBlockThenPutInArr)
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 0
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangEndGO))
+{
+
+COUNT_programmingBlock_GO++
+StringTrimRight, holdTempDataProgrammingBlockThenPutInArr, holdTempDataProgrammingBlockThenPutInArr, 1
+programmingBlocksTemp .= "programmingBlock_GO-programmingBlock_GO-AA" . STR(COUNT_programmingBlock_GO) . "AA" . Chr(10)
+programmingBlock_GO.add(holdTempDataProgrammingBlockThenPutInArr)
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 0
+}
+
+else if (inProgarmmingBlock = 1)
+{
+holdTempDataProgrammingBlockThenPutInArr .= A_LoopField . Chr(10)
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangStart))
+{
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 1
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangStartCPP))
+{
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 1
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangStartPY))
+{
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 1
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangStartJS))
+{
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 1
+}
+else if (Trim(StrLower(A_LoopField)) = StrLower(keyWordCodeInTheTranspiledLangStartGO))
+{
+holdTempDataProgrammingBlockThenPutInArr := ""
+inProgarmmingBlock := 1
+}
+else
+{
+programmingBlocksTemp .= A_LoopField . Chr(10)
+}
+
+}
+StringTrimRight, code, programmingBlocksTemp, 1
+
+;programmingBlock_InTheTranspiledLang
+;programmingBlock_CPP
+;programmingBlock_PY
+;programmingBlock_JS
+;programmingBlock_GO
+
+; PROGRAMMING BLOCK
+; PROGRAMMING BLOCK
+; PROGRAMMING BLOCK
+; PROGRAMMING BLOCK
+
+
 
 code := cleanUpFirst(code)
 code := preserveStrings(code)
 code := handleComments(code)
 code := formatCurlyBracesForParsing(code)
-;print(code)
+
+
+
+
+
+int doWeEverSeeExprestion := 0
+    out := ""
+    Loop, Parse, code, `n, `r {
+         if (InStr(A_LoopField, " := ")) or (InStr(A_LoopField, " += ")) or (InStr(A_LoopField, " -= ")) or (InStr(A_LoopField, " *= ")) or (InStr(A_LoopField, " //= ")) or (InStr(A_LoopField, " %= ")) or (InStr(A_LoopField, " <<= ")) or (InStr(A_LoopField, " >>= ")) or (InStr(A_LoopField, " &= ")) or (InStr(A_LoopField, " |= ")) or (InStr(A_LoopField, " ^= ")) {
+            str1 := Trim(A_LoopField)
+        
+     if (InStr(A_LoopField, " + ")) or (InStr(A_LoopField, " - ")) or (InStr(A_LoopField, " * ")) or (InStr(A_LoopField, " // ")) or (InStr(A_LoopField, " % ")) or (InStr(A_LoopField, " << ")) or (InStr(A_LoopField, " >> ")) or (InStr(A_LoopField, " & ")) or (InStr(A_LoopField, " | ")) or (InStr(A_LoopField, " ^ ")) {
+            if (InStr(A_LoopField, " := ")) {
+                str10 := ":="
+            }
+            else if (InStr(A_LoopField, " += ")) {
+                str10 := "+="            
+            }
+            else if (InStr(A_LoopField, " -= ")) {
+                str10 := "-="
+            }
+            else if (InStr(A_LoopField, " *= ")) {
+                str10 := "*="            
+            }
+            else if (InStr(A_LoopField, " //= ")) {
+                str10 := "//="
+            }
+            else if (InStr(A_LoopField, " %= ")) {
+                str10 := "%="
+            }
+            else if (InStr(A_LoopField, " <<= ")) {
+                str10 := "<<="
+            }
+            else if (InStr(A_LoopField, " >>= ")) {
+                str10 := ">>="
+            }
+            else if (InStr(A_LoopField, " &= ")) {
+                str10 := "&="
+            }
+            else if (InStr(A_LoopField, " |= ")) {
+                str10 := "|="
+            }
+            else if (InStr(A_LoopField, " ^= ")) {
+                str10 := "^="
+            }
+doWeEverSeeExprestion := 1
+;;;;; code here
+;;;;; code here
+; x := x + 5 * 7 // var1
+
+; ___HTLL_expression_helper___
+str2 := Trim(StrSplit(str1, str10, 1))
+str3 := Trim(StrSplit(str1, str10, 2))
+
+
+Loop, Parse, str3, " " {
+if (Trim(A_LoopField) != "") {
+
+if (A_Index = 0) {
+
+    out .= "___HTLL_expression_helper___ := " . Trim(A_LoopField) . Chr(10)
+
+}
+else {
+if (InStr(A_LoopField, "+")) or (InStr(A_LoopField, "-")) or (InStr(A_LoopField, "*")) or (InStr(A_LoopField, "//")) or (InStr(A_LoopField, "%")) or (InStr(A_LoopField, "<<")) or (InStr(A_LoopField, ">>")) or (InStr(A_LoopField, "&")) or (InStr(A_LoopField, "|")) or (InStr(A_LoopField, "^")) {
+    out .= "___HTLL_expression_helper___ " . Trim(A_LoopField) . "= "
+}
+else {
+    out .= Trim(A_LoopField) . Chr(10)
+}
+
+}
+}
+}
+
+out .= str2 . " " . str10 . " ___HTLL_expression_helper___" . Chr(10)
+;;;;; code here
+;;;;; code here
+    
+            
+        }
+        else {
+            out .= A_LoopField . Chr(10)
+        }
+        }
+else if (SubStr(StrLower(Trim(A_LoopField)), 1, 7) = "return ") {
+;;;;;;;;;;;;;; return
+str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7))
+
+if (InStr(A_LoopField, " + ")) or (InStr(A_LoopField, " - ")) or (InStr(A_LoopField, " * ")) or (InStr(A_LoopField, " // ")) or (InStr(A_LoopField, " % ")) or (InStr(A_LoopField, " << ")) or (InStr(A_LoopField, " >> ")) or (InStr(A_LoopField, " & ")) or (InStr(A_LoopField, " | ")) or (InStr(A_LoopField, " ^ ")) {
+;;;;;;;;;;;;;; return return
+;;;;;;;;;;;;;; return return
+doWeEverSeeExprestion := 1
+str3 := str1
+
+
+Loop, Parse, str3, " " {
+if (Trim(A_LoopField) != "") {
+
+if (A_Index = 0) {
+
+    out .= "___HTLL_expression_helper___ := " . Trim(A_LoopField) . Chr(10)
+
+}
+else {
+if (InStr(A_LoopField, "+")) or (InStr(A_LoopField, "-")) or (InStr(A_LoopField, "*")) or (InStr(A_LoopField, "//")) or (InStr(A_LoopField, "%")) or (InStr(A_LoopField, "<<")) or (InStr(A_LoopField, ">>")) or (InStr(A_LoopField, "&")) or (InStr(A_LoopField, "|")) or (InStr(A_LoopField, "^")) {
+    out .= "___HTLL_expression_helper___ " . Trim(A_LoopField) . "= "
+}
+else {
+    out .= Trim(A_LoopField) . Chr(10)
+}
+
+}
+}
+}
+
+out .= "return ___HTLL_expression_helper___" . Chr(10)
+
+
+;;;;;;;;;;;;;; return return
+;;;;;;;;;;;;;; return return
+}
+else {
+    out .= A_LoopField . Chr(10)
+}
+;;;;;;;;;;;;;; return
+}
+                else {
+            out .= A_LoopField . Chr(10)
+        }
+
+    }
+    StringTrimRight, code, out, 1
+
+    if (doWeEverSeeExprestion = 1) {
+        code := "int ___HTLL_expression_helper___ := 0" . Chr(10) . code
+    }
+
+
+    out := ""
+    Loop, Parse, code, `n, `r {
+        if (SubStr(StrLower(Trim(A_LoopField)), 1, 6) = "loop, ") {
+            str1 := Trim(A_LoopField)
+            str2 := Trim(StrSplit(str1, ",", 2))
+
+            if (InStr(str2, ".size")) {
+                out .= Trim(str2) . Chr(10) . "Loop, rax" . Chr(10)
+            } else {
+                out .= A_LoopField . Chr(10)
+            }
+        }
+        else if (StrLower(Trim(A_LoopField)) = "loop") {
+            out .= "Loop, -1" . Chr(10)
+        } else {
+            out .= A_LoopField . Chr(10)
+        }
+
+    }
+    StringTrimRight, code, out, 1
+    out := ""
+
 
 if (InStr(code, "{")) {
     code := transformBracesToHTLL(code)
 }
 
-; VYIGUOYIYVIUCFCYIUCFCYIGCYGICFHYFHCTCFTFDFGYGFCAA
-;print(code)
-;Loop, % HT_Lib_theIdNumOfThe34theVar.size() {
-;if (Trim(HT_Lib_theIdNumOfThe34theVar[A_Index]) != "") {
-;print(A_Index)
-;print(HT_Lib_theIdNumOfThe34theVar[A_Index])
-;}
-;if (A_Index = 50) {
-;break
-;}
-;}
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+int dose_func_exist := 0
+
+Loop, Parse, code, `n, `r {
+    if (SubStr(StrLower(Trim(A_LoopField)), 1, 5) = "func ") {
+        dose_func_exist := 1
+        break
+    }
+}
+
+
+
+int is_in_func := 0
+int is_in_main := 0
+
+
+
+arr str arrays_from_global_scope
+
+
+arr str func_arrs_params
+arr str func_arrs_params_ORIGINAL_NAME
+
+
+arr str func_vars_and_arrs
+arr str main_vars_and_arrs
+
+arr str funcs_and_what_types
+
+str ALoopField := ""
+int AIndex := 0
+int AAIndex := 0
+int it_macth_arr_name := 0
+
+
+out := ""
+Loop, Parse, code, `n, `r {
+if (SubStr(StrLower(Trim(A_LoopField)), 1, 5) = "func ") {
+str1 := Trim(StringTrimLeft(Trim(A_LoopField), 5))
+is_in_func := 1
+str2 := ""
+str3 := ""
+str4 := ""
+str5 := ""
+str6 := ""
+str7 := ""
+str8 := ""
+str9 := ""
+
+
+
+func_arrs_params := []
+
+str2 := Trim(StrSplit(str1, "(", 1))
+str4 := Trim(StrSplit(str1, "(", 2))
+str4 := StringTrimRight(str4, 1)
+
+if (InStr(str2, " ")) {
+; is an array func return
+
+
+; get name of func
+str3 := Trim(StrSplit(str2, " ", 2))
+
+str8 := ""
+
+str6 .= "arr __HTLL_ret_" . str3 . Chr(10)
+
+
+    str5 := ""
+    
+    if (InStr(str1, "()") = false) {
+    
+    Loop, Parse, str4, "," {
+        if (InStr(Trim(A_LoopField), " ")) {
+            ; its an array param
+        func_arrs_params.add("__HTLL_param_" . str3 . "_" . Trim(StrSplit(Trim(A_LoopField), " ", 2)))
+        str8 .= Trim(StrSplit(Trim(A_LoopField), " ", 2)) . ","
+        func_arrs_params_ORIGINAL_NAME.add(Trim(StrSplit(Trim(A_LoopField), " ", 2)))
+        }
+        else {
+        str8 .= "__000_NOT-ARRAY_000__,"
+        str5 .= Trim(A_LoopField) . ", "
+        }
+
+    }
+        
+    str8 := StringTrimRight(str8, 1)
+    funcs_and_what_types.add("yes|" . str3 . "|" . Trim(str8))
+    
+    str5 := Trim(str5)
+    str5 := StringTrimRight(str5, 1)
+
+}
+else {
+    str5 := ""
+    funcs_and_what_types.add("yes|" . str3 . "|")
+}
+
+}
+else {
+
+    ; get name of func
+    str3 := Trim(str2)
+    
+    
+    str8 := ""
+    
+    str5 := ""
+    
+    if (InStr(str1, "()") = false) {
+    
+    Loop, Parse, str4, "," {
+        if (InStr(Trim(A_LoopField), " ")) {
+            ; its an array param
+        func_arrs_params.add("__HTLL_param_" . str3 . "_" . Trim(StrSplit(Trim(A_LoopField), " ", 2)))
+        str8 .= Trim(StrSplit(Trim(A_LoopField), " ", 2)) . ","
+        func_arrs_params_ORIGINAL_NAME.add(Trim(StrSplit(Trim(A_LoopField), " ", 2)))
+        }
+        else {
+        str8 .= "__000_NOT-ARRAY_000__,"
+        str5 .= Trim(A_LoopField) . ", "
+        }
+
+    }
+    
+    str8 := StringTrimRight(str8, 1)
+    funcs_and_what_types.add("no|" . str3 . "|" . Trim(str8))
+    
+    str5 := Trim(str5)
+    str5 := StringTrimRight(str5, 1)
+    }
+    else {
+    str5 := ""
+    funcs_and_what_types.add("no|" . str3 . "|")
+    }
+    
+}
+
+Loop, func_arrs_params.size() {
+str6 .= "arr " . func_arrs_params[A_Index] . Chr(10)
+}
+
+str6 .= "func " . str3 . "(" . str5 . ")"
+
+
+out .= str6 . Chr(10)
+
+str14 := str3
+
+}
+else if (Trim(A_LoopField) = "funcend") {
+is_in_func := 0
+str1 := ""
+str2 := ""
+str3 := ""
+str4 := ""
+str5 := ""
+
+out .= A_LoopField . Chr(10)
+}
+else if (Trim(A_LoopField) = "main") {
+is_in_main := 1
+str1 := ""
+str2 := ""
+str3 := ""
+str4 := ""
+str5 := ""
+
+out .= A_LoopField . Chr(10)
+}
+else {
+
+if (is_in_func = 1) and (is_in_main = 0) {
+; in a func
+str1 := ""
+str2 := ""
+str4 := ""
+str5 := ""
+str1 := A_LoopField
+
+if (SubStr(StrLower(Trim(A_LoopField)), 1, 4) = "arr ") or (SubStr(StrLower(Trim(A_LoopField)), 1, 4) = "int ") {
+
+
+if (SubStr(StrLower(Trim(A_LoopField)), 1, 4) = "arr ") {
+out .= "__HTLL_flocal_" . str3 . "_" . Trim(StringTrimLeft(Trim(A_LoopField), 4)) . ".clear" . Chr(10)
+}
+
+if (InStr(A_LoopField, " := ")) {
+str2 := Trim(StrSplit(A_LoopField, ":=", 1))
+
+str4 := Trim(StrSplit(A_LoopField, " ", 2))
+
+}
+else {
+str2 := Trim(A_LoopField)
+str4 := Trim(StrSplit(A_LoopField, " ", 2))
+}
+
+func_vars_and_arrs.add(str4)
+}
+
+
+
+Loop, func_arrs_params_ORIGINAL_NAME.size() {
+str1 := RegExReplace(str1, "\b" . func_arrs_params_ORIGINAL_NAME[A_Index] . "\b", "__HTLL_param_" . str14 . "_" . func_arrs_params_ORIGINAL_NAME[A_Index])
+}
+
+Loop, func_vars_and_arrs.size() {
+str1 := RegExReplace(str1, "\b" . func_vars_and_arrs[A_Index] . "\b", "__HTLL_flocal_" . str14 . "_" . func_vars_and_arrs[A_Index])
+}
+
+
+
+
+
+
+
+;::::::::::::::::::::::
+;::::::::::::::::::::::
+;::::::::::::::::::::::
+;::::::::::::::::::::::
+;::::::::::::::::::::::
+;::::::::::::::::::::::
+
+
+
+str6 := str1
+
+Loop, funcs_and_what_types.size() {
+    if (InStr(A_LoopField, ")")) and (RegExMatch(A_LoopField, "\b" . StrSplit(funcs_and_what_types[A_Index], "|", 2) . "\b")) {
+        if (InStr(A_LoopField, " := ")) {
+            if (StrSplit(funcs_and_what_types[A_Index], "|", 1) = "no") {
+                throw ErrorMsg("ERROR You cannot use the assignment operator and save the function " . StrSplit(funcs_and_what_types[A_Index], "|", 2) . " please use rax.")
+            }
+; for arrays
+; for arrays
+
+str1 := Trim(StrSplit(str6, " := ", 1))
+str2 := Trim(StrSplit(str6, " := ", 2))
+
+str3 := Trim(StrSplit(str2, "(", 1))
+str4 := Trim(StrSplit(str2, "(", 2))
+str4 := StringTrimRight(str4, 1)
+
+; str1 = arrName
+; str2 WE DONT CARE
+; str3 = func name
+; str4 = all params if any
+
+if (Trim(str4) = "") {
+; no param handle here
+
+str5 := StrSplit(funcs_and_what_types[A_Index], "|", 2) . "()" . Chr(10)
+str5 .= str1 . ".copy __HTLL_ret_" . StrSplit(funcs_and_what_types[A_Index], "|", 2) . Chr(10)
+
+}
+else {
+; there are params so handle here
+
+str7 := ""
+str5 := ""
+str8 := StrSplit(funcs_and_what_types[A_Index], "|", 3)
+AAIndex := A_Index
+Loop, Parse, str4, "," {
+ALoopField := Trim(A_LoopField)
+AIndex := A_Index
+it_macth_arr_name := 0
+Loop, Parse, str8, "," {
+if (Trim(A_LoopField) != "__000_NOT-ARRAY_000__") and (AIndex = A_Index) {
+ALoopField := Trim(A_LoopField)
+if (Trim(ALoopField) != "") {
+it_macth_arr_name := 1
+}
+break
+}
+}
+
+if (it_macth_arr_name = 1) {
+
+if (InStr(A_LoopField, "__HTLL_flocal_")) {
+str5 .= "__HTLL_param_" . StrSplit(funcs_and_what_types[AAIndex], "|", 2) . "_" . ALoopField . ".copy " . Trim(A_LoopField) . Chr(10)
+}
+else {
+str5 .= "__HTLL_param_" . StrSplit(funcs_and_what_types[AAIndex], "|", 2) . "_" . ALoopField . ".copy __HTLL_flocal_" . str14 . "_" . Trim(A_LoopField) . Chr(10)
+}
+
+}
+else {
+if (RegExMatch(Trim(A_LoopField), "^\d+$")) {
+str7 .= Trim(A_LoopField) . ", "
+}
+else {
+if (InStr(A_LoopField, "__HTLL_flocal_")) {
+str7 .= "__HTLL_flocal_" . str14 . "_" . Trim(A_LoopField) . ", "
+} else {
+str7 .= "__HTLL_flocal_" . str14 . "_" . Trim(A_LoopField) . ", "
+}
+
+}
+}
+
+
+
+
+}
+
+str5 .= StrSplit(funcs_and_what_types[A_Index], "|", 2) . "(" . StringTrimRight(Trim(str7), 1) . ")" . Chr(10)
+str5 .= str1 . ".copy __HTLL_ret_" . StrSplit(funcs_and_what_types[A_Index], "|", 2) . Chr(10)
+
+
+; there are params so handle here
+}
+
+
+str6 := str5
+; for arrays
+; for arrays
+        } 
+        else {
+            if (StrSplit(funcs_and_what_types[A_Index], "|", 1) = "yes") {
+                throw ErrorMsg("ERROR You must use the assignment operator and save the function " . StrSplit(funcs_and_what_types[A_Index], "|", 2) . " to an array.")
+            }
+; for not arays returned
+; for not arays returned
+
+
+str1 := Trim(A_LoopField)
+str2 := str1
+
+str3 := Trim(StrSplit(str2, "(", 1))
+str4 := Trim(StrSplit(str2, "(", 2))
+str4 := StringTrimRight(str4, 1)
+
+
+; str2 WE DONT CARE
+; str3 = func name
+; str4 = all params if any
+
+if (Trim(str4) = "") {
+; no param handle here
+
+str5 := StrSplit(funcs_and_what_types[A_Index], "|", 2) . "()" . Chr(10)
+
+}
+else {
+; there are params so handle here
+
+str7 := ""
+str5 := ""
+str8 := StrSplit(funcs_and_what_types[A_Index], "|", 3)
+AAIndex := A_Index
+Loop, Parse, str4, "," {
+ALoopField := Trim(A_LoopField)
+AIndex := A_Index
+it_macth_arr_name := 0
+Loop, Parse, str8, "," {
+if (Trim(A_LoopField) != "__000_NOT-ARRAY_000__") and (AIndex = A_Index) {
+ALoopField := Trim(A_LoopField)
+if (Trim(ALoopField) != "") {
+it_macth_arr_name := 1
+}
+break
+}
+}
+
+if (it_macth_arr_name = 1) {
+
+if (InStr(A_LoopField, "__HTLL_flocal_")) {
+str5 .= "__HTLL_param_" . StrSplit(funcs_and_what_types[AAIndex], "|", 2) . "_" . ALoopField . ".copy " . Trim(A_LoopField) . Chr(10)
+}
+else {
+str5 .= "__HTLL_param_" . StrSplit(funcs_and_what_types[AAIndex], "|", 2) . "_" . ALoopField . ".copy __HTLL_flocal_" . str14 . "_" . Trim(A_LoopField) . Chr(10)
+}
+
+}
+else {
+if (RegExMatch(Trim(A_LoopField), "^\d+$")) {
+str7 .= Trim(A_LoopField) . ", "
+}
+else {
+if (InStr(A_LoopField, "__HTLL_flocal_")) {
+str7 .= "__HTLL_flocal_" . str14 . "_" . Trim(A_LoopField) . ", "
+} else {
+str7 .= "__HTLL_flocal_" . str14 . "_" . Trim(A_LoopField) . ", "
+}
+
+}
+}
+
+
+
+
+}
+
+str5 .= StrSplit(funcs_and_what_types[A_Index], "|", 2) . "(" . StringTrimRight(Trim(str7), 1) . ")" . Chr(10)
+
+
+
+; there are params so handle here
+}
+
+
+str6 := str5
+
+; for not arays returned
+; for not arays returned
+
+
+        }
+        break
+    }
+    else {
+    str6 := str1
+    }
+    
+}
+
+out .= str6 . Chr(10)
+
+;::::::::::::::::::::::
+;::::::::::::::::::::::
+;::::::::::::::::::::::
+;::::::::::::::::::::::
+;::::::::::::::::::::::
+;::::::::::::::::::::::
+
+}
+else if (is_in_main = 1) {
+; in main
+str1 := ""
+str2 := ""
+str3 := ""
+str4 := ""
+str5 := ""
+str6 := ""
+str7 := ""
+
+str11 := A_LoopField
+
+if (SubStr(StrLower(Trim(A_LoopField)), 1, 4) = "arr ") or (SubStr(StrLower(Trim(A_LoopField)), 1, 4) = "int ") {
+
+if (InStr(A_LoopField, " := ")) {
+str2 := Trim(StrSplit(A_LoopField, ":=", 1))
+
+str3 := Trim(StrSplit(A_LoopField, " ", 2))
+
+}
+else {
+str2 := Trim(A_LoopField)
+str3 := Trim(StrSplit(A_LoopField, " ", 2))
+}
+
+main_vars_and_arrs.add(str3)
+}
+
+
+Loop, main_vars_and_arrs.size() {
+str11 := RegExReplace(str11, "\b" . main_vars_and_arrs[A_Index] . "\b", "__HTLL_mlocal_" . main_vars_and_arrs[A_Index])
+}
+
+
+
+str6 := str11
+
+Loop, funcs_and_what_types.size() {
+    if (InStr(A_LoopField, ")")) and (RegExMatch(A_LoopField, "\b" . StrSplit(funcs_and_what_types[A_Index], "|", 2) . "\b")) {
+        if (InStr(A_LoopField, " := ")) {
+            if (StrSplit(funcs_and_what_types[A_Index], "|", 1) = "no") {
+                throw ErrorMsg("ERROR You cannot use the assignment operator and save the function " . StrSplit(funcs_and_what_types[A_Index], "|", 2) . " please use rax.")
+            }
+; for arrays
+; for arrays
+
+str1 := Trim(StrSplit(str6, " := ", 1))
+str2 := Trim(StrSplit(str6, " := ", 2))
+
+str3 := Trim(StrSplit(str2, "(", 1))
+str4 := Trim(StrSplit(str2, "(", 2))
+str4 := StringTrimRight(str4, 1)
+
+; str1 = arrName
+; str2 WE DONT CARE
+; str3 = func name
+; str4 = all params if any
+
+if (Trim(str4) = "") {
+; no param handle here
+
+str5 := StrSplit(funcs_and_what_types[A_Index], "|", 2) . "()" . Chr(10)
+str5 .= str1 . ".copy __HTLL_ret_" . StrSplit(funcs_and_what_types[A_Index], "|", 2) . Chr(10)
+
+}
+else {
+; there are params so handle here
+
+str7 := ""
+str5 := ""
+str8 := StrSplit(funcs_and_what_types[A_Index], "|", 3)
+AAIndex := A_Index
+Loop, Parse, str4, "," {
+ALoopField := Trim(A_LoopField)
+AIndex := A_Index
+it_macth_arr_name := 0
+Loop, Parse, str8, "," {
+if (Trim(A_LoopField) != "__000_NOT-ARRAY_000__") and (AIndex = A_Index) {
+ALoopField := Trim(A_LoopField)
+if (Trim(ALoopField) != "") {
+it_macth_arr_name := 1
+}
+break
+}
+}
+
+if (it_macth_arr_name = 1) {
+if (InStr(A_LoopField, "__HTLL_mlocal_")) {
+str5 .= "__HTLL_param_" . StrSplit(funcs_and_what_types[AAIndex], "|", 2) . "_" . ALoopField . ".copy " . Trim(A_LoopField) . Chr(10)
+} else {
+str5 .= "__HTLL_param_" . StrSplit(funcs_and_what_types[AAIndex], "|", 2) . "_" . ALoopField . ".copy __HTLL_mlocal_" . Trim(A_LoopField) . Chr(10)
+}
+}
+else {
+if (RegExMatch(Trim(A_LoopField), "^\d+$")) {
+str7 .= Trim(A_LoopField) . ", "
+}
+else {
+
+if (InStr(A_LoopField, "__HTLL_mlocal_")) {
+str7 .= Trim(A_LoopField) . ", "
+}
+else {
+str7 .= "__HTLL_mlocal_" . Trim(A_LoopField) . ", "
+}
+}
+}
+
+
+
+
+}
+
+str5 .= StrSplit(funcs_and_what_types[A_Index], "|", 2) . "(" . StringTrimRight(Trim(str7), 1) . ")" . Chr(10)
+str5 .= str1 . ".copy __HTLL_ret_" . StrSplit(funcs_and_what_types[A_Index], "|", 2) . Chr(10)
+
+
+; there are params so handle here
+}
+
+
+str6 := str5
+; for arrays
+; for arrays
+        } 
+        else {
+            if (StrSplit(funcs_and_what_types[A_Index], "|", 1) = "yes") {
+                throw ErrorMsg("ERROR You must use the assignment operator and save the function " . StrSplit(funcs_and_what_types[A_Index], "|", 2) . " to an array.")
+            }
+; for not arays returned
+; for not arays returned
+
+
+str1 := Trim(A_LoopField)
+str2 := str1
+
+str3 := Trim(StrSplit(str2, "(", 1))
+str4 := Trim(StrSplit(str2, "(", 2))
+str4 := StringTrimRight(str4, 1)
+
+
+; str2 WE DONT CARE
+; str3 = func name
+; str4 = all params if any
+
+if (Trim(str4) = "") {
+; no param handle here
+
+str5 := StrSplit(funcs_and_what_types[A_Index], "|", 2) . "()" . Chr(10)
+
+}
+else {
+; there are params so handle here
+
+str7 := ""
+str5 := ""
+str8 := StrSplit(funcs_and_what_types[A_Index], "|", 3)
+AAIndex := A_Index
+Loop, Parse, str4, "," {
+ALoopField := Trim(A_LoopField)
+AIndex := A_Index
+it_macth_arr_name := 0
+Loop, Parse, str8, "," {
+if (Trim(A_LoopField) != "__000_NOT-ARRAY_000__") and (AIndex = A_Index) {
+ALoopField := Trim(A_LoopField)
+if (Trim(ALoopField) != "") {
+it_macth_arr_name := 1
+}
+break
+}
+}
+
+if (it_macth_arr_name = 1) {
+if (InStr(A_LoopField, "__HTLL_mlocal_")) {
+str5 .= "__HTLL_param_" . StrSplit(funcs_and_what_types[AAIndex], "|", 2) . "_" . ALoopField . ".copy " . Trim(A_LoopField) . Chr(10)
+} else {
+str5 .= "__HTLL_param_" . StrSplit(funcs_and_what_types[AAIndex], "|", 2) . "_" . ALoopField . ".copy __HTLL_mlocal_" . Trim(A_LoopField) . Chr(10)
+}
+}
+else {
+if (RegExMatch(Trim(A_LoopField), "^\d+$")) {
+str7 .= Trim(A_LoopField) . ", "
+}
+else {
+
+if (InStr(A_LoopField, "__HTLL_mlocal_")) {
+str7 .= Trim(A_LoopField) . ", "
+}
+else {
+str7 .= "__HTLL_mlocal_" . Trim(A_LoopField) . ", "
+}
+}
+}
+
+
+
+
+}
+
+str5 .= StrSplit(funcs_and_what_types[A_Index], "|", 2) . "(" . StringTrimRight(Trim(str7), 1) . ")" . Chr(10)
+
+
+
+; there are params so handle here
+}
+
+
+str6 := str5
+
+; for not arays returned
+; for not arays returned
+
+
+        }
+        break
+    }
+    else {
+    str6 := str11
+    }
+    
+}
+
+out .= str6 . Chr(10)
+}
+else {
+; get all array names
+if (SubStr(StrLower(Trim(A_LoopField)), 1, 4) = "arr ") {
+arrays_from_global_scope.add(Trim(StringTrimLeft(Trim(A_LoopField), 4)))
+}
+out .= A_LoopField . Chr(10)
+}
+
+}
+}
+    StringTrimRight, code, out, 1
+    out := ""
+
+
+int doWeReturnARR := 0
+
 
 Loop, Parse, code, `n, `r {
 
-if (SubStr(A_LoopField, 1, 4) = "str ") {
-str1 := Trim(StringTrimLeft(A_LoopField, 4))
+
+
+
+if (SubStr(StrLower(Trim(A_LoopField)), 1, 5) = "func ") {
+str1 := Trim(StringTrimLeft(Trim(A_LoopField), 5))
+
+str2 := ""
+str3 := ""
+str4 := ""
+
+str6 := ""
+
+doWeReturnARR := 0
+
+str2 := Trim(StrSplit(str1, "(", 1))
+str4 := Trim(StrSplit(str1, "(", 2))
+str4 := StringTrimRight(str4, 1)
+
+if (InStr(str2, " ")) {
+; is an array func return
+
+
+; get name of func
+str3 := Trim(StrSplit(str2, " ", 2))
+
+
+}
+else {
+    ; get name of func
+    str3 := Trim(str2)
+}
+
+
+Loop, funcs_and_what_types.size() {
+if (StrSplit(funcs_and_what_types[A_Index], "|", 2) = str3) {
+
+if (StrSplit(funcs_and_what_types[A_Index], "|", 1) = "yes") {
+doWeReturnARR := 1
+}
+else {
+doWeReturnARR := 0
+}
+
+break
+}
+}
+
+
+out .= A_LoopField . Chr(10)
+}
+else if (SubStr(StrLower(Trim(A_LoopField)), 1, 7) = "return ") and (isFuncRetARR(A_LoopField)) and (doWeReturnARR = 1) {
+str1 := Trim(StringTrimLeft(Trim(A_LoopField), 21 + StrLen(Trim(str3))))
+
+str2 := "__HTLL_ret_" . str3 . ".copy __HTLL_param_" . str3 . "_" . str1 . ""
+
+out .= str2 . Chr(10)
+out .= "return 0" . Chr(10)
+}
+else if (SubStr(StrLower(Trim(A_LoopField)), 1, 7) = "return ") and (isFuncRetARR2(A_LoopField)) and (doWeReturnARR = 1) {
+str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7 ))
+
+str2 := "__HTLL_ret_" . str3 . ".copy " . str1
+
+out .= str2 . Chr(10)
+out .= "return 0" . Chr(10)
+}
+else if (SubStr(StrLower(Trim(A_LoopField)), 1, 7) = "return ") and (isFuncRetARR3(A_LoopField, arrays_from_global_scope)) and (doWeReturnARR = 1) {
+str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7 ))
+
+str2 := "__HTLL_ret_" . str3 . ".copy " . str1
+
+out .= str2 . Chr(10)
+out .= "return 0" . Chr(10)
 }
 else {
 out .= A_LoopField . Chr(10)
 }
 }
 
-out := Trim(out)
-out := restoreStrings(out)
+
+out := RegExReplace(out, "__HTLL_[^ \n\],]*?___HTLL", "__HTLL")
+
+    StringTrimRight, code, out, 1
+    out := ""
+
+
+out := restoreStrings(code)
 
 return out
 }
@@ -370,6 +1645,8 @@ str strIndex := ""
 str idxSrc := ""
 str valSrc := ""
 str strArg := ""
+
+int is_inf_loop := 0
     
     Loop, Parse, code {
         theIdNumOfThe34theVar.add("")
@@ -500,11 +1777,17 @@ str strArg := ""
         }
     }
     StringTrimRight, code, out, 1
+    
+    
+    
+    
+    
+    
     int fix_func_temp_int := 0
     arr str fix_func_temp_arr
     out := ""
     Loop, Parse, code, `n, `r {
-        if (SubStr(A_LoopField, 1, 5) = "func ") {
+        if (SubStr(Trim(A_LoopField), 1, 5) = "func ") {
             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             str1 := Trim(StringTrimLeft(A_LoopField, 5))
@@ -548,6 +1831,19 @@ str strArg := ""
     }
     StringTrimRight, code, out, 1
     out := ""
+    
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; main loop main loop main loop main loop
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; main loop main loop main loop main loop
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; main loop main loop main loop main loop
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; main loop main loop main loop main loop
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
     Loop, Parse, code, `n, `r {
         if (SubStr(A_LoopField, 1, 7) = "arradd ") {
             str1 := Trim(StringTrimLeft(A_LoopField, 7))
@@ -1097,12 +2393,13 @@ str strArg := ""
                 }
             }
         }
-        else if (InStr(A_LoopField, " := ")) or (InStr(A_LoopField, " += ")) or (InStr(A_LoopField, " -= ")) or (InStr(A_LoopField, " *= ")) {
+        else if (InStr(A_LoopField, " := ")) or (InStr(A_LoopField, " += ")) or (InStr(A_LoopField, " -= ")) or (InStr(A_LoopField, " *= ")) or (InStr(A_LoopField, " //= ")) or (InStr(A_LoopField, " %= ")) or (InStr(A_LoopField, " <<= ")) or (InStr(A_LoopField, " >>= ")) or (InStr(A_LoopField, " &= ")) or (InStr(A_LoopField, " |= ")) or (InStr(A_LoopField, " ^= ")) {
             if (is_arm = 1) {
                 if (InStr(A_LoopField, " := ")) {
                     str1 := Trim(A_LoopField)
                     str2 := Trim(StrSplit(str1, ":=", 1))
                     str3 := Trim(StrSplit(str1, ":=", 2))
+                    
                     int isLhsStackVar := 0
                     if (inFunc = 1) {
                         Loop, % funcArgsArr.size() {
@@ -1112,6 +2409,8 @@ str strArg := ""
                             }
                         }
                     }
+                    
+                    ; --- Compute the source value into x9 ---
                     if (str3 = "rax") {
                         out .= "    mov x9, x0" . Chr(10)
                     }
@@ -1135,40 +2434,50 @@ str strArg := ""
                             out .= "    ldr x9, =" . str3 . Chr(10)
                         }
                         else {
-                            out .= "    ldr x10, =" . str3 . Chr(10) . Chr(10)
+                            out .= "    ldr x10, =" . str3 . Chr(10)
                             out .= "    ldr x9, [x10]" . Chr(10)
                         }
                     }
+                    
+                    ; --- Store x9 to destination ---
                     if (isLhsStackVar = 1) {
+                        ; Destination is a function parameter (stored as a global label)
                         out .= "    str x9, =" . str2 . Chr(10)
                     }
+                    else if (str2 = "rax") {
+                        out .= "    mov x0, x9" . Chr(10)
+                    }
                     else {
-                        out .= "    ldr x10, =" . str2 . Chr(10) . Chr(10)
+                        ; Destination is a normal global variable
+                        out .= "    ldr x10, =" . str2 . Chr(10)
                         out .= "    str x9, [x10]" . Chr(10)
                     }
+                    
                     if (isNint(str2)) {
-                        out .= "    ldr x0, =" . str2 . Chr(10) . "    ldr x1, =" . str2 . "_is_negative" . Chr(10) . "    bl is_nint_negative" . Chr(10)
+                        out .= "    ldr x0, =" . str2 . Chr(10)
+                        out .= "    ldr x1, =" . str2 . "_is_negative" . Chr(10)
+                        out .= "    bl is_nint_negative" . Chr(10)
                     }
                 }
                 else {
-                    ; Handles +=, -=, *= []
+                    ; Handles +=, -=, *=, //=, %=, <<=, >>=, &=, |=, ^=
                     str op := ""
                     str op_asm := ""
-                    if (InStr(A_LoopField, " += ")) {
-                        op := "+="
-                        op_asm := "add"
-                    }
-                    else if (InStr(A_LoopField, " -= ")) {
-                        op := "-="
-                        op_asm := "sub"
-                    }
-                    else if (InStr(A_LoopField, " *= ")) {
-                        op := "*="
-                        op_asm := "mul"
-                    }
+                    if (InStr(A_LoopField, " += ")) { op := "+="; op_asm := "add" }
+                    else if (InStr(A_LoopField, " -= ")) { op := "-="; op_asm := "sub" }
+                    else if (InStr(A_LoopField, " *= ")) { op := "*="; op_asm := "mul" }
+                    else if (InStr(A_LoopField, " //= ")) { op := "//="; op_asm := "udiv" }
+                    else if (InStr(A_LoopField, " %= ")) { op := "%="; op_asm := "mod" }
+                    else if (InStr(A_LoopField, " <<= ")) { op := "<<="; op_asm := "lsl" }
+                    else if (InStr(A_LoopField, " >>= ")) { op := ">>="; op_asm := "lsr" }
+                    else if (InStr(A_LoopField, " &= ")) { op := "&="; op_asm := "and" }
+                    else if (InStr(A_LoopField, " |= ")) { op := "|="; op_asm := "orr" }
+                    else if (InStr(A_LoopField, " ^= ")) { op := "^="; op_asm := "eor" }
+                    
                     str1 := Trim(A_LoopField)
                     str2 := Trim(StrSplit(str1, op, 1))
                     str3 := Trim(StrSplit(str1, op, 2))
+                    
                     ; --- Load Destination Value into x9 ---
                     int isLhsStackVar := 0
                     if (inFunc = 1) {
@@ -1186,23 +2495,43 @@ str strArg := ""
                         out .= "    ldr x10, =" . str2 . Chr(10) . Chr(10)
                         out .= "    ldr x9, [x10]" . Chr(10)
                     }
+                    
                     ; --- Load Source Value into x11 and perform operation ---
                     if (str3 = "rax") {
-                        out .= "    " . op_asm . " x9, x9, x0" . Chr(10)
+                        if (op_asm = "mod") {
+                            out .= "    udiv x12, x9, x0" . Chr(10)
+                            out .= "    msub x9, x12, x0, x9" . Chr(10)
+                        } else {
+                            out .= "    " . op_asm . " x9, x9, x0" . Chr(10)
+                        }
                     }
                     else if (str3 = "A_Index") {
-                        out .= "    " . op_asm . " x9, x9, x20" . Chr(10)
+                        if (op_asm = "mod") {
+                            out .= "    udiv x12, x9, x20" . Chr(10)
+                            out .= "    msub x9, x12, x20, x9" . Chr(10)
+                        } else {
+                            out .= "    " . op_asm . " x9, x9, x20" . Chr(10)
+                        }
                     }
                     else if (RegExMatch(str3, "^\d+$")) {
-                        if (op_asm = "mul") {
+                        ; ARM cannot 'udiv' or 'mul' an immediate number directly!
+                        ; We must move it to x11 first.
+                        if (op_asm = "mul" or op_asm = "udiv" or op_asm = "mod" or op_asm = "lsl" or op_asm = "lsr" or op_asm = "and" or op_asm = "orr" or op_asm = "eor") {
                             out .= "    mov x11, #" . str3 . Chr(10) . Chr(10)
-                            out .= "    " . op_asm . " x9, x9, x11" . Chr(10)
+                            if (op_asm = "mod") {
+                                out .= "    udiv x12, x9, x11" . Chr(10)
+                                out .= "    msub x9, x12, x11, x9" . Chr(10)
+                            } else {
+                                out .= "    " . op_asm . " x9, x9, x11" . Chr(10)
+                            }
                         }
                         else {
+                            ; add and sub CAN take immediate numbers directly
                             out .= "    " . op_asm . " x9, x9, #" . str3 . Chr(10)
                         }
                     }
                     else {
+                        ; Right hand side is a standard variable
                         int isRhsStackVar := 0
                         if (inFunc = 1) {
                             Loop, % funcArgsArr.size() {
@@ -1214,21 +2543,26 @@ str strArg := ""
                         }
                         if (isRhsStackVar = 1) {
                             out .= "    ldr x11, =" . str3 . Chr(10) . Chr(10)
-                            out .= "    " . op_asm . " x9, x9, x11" . Chr(10)
-                        }
-                        else {
+                        } else {
                             out .= "    ldr x11, =" . str3 . Chr(10) . Chr(10)
                             out .= "    ldr x11, [x11]" . Chr(10) . Chr(10)
+                        }
+                        
+                        if (op_asm = "mod") {
+                            out .= "    udiv x12, x9, x11" . Chr(10)
+                            out .= "    msub x9, x12, x11, x9" . Chr(10)
+                        } else {
                             out .= "    " . op_asm . " x9, x9, x11" . Chr(10)
                         }
                     }
+                    
                     ; --- Store Result back into Destination ---
                     if (isLhsStackVar = 1) {
                         out .= "    str x9, =" . str2 . Chr(10)
-                    }
-                    else {
+                    } else {
                         out .= "    str x9, [x10]" . Chr(10)
                     }
+                    
                     if (isNint(str2)) {
                         out .= "    ldr x0, =" . str2 . Chr(10) . "    ldr x1, =" . str2 . "_is_negative" . Chr(10) . "    bl is_nint_negative" . Chr(10)
                     }
@@ -1254,13 +2588,19 @@ str strArg := ""
                     }
                 }
                 else {
-                    ; Handles +=, -=, *=
+                    ; Handles +=, -=, *=, //=, %=, <<=, >>=, &=, |=, ^=
                     str op := ""
                     str op_asm := ""
                     if (InStr(A_LoopField, " += ")) { op := "+="; op_asm := "add" }
                     else if (InStr(A_LoopField, " -= ")) { op := "-="; op_asm := "sub" }
                     else if (InStr(A_LoopField, " *= ")) { op := "*="; op_asm := "mul" }
-                    
+                    else if (InStr(A_LoopField, " //= ")) { op := "//="; op_asm := "div_floor" }
+                    else if (InStr(A_LoopField, " %= ")) { op := "%="; op_asm := "mod" }
+                    else if (InStr(A_LoopField, " <<= ")) { op := "<<="; op_asm := "shl" }
+                    else if (InStr(A_LoopField, " >>= ")) { op := ">>="; op_asm := "shr" }
+                    else if (InStr(A_LoopField, " &= ")) { op := "&="; op_asm := "and" }
+                    else if (InStr(A_LoopField, " |= ")) { op := "|="; op_asm := "or" }
+                    else if (InStr(A_LoopField, " ^= ")) { op := "^="; op_asm := "xor" }
                     str1 := Trim(A_LoopField)
                     str2 := Trim(StrSplit(str1, op, 1))
                     str3 := Trim(StrSplit(str1, op, 2))
@@ -1348,6 +2688,106 @@ str strArg := ""
                         }
                     }
                 }
+                ; ====== THE NEW DIVISION MAGIC ======
+                else if (InStr(A_LoopField, " //= ")) {
+                    str1 := Trim(A_LoopField)
+                    str2 := Trim(StrSplit(str1, "//=", 1))
+                    str3 := Trim(StrSplit(str1, "//=", 2))
+                    out .= "mov rax, [" . str2 . "]" . Chr(10) . "xor rdx, rdx" . Chr(10)
+                    if (RegExMatch(str3, "^\d+$")) { out .= "mov rdi, " . str3 . Chr(10) . "div rdi" . Chr(10) }
+                    else { out .= "mov rdi, [" . str3 . "]" . Chr(10) . "div rdi" . Chr(10) }
+                    out .= "mov [" . str2 . "], rax" . Chr(10) ; Grab Quotient
+                    if (isNint(str2)) { out .= "lea rdi, [" . str2 . "]" . Chr(10) . "lea rsi, [" . str2 . "_is_negative]" . Chr(10) . "call is_nint_negative" . Chr(10) }
+                }
+                else if (InStr(A_LoopField, " %= ")) {
+                    str1 := Trim(A_LoopField)
+                    str2 := Trim(StrSplit(str1, "%=", 1))
+                    str3 := Trim(StrSplit(str1, "%=", 2))
+                    out .= "mov rax, [" . str2 . "]" . Chr(10) . "xor rdx, rdx" . Chr(10)
+                    if (RegExMatch(str3, "^\d+$")) { out .= "mov rdi, " . str3 . Chr(10) . "div rdi" . Chr(10) }
+                    else { out .= "mov rdi, [" . str3 . "]" . Chr(10) . "div rdi" . Chr(10) }
+                    out .= "mov [" . str2 . "], rdx" . Chr(10) ; Grab Remainder
+                    if (isNint(str2)) { out .= "lea rdi, [" . str2 . "]" . Chr(10) . "lea rsi, [" . str2 . "_is_negative]" . Chr(10) . "call is_nint_negative" . Chr(10) }
+                }
+                
+                else if (InStr(A_LoopField, " <<= ")) {
+    str1 := Trim(A_LoopField)
+    str2 := Trim(StrSplit(str1, "<<=", 1))
+    str3 := Trim(StrSplit(str1, "<<=", 2))
+    if (RegExMatch(str3, "^\d+$")) {
+        out .= "shl qword [" . str2 . "], " . str3 . Chr(10)
+    }
+    else {
+        out .= "mov rdi, [" . str3 . "]" . Chr(10)
+        out .= "shl qword [" . str2 . "], rdi" . Chr(10)
+    }
+    if (isNint(str2)) {
+        out .= "lea rdi, [" . str2 . "]" . Chr(10) . "lea rsi, [" . str2 . "_is_negative]" . Chr(10) . "call is_nint_negative" . Chr(10)
+    }
+}
+else if (InStr(A_LoopField, " >>= ")) {
+    str1 := Trim(A_LoopField)
+    str2 := Trim(StrSplit(str1, ">>=", 1))
+    str3 := Trim(StrSplit(str1, ">>=", 2))
+    if (RegExMatch(str3, "^\d+$")) {
+        out .= "shr qword [" . str2 . "], " . str3 . Chr(10)
+    }
+    else {
+        out .= "mov rdi, [" . str3 . "]" . Chr(10)
+        out .= "shr qword [" . str2 . "], rdi" . Chr(10)
+    }
+    if (isNint(str2)) {
+        out .= "lea rdi, [" . str2 . "]" . Chr(10) . "lea rsi, [" . str2 . "_is_negative]" . Chr(10) . "call is_nint_negative" . Chr(10)
+    }
+}
+else if (InStr(A_LoopField, " &= ")) {
+    str1 := Trim(A_LoopField)
+    str2 := Trim(StrSplit(str1, "&=", 1))
+    str3 := Trim(StrSplit(str1, "&=", 2))
+    if (RegExMatch(str3, "^\d+$")) {
+        out .= "and qword [" . str2 . "], " . str3 . Chr(10)
+    }
+    else {
+        out .= "mov rdi, [" . str3 . "]" . Chr(10)
+        out .= "and qword [" . str2 . "], rdi" . Chr(10)
+    }
+    if (isNint(str2)) {
+        out .= "lea rdi, [" . str2 . "]" . Chr(10) . "lea rsi, [" . str2 . "_is_negative]" . Chr(10) . "call is_nint_negative" . Chr(10)
+    }
+}
+else if (InStr(A_LoopField, " |= ")) {
+    str1 := Trim(A_LoopField)
+    str2 := Trim(StrSplit(str1, "|=", 1))
+    str3 := Trim(StrSplit(str1, "|=", 2))
+    if (RegExMatch(str3, "^\d+$")) {
+        out .= "or qword [" . str2 . "], " . str3 . Chr(10)
+    }
+    else {
+        out .= "mov rdi, [" . str3 . "]" . Chr(10)
+        out .= "or qword [" . str2 . "], rdi" . Chr(10)
+    }
+    if (isNint(str2)) {
+        out .= "lea rdi, [" . str2 . "]" . Chr(10) . "lea rsi, [" . str2 . "_is_negative]" . Chr(10) . "call is_nint_negative" . Chr(10)
+    }
+}
+else if (InStr(A_LoopField, " ^= ")) {
+    str1 := Trim(A_LoopField)
+    str2 := Trim(StrSplit(str1, "^=", 1))
+    str3 := Trim(StrSplit(str1, "^=", 2))
+    if (RegExMatch(str3, "^\d+$")) {
+        out .= "xor qword [" . str2 . "], " . str3 . Chr(10)
+    }
+    else {
+        out .= "mov rdi, [" . str3 . "]" . Chr(10)
+        out .= "xor qword [" . str2 . "], rdi" . Chr(10)
+    }
+    if (isNint(str2)) {
+        out .= "lea rdi, [" . str2 . "]" . Chr(10) . "lea rsi, [" . str2 . "_is_negative]" . Chr(10) . "call is_nint_negative" . Chr(10)
+    }
+}
+                
+                
+                
             }
         }
         else if (InStr(A_LoopField, "++")) {
@@ -1810,11 +3250,16 @@ str strArg := ""
         }
         else if (SubStr(StrLower(A_LoopField), 1, 6) = "loop, ") or (SubStr(StrLower(A_LoopField), 1, 7) = "loop1, ") {
             str1 := Trim(StringTrimLeft(Trim(A_LoopField), 6))
+            is_inf_loop := 0
             if (is_arm = 1) {
                 out .= "    stp x19, x20, [sp, #-16]!" . Chr(10)
                 out .= "    mov x20, xzr" . Chr(10)
                 if (Trim(str1) = "rax") {
                     out .= "    mov x19, x0" . Chr(10)
+                }
+                else if (str1 = "-1") {
+                    is_inf_loop := 1
+                    out .= "    mov x19, #0" . Chr(10)
                 }
                 else if (RegExMatch(str1, "^\d+$")) {
                     out .= "    mov x19, #" . str1 . Chr(10)
@@ -1839,7 +3284,15 @@ str strArg := ""
                         out .= "    ldr x9, =" . str1 . Chr(10) . "    ldr x19, [x9]" . Chr(10)
                     }
                 }
-                out .= ".loop1_" . STR(loopCount1) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop1_end" . STR(loopCount1) . Chr(10)
+                
+                if (is_inf_loop = 1) {
+                    out .= ".loop1_" . STR(loopCount1) . ":" . Chr(10)
+                }
+                else {
+                    out .= ".loop1_" . STR(loopCount1) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop1_end" . STR(loopCount1) . Chr(10)                
+                }
+                
+
             }
             else if (is_oryx = 1) {
                         out .= "meta " . A_LoopField . Chr(10)
@@ -1848,15 +3301,24 @@ str strArg := ""
                 out .= "push r91" . Chr(10)
                 
                 strSrc := str1
-                if (str1 = "rax") { strSrc := "r0" }
+                if (str1 = "rax") {
+                strSrc := "r0" 
+                }
+                                else if (str1 = "-1") {
+                    is_inf_loop := 1
+                    
+                    }
                 else if (str1 = "A_Index") { strSrc := "r20" } ; Should ideally be the current loop's iterator register
                 
                 out .= "mov r90, " . strSrc . Chr(10) ; Limit
                 out .= "mov r91, 0" . Chr(10) ; Iterator
                 
                 out .= "loop1_" . STR(loopCount1) . ":" . Chr(10)
+                
+                if (is_inf_loop != 1) {
                 out .= "cmp r91, r90" . Chr(10)
                 out .= "jge loop1_end" . STR(loopCount1) . Chr(10)
+                }
                 
                 ; Update A_Index alias (r20) to current loop iterator (r91)
                 out .= "mov r20, r91" . Chr(10)
@@ -1864,6 +3326,9 @@ str strArg := ""
             else {
                 if (RegExMatch(str1, "^\d+$")) {
                     out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop1_" . STR(loopCount1) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop1_end" . STR(loopCount1) . Chr(10)
+                }
+                else if (str1 = "-1") {
+                    out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, 0" . Chr(10) . ".loop1_" . STR(loopCount1) . ":" . Chr(10)
                 }
                 else {
                     out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, [" . str1 . "]" . Chr(10) . ".loop1_" . STR(loopCount1) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop1_end" . STR(loopCount1) . Chr(10)
@@ -1891,11 +3356,16 @@ str strArg := ""
         }
         else if (SubStr(StrLower(A_LoopField), 1, 7) = "loop2, ") {
             str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7))
+            is_inf_loop := 0
             if (is_arm = 1) {
                 out .= "    stp x19, x20, [sp, #-16]!" . Chr(10)
                 out .= "    mov x20, xzr" . Chr(10)
                 if (Trim(str1) = "rax") {
                     out .= "    mov x19, x0" . Chr(10)
+                }
+                else if (str1 = "-1") {
+                    is_inf_loop := 1
+                    out .= "    mov x19, #0" . Chr(10)
                 }
                 else if (RegExMatch(str1, "^\d+$")) {
                     out .= "    mov x19, #" . str1 . Chr(10)
@@ -1920,32 +3390,48 @@ str strArg := ""
                         out .= "    ldr x9, =" . str1 . Chr(10) . "    ldr x19, [x9]" . Chr(10)
                     }
                 }
-                out .= ".loop2_" . STR(loopCount2) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop2_end" . STR(loopCount2) . Chr(10)
+                
+                if (is_inf_loop = 1) {
+                    out .= ".loop2_" . STR(loopCount2) . ":" . Chr(10)
+                }
+                else {
+                    out .= ".loop2_" . STR(loopCount2) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop2_end" . STR(loopCount2) . Chr(10)
+                }
             }
-                        else if (is_oryx = 1) {
-                                    out .= "meta " . A_LoopField . Chr(10)
-                ; --- ORYX IR (Loop 2) ---
-                ; Reuse r90 (Limit) and r91 (Iterator), save previous values to stack
+            else if (is_oryx = 1) {
+                out .= "meta " . A_LoopField . Chr(10)
                 out .= "push r90" . Chr(10)
                 out .= "push r91" . Chr(10)
                 
                 strSrc := str1
-                if (str1 = "rax") { strSrc := "r0" }
-                else if (str1 = "A_Index") { strSrc := "r20" }
+                if (str1 = "rax") { 
+                    strSrc := "r0" 
+                }
+                else if (str1 = "-1") {
+                    is_inf_loop := 1
+                }
+                else if (str1 = "A_Index") { 
+                    strSrc := "r20" 
+                }
                 
-                out .= "mov r90, " . strSrc . Chr(10) ; Limit
-                out .= "mov r91, 0" . Chr(10) ; Iterator
+                out .= "mov r90, " . strSrc . Chr(10)
+                out .= "mov r91, 0" . Chr(10)
                 
                 out .= "loop2_" . STR(loopCount2) . ":" . Chr(10)
-                out .= "cmp r91, r90" . Chr(10)
-                out .= "jge loop2_end" . STR(loopCount2) . Chr(10)
                 
-                ; Update A_Index alias (r20) to current loop iterator
+                if (is_inf_loop != 1) {
+                    out .= "cmp r91, r90" . Chr(10)
+                    out .= "jge loop2_end" . STR(loopCount2) . Chr(10)
+                }
+                
                 out .= "mov r20, r91" . Chr(10)
             }
             else {
                 if (RegExMatch(str1, "^\d+$")) {
                     out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop2_" . STR(loopCount2) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop2_end" . STR(loopCount2) . Chr(10)
+                }
+                else if (str1 = "-1") {
+                    out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, 0" . Chr(10) . ".loop2_" . STR(loopCount2) . ":" . Chr(10)
                 }
                 else {
                     out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, [" . str1 . "]" . Chr(10) . ".loop2_" . STR(loopCount2) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop2_end" . STR(loopCount2) . Chr(10)
@@ -1973,67 +3459,90 @@ str strArg := ""
             }
             loopCount2++
         }
-        else if (SubStr(StrLower(A_LoopField), 1, 7) = "loop3, ") {
-            str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7))
-            if (is_arm = 1) {
-                out .= "    stp x19, x20, [sp, #-16]!" . Chr(10)
-                out .= "    mov x20, xzr" . Chr(10)
-                if (Trim(str1) = "rax") {
-                    out .= "    mov x19, x0" . Chr(10)
-                }
-                else if (RegExMatch(str1, "^\d+$")) {
-                    out .= "    mov x19, #" . str1 . Chr(10)
-                }
-                else if (Trim(str1) = "A_Index") {
-                    out .= "    mov x19, x20" . Chr(10)
-                }
-                else {
-                    int isStackVar := 0
-                    if (inFunc = 1) {
-                        Loop, % funcArgsArr.size() {
-                            if (Trim(funcArgsArr[A_Index]) = str1) {
-                                isStackVar := 1
-                                break
-                            }
-                        }
-                    }
-                    if (isStackVar = 1) {
-                        out .= "    ldr x19, =" . str1 . Chr(10)
-                    }
-                    else {
-                        out .= "    ldr x9, =" . str1 . Chr(10) . "    ldr x19, [x9]" . Chr(10)
+else if (SubStr(StrLower(A_LoopField), 1, 7) = "loop3, ") {
+    str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7))
+    is_inf_loop := 0
+    if (is_arm = 1) {
+        out .= "    stp x19, x20, [sp, #-16]!" . Chr(10)
+        out .= "    mov x20, xzr" . Chr(10)
+        if (Trim(str1) = "rax") {
+            out .= "    mov x19, x0" . Chr(10)
+        }
+        else if (str1 = "-1") {
+            is_inf_loop := 1
+            out .= "    mov x19, #0" . Chr(10)
+        }
+        else if (RegExMatch(str1, "^\d+$")) {
+            out .= "    mov x19, #" . str1 . Chr(10)
+        }
+        else if (Trim(str1) = "A_Index") {
+            out .= "    mov x19, x20" . Chr(10)
+        }
+        else {
+            int isStackVar := 0
+            if (inFunc = 1) {
+                Loop, % funcArgsArr.size() {
+                    if (Trim(funcArgsArr[A_Index]) = str1) {
+                        isStackVar := 1
+                        break
                     }
                 }
-                out .= ".loop3_" . STR(loopCount3) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop3_end" . STR(loopCount3) . Chr(10)
             }
-            else if (is_oryx = 1) {
-                        out .= "meta " . A_LoopField . Chr(10)
-                ; --- ORYX IR (Loop 3) ---
-                out .= "push r90" . Chr(10)
-                out .= "push r91" . Chr(10)
-                
-                strSrc := str1
-                if (str1 = "rax") { strSrc := "r0" }
-                else if (str1 = "A_Index") { strSrc := "r20" }
-                
-                out .= "mov r90, " . strSrc . Chr(10)
-                out .= "mov r91, 0" . Chr(10)
-                
-                out .= "loop3_" . STR(loopCount3) . ":" . Chr(10)
-                out .= "cmp r91, r90" . Chr(10)
-                out .= "jge loop3_end" . STR(loopCount3) . Chr(10)
-                
-                out .= "mov r20, r91" . Chr(10)
+            if (isStackVar = 1) {
+                out .= "    ldr x19, =" . str1 . Chr(10)
             }
             else {
-                if (RegExMatch(str1, "^\d+$")) {
-                    out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop3_" . STR(loopCount3) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop3_end" . STR(loopCount3) . Chr(10)
-                }
-                else {
-                    out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, [" . str1 . "]" . Chr(10) . ".loop3_" . STR(loopCount3) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop3_end" . STR(loopCount3) . Chr(10)
-                }
+                out .= "    ldr x9, =" . str1 . Chr(10) . "    ldr x19, [x9]" . Chr(10)
             }
         }
+        
+        if (is_inf_loop = 1) {
+            out .= ".loop3_" . STR(loopCount3) . ":" . Chr(10)
+        }
+        else {
+            out .= ".loop3_" . STR(loopCount3) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop3_end" . STR(loopCount3) . Chr(10)
+        }
+    }
+    else if (is_oryx = 1) {
+        out .= "meta " . A_LoopField . Chr(10)
+        out .= "push r90" . Chr(10)
+        out .= "push r91" . Chr(10)
+        
+        strSrc := str1
+        if (str1 = "rax") { 
+            strSrc := "r0" 
+        }
+        else if (str1 = "-1") {
+            is_inf_loop := 1
+        }
+        else if (str1 = "A_Index") { 
+            strSrc := "r20" 
+        }
+        
+        out .= "mov r90, " . strSrc . Chr(10)
+        out .= "mov r91, 0" . Chr(10)
+        
+        out .= "loop3_" . STR(loopCount3) . ":" . Chr(10)
+        
+        if (is_inf_loop != 1) {
+            out .= "cmp r91, r90" . Chr(10)
+            out .= "jge loop3_end" . STR(loopCount3) . Chr(10)
+        }
+        
+        out .= "mov r20, r91" . Chr(10)
+    }
+    else {
+        if (RegExMatch(str1, "^\d+$")) {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop3_" . STR(loopCount3) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop3_end" . STR(loopCount3) . Chr(10)
+        }
+        else if (str1 = "-1") {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, 0" . Chr(10) . ".loop3_" . STR(loopCount3) . ":" . Chr(10)
+        }
+        else {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, [" . str1 . "]" . Chr(10) . ".loop3_" . STR(loopCount3) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop3_end" . STR(loopCount3) . Chr(10)
+        }
+    }
+}
         else if (Trim(A_LoopField) = "loopend3") or (Trim(A_LoopField) = "endloop3") {
             if (is_arm = 1) {
                 out .= ".cloop3_end" . STR(loopCount3) . ":" . Chr(10) . "    add x20, x20, #1" . Chr(10) . "    sub x19, x19, #1" . Chr(10) . "    b .loop3_" . STR(loopCount3) . Chr(10) . ".loop3_end" . STR(loopCount3) . ":" . Chr(10) . "    ldp x19, x20, [sp], #16" . Chr(10)
@@ -2054,67 +3563,90 @@ str strArg := ""
             }
             loopCount3++
         }
-        else if (SubStr(StrLower(A_LoopField), 1, 7) = "loop4, ") {
-            str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7))
-            if (is_arm = 1) {
-                out .= "    stp x19, x20, [sp, #-16]!" . Chr(10)
-                out .= "    mov x20, xzr" . Chr(10)
-                if (Trim(str1) = "rax") {
-                    out .= "    mov x19, x0" . Chr(10)
-                }
-                else if (RegExMatch(str1, "^\d+$")) {
-                    out .= "    mov x19, #" . str1 . Chr(10)
-                }
-                else if (Trim(str1) = "A_Index") {
-                    out .= "    mov x19, x20" . Chr(10)
-                }
-                else {
-                    int isStackVar := 0
-                    if (inFunc = 1) {
-                        Loop, % funcArgsArr.size() {
-                            if (Trim(funcArgsArr[A_Index]) = str1) {
-                                isStackVar := 1
-                                break
-                            }
-                        }
-                    }
-                    if (isStackVar = 1) {
-                        out .= "    ldr x19, =" . str1 . Chr(10)
-                    }
-                    else {
-                        out .= "    ldr x9, =" . str1 . Chr(10) . "    ldr x19, [x9]" . Chr(10)
+else if (SubStr(StrLower(A_LoopField), 1, 7) = "loop4, ") {
+    str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7))
+    is_inf_loop := 0
+    if (is_arm = 1) {
+        out .= "    stp x19, x20, [sp, #-16]!" . Chr(10)
+        out .= "    mov x20, xzr" . Chr(10)
+        if (Trim(str1) = "rax") {
+            out .= "    mov x19, x0" . Chr(10)
+        }
+        else if (str1 = "-1") {
+            is_inf_loop := 1
+            out .= "    mov x19, #0" . Chr(10)
+        }
+        else if (RegExMatch(str1, "^\d+$")) {
+            out .= "    mov x19, #" . str1 . Chr(10)
+        }
+        else if (Trim(str1) = "A_Index") {
+            out .= "    mov x19, x20" . Chr(10)
+        }
+        else {
+            int isStackVar := 0
+            if (inFunc = 1) {
+                Loop, % funcArgsArr.size() {
+                    if (Trim(funcArgsArr[A_Index]) = str1) {
+                        isStackVar := 1
+                        break
                     }
                 }
-                out .= ".loop4_" . STR(loopCount4) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop4_end" . STR(loopCount4) . Chr(10)
             }
-            else if (is_oryx = 1) {
-                        out .= "meta " . A_LoopField . Chr(10)
-                ; --- ORYX IR (Loop 4) ---
-                out .= "push r90" . Chr(10)
-                out .= "push r91" . Chr(10)
-                
-                strSrc := str1
-                if (str1 = "rax") { strSrc := "r0" }
-                else if (str1 = "A_Index") { strSrc := "r20" }
-                
-                out .= "mov r90, " . strSrc . Chr(10)
-                out .= "mov r91, 0" . Chr(10)
-                
-                out .= "loop4_" . STR(loopCount4) . ":" . Chr(10)
-                out .= "cmp r91, r90" . Chr(10)
-                out .= "jge loop4_end" . STR(loopCount4) . Chr(10)
-                
-                out .= "mov r20, r91" . Chr(10)
+            if (isStackVar = 1) {
+                out .= "    ldr x19, =" . str1 . Chr(10)
             }
             else {
-                if (RegExMatch(str1, "^\d+$")) {
-                    out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop4_" . STR(loopCount4) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop4_end" . STR(loopCount4) . Chr(10)
-                }
-                else {
-                    out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, [" . str1 . "]" . Chr(10) . ".loop4_" . STR(loopCount4) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop4_end" . STR(loopCount4) . Chr(10)
-                }
+                out .= "    ldr x9, =" . str1 . Chr(10) . "    ldr x19, [x9]" . Chr(10)
             }
         }
+        
+        if (is_inf_loop = 1) {
+            out .= ".loop4_" . STR(loopCount4) . ":" . Chr(10)
+        }
+        else {
+            out .= ".loop4_" . STR(loopCount4) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop4_end" . STR(loopCount4) . Chr(10)
+        }
+    }
+    else if (is_oryx = 1) {
+        out .= "meta " . A_LoopField . Chr(10)
+        out .= "push r90" . Chr(10)
+        out .= "push r91" . Chr(10)
+        
+        strSrc := str1
+        if (str1 = "rax") { 
+            strSrc := "r0" 
+        }
+        else if (str1 = "-1") {
+            is_inf_loop := 1
+        }
+        else if (str1 = "A_Index") { 
+            strSrc := "r20" 
+        }
+        
+        out .= "mov r90, " . strSrc . Chr(10)
+        out .= "mov r91, 0" . Chr(10)
+        
+        out .= "loop4_" . STR(loopCount4) . ":" . Chr(10)
+        
+        if (is_inf_loop != 1) {
+            out .= "cmp r91, r90" . Chr(10)
+            out .= "jge loop4_end" . STR(loopCount4) . Chr(10)
+        }
+        
+        out .= "mov r20, r91" . Chr(10)
+    }
+    else {
+        if (RegExMatch(str1, "^\d+$")) {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop4_" . STR(loopCount4) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop4_end" . STR(loopCount4) . Chr(10)
+        }
+        else if (str1 = "-1") {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, 0" . Chr(10) . ".loop4_" . STR(loopCount4) . ":" . Chr(10)
+        }
+        else {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, [" . str1 . "]" . Chr(10) . ".loop4_" . STR(loopCount4) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop4_end" . STR(loopCount4) . Chr(10)
+        }
+    }
+}
         else if (Trim(A_LoopField) = "loopend4") or (Trim(A_LoopField) = "endloop4") {
             if (is_arm = 1) {
                 out .= ".cloop4_end" . STR(loopCount4) . ":" . Chr(10) . "    add x20, x20, #1" . Chr(10) . "    sub x19, x19, #1" . Chr(10) . "    b .loop4_" . STR(loopCount4) . Chr(10) . ".loop4_end" . STR(loopCount4) . ":" . Chr(10) . "    ldp x19, x20, [sp], #16" . Chr(10)
@@ -2135,67 +3667,90 @@ str strArg := ""
             }
             loopCount4++
         }
-        else if (SubStr(StrLower(A_LoopField), 1, 7) = "loop5, ") {
-            str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7))
-            if (is_arm = 1) {
-                out .= "    stp x19, x20, [sp, #-16]!" . Chr(10)
-                out .= "    mov x20, xzr" . Chr(10)
-                if (Trim(str1) = "rax") {
-                    out .= "    mov x19, x0" . Chr(10)
-                }
-                else if (RegExMatch(str1, "^\d+$")) {
-                    out .= "    mov x19, #" . str1 . Chr(10)
-                }
-                else if (Trim(str1) = "A_Index") {
-                    out .= "    mov x19, x20" . Chr(10)
-                }
-                else {
-                    int isStackVar := 0
-                    if (inFunc = 1) {
-                        Loop, % funcArgsArr.size() {
-                            if (Trim(funcArgsArr[A_Index]) = str1) {
-                                isStackVar := 1
-                                break
-                            }
-                        }
-                    }
-                    if (isStackVar = 1) {
-                        out .= "    ldr x19, =" . str1 . Chr(10)
-                    }
-                    else {
-                        out .= "    ldr x9, =" . str1 . Chr(10) . "    ldr x19, [x9]" . Chr(10)
+else if (SubStr(StrLower(A_LoopField), 1, 7) = "loop5, ") {
+    str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7))
+    is_inf_loop := 0
+    if (is_arm = 1) {
+        out .= "    stp x19, x20, [sp, #-16]!" . Chr(10)
+        out .= "    mov x20, xzr" . Chr(10)
+        if (Trim(str1) = "rax") {
+            out .= "    mov x19, x0" . Chr(10)
+        }
+        else if (str1 = "-1") {
+            is_inf_loop := 1
+            out .= "    mov x19, #0" . Chr(10)
+        }
+        else if (RegExMatch(str1, "^\d+$")) {
+            out .= "    mov x19, #" . str1 . Chr(10)
+        }
+        else if (Trim(str1) = "A_Index") {
+            out .= "    mov x19, x20" . Chr(10)
+        }
+        else {
+            int isStackVar := 0
+            if (inFunc = 1) {
+                Loop, % funcArgsArr.size() {
+                    if (Trim(funcArgsArr[A_Index]) = str1) {
+                        isStackVar := 1
+                        break
                     }
                 }
-                out .= ".loop5_" . STR(loopCount5) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop5_end" . STR(loopCount5) . Chr(10)
             }
-            else if (is_oryx = 1) {
-                        out .= "meta " . A_LoopField . Chr(10)
-                ; --- ORYX IR (Loop 5) ---
-                out .= "push r90" . Chr(10)
-                out .= "push r91" . Chr(10)
-                
-                strSrc := str1
-                if (str1 = "rax") { strSrc := "r0" }
-                else if (str1 = "A_Index") { strSrc := "r20" }
-                
-                out .= "mov r90, " . strSrc . Chr(10)
-                out .= "mov r91, 0" . Chr(10)
-                
-                out .= "loop5_" . STR(loopCount5) . ":" . Chr(10)
-                out .= "cmp r91, r90" . Chr(10)
-                out .= "jge loop5_end" . STR(loopCount5) . Chr(10)
-                
-                out .= "mov r20, r91" . Chr(10)
+            if (isStackVar = 1) {
+                out .= "    ldr x19, =" . str1 . Chr(10)
             }
             else {
-                if (RegExMatch(str1, "^\d+$")) {
-                    out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop5_" . STR(loopCount5) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop5_end" . STR(loopCount5) . Chr(10)
-                }
-                else {
-                    out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, [" . str1 . "]" . Chr(10) . ".loop5_" . STR(loopCount5) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop5_end" . STR(loopCount5) . Chr(10)
-                }
+                out .= "    ldr x9, =" . str1 . Chr(10) . "    ldr x19, [x9]" . Chr(10)
             }
         }
+        
+        if (is_inf_loop = 1) {
+            out .= ".loop5_" . STR(loopCount5) . ":" . Chr(10)
+        }
+        else {
+            out .= ".loop5_" . STR(loopCount5) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop5_end" . STR(loopCount5) . Chr(10)
+        }
+    }
+    else if (is_oryx = 1) {
+        out .= "meta " . A_LoopField . Chr(10)
+        out .= "push r90" . Chr(10)
+        out .= "push r91" . Chr(10)
+        
+        strSrc := str1
+        if (str1 = "rax") { 
+            strSrc := "r0" 
+        }
+        else if (str1 = "-1") {
+            is_inf_loop := 1
+        }
+        else if (str1 = "A_Index") { 
+            strSrc := "r20" 
+        }
+        
+        out .= "mov r90, " . strSrc . Chr(10)
+        out .= "mov r91, 0" . Chr(10)
+        
+        out .= "loop5_" . STR(loopCount5) . ":" . Chr(10)
+        
+        if (is_inf_loop != 1) {
+            out .= "cmp r91, r90" . Chr(10)
+            out .= "jge loop5_end" . STR(loopCount5) . Chr(10)
+        }
+        
+        out .= "mov r20, r91" . Chr(10)
+    }
+    else {
+        if (RegExMatch(str1, "^\d+$")) {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop5_" . STR(loopCount5) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop5_end" . STR(loopCount5) . Chr(10)
+        }
+        else if (str1 = "-1") {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, 0" . Chr(10) . ".loop5_" . STR(loopCount5) . ":" . Chr(10)
+        }
+        else {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, [" . str1 . "]" . Chr(10) . ".loop5_" . STR(loopCount5) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop5_end" . STR(loopCount5) . Chr(10)
+        }
+    }
+}
         else if (Trim(A_LoopField) = "loopend5") or (Trim(A_LoopField) = "endloop5") {
             if (is_arm = 1) {
                 out .= ".cloop5_end" . STR(loopCount5) . ":" . Chr(10) . "    add x20, x20, #1" . Chr(10) . "    sub x19, x19, #1" . Chr(10) . "    b .loop5_" . STR(loopCount5) . Chr(10) . ".loop5_end" . STR(loopCount5) . ":" . Chr(10) . "    ldp x19, x20, [sp], #16" . Chr(10)
@@ -2216,67 +3771,90 @@ str strArg := ""
             }
             loopCount5++
         }
-        else if (SubStr(StrLower(A_LoopField), 1, 7) = "loop6, ") {
-            str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7))
-            if (is_arm = 1) {
-                out .= "    stp x19, x20, [sp, #-16]!" . Chr(10)
-                out .= "    mov x20, xzr" . Chr(10)
-                if (Trim(str1) = "rax") {
-                    out .= "    mov x19, x0" . Chr(10)
-                }
-                else if (RegExMatch(str1, "^\d+$")) {
-                    out .= "    mov x19, #" . str1 . Chr(10)
-                }
-                else if (Trim(str1) = "A_Index") {
-                    out .= "    mov x19, x20" . Chr(10)
-                }
-                else {
-                    int isStackVar := 0
-                    if (inFunc = 1) {
-                        Loop, % funcArgsArr.size() {
-                            if (Trim(funcArgsArr[A_Index]) = str1) {
-                                isStackVar := 1
-                                break
-                            }
-                        }
-                    }
-                    if (isStackVar = 1) {
-                        out .= "    ldr x19, =" . str1 . Chr(10)
-                    }
-                    else {
-                        out .= "    ldr x9, =" . str1 . Chr(10) . "    ldr x19, [x9]" . Chr(10)
+else if (SubStr(StrLower(A_LoopField), 1, 7) = "loop6, ") {
+    str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7))
+    is_inf_loop := 0
+    if (is_arm = 1) {
+        out .= "    stp x19, x20, [sp, #-16]!" . Chr(10)
+        out .= "    mov x20, xzr" . Chr(10)
+        if (Trim(str1) = "rax") {
+            out .= "    mov x19, x0" . Chr(10)
+        }
+        else if (str1 = "-1") {
+            is_inf_loop := 1
+            out .= "    mov x19, #0" . Chr(10)
+        }
+        else if (RegExMatch(str1, "^\d+$")) {
+            out .= "    mov x19, #" . str1 . Chr(10)
+        }
+        else if (Trim(str1) = "A_Index") {
+            out .= "    mov x19, x20" . Chr(10)
+        }
+        else {
+            int isStackVar := 0
+            if (inFunc = 1) {
+                Loop, % funcArgsArr.size() {
+                    if (Trim(funcArgsArr[A_Index]) = str1) {
+                        isStackVar := 1
+                        break
                     }
                 }
-                out .= ".loop6_" . STR(loopCount6) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop6_end" . STR(loopCount6) . Chr(10)
             }
-            else if (is_oryx = 1) {
-                        out .= "meta " . A_LoopField . Chr(10)
-                ; --- ORYX IR (Loop 6) ---
-                out .= "push r90" . Chr(10)
-                out .= "push r91" . Chr(10)
-                
-                strSrc := str1
-                if (str1 = "rax") { strSrc := "r0" }
-                else if (str1 = "A_Index") { strSrc := "r20" }
-                
-                out .= "mov r90, " . strSrc . Chr(10)
-                out .= "mov r91, 0" . Chr(10)
-                
-                out .= "loop6_" . STR(loopCount6) . ":" . Chr(10)
-                out .= "cmp r91, r90" . Chr(10)
-                out .= "jge loop6_end" . STR(loopCount6) . Chr(10)
-                
-                out .= "mov r20, r91" . Chr(10)
+            if (isStackVar = 1) {
+                out .= "    ldr x19, =" . str1 . Chr(10)
             }
             else {
-                if (RegExMatch(str1, "^\d+$")) {
-                    out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop6_" . STR(loopCount6) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop6_end" . STR(loopCount6) . Chr(10)
-                }
-                else {
-                    out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, [" . str1 . "]" . Chr(10) . ".loop6_" . STR(loopCount6) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop6_end" . STR(loopCount6) . Chr(10)
-                }
+                out .= "    ldr x9, =" . str1 . Chr(10) . "    ldr x19, [x9]" . Chr(10)
             }
         }
+        
+        if (is_inf_loop = 1) {
+            out .= ".loop6_" . STR(loopCount6) . ":" . Chr(10)
+        }
+        else {
+            out .= ".loop6_" . STR(loopCount6) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop6_end" . STR(loopCount6) . Chr(10)
+        }
+    }
+    else if (is_oryx = 1) {
+        out .= "meta " . A_LoopField . Chr(10)
+        out .= "push r90" . Chr(10)
+        out .= "push r91" . Chr(10)
+        
+        strSrc := str1
+        if (str1 = "rax") { 
+            strSrc := "r0" 
+        }
+        else if (str1 = "-1") {
+            is_inf_loop := 1
+        }
+        else if (str1 = "A_Index") { 
+            strSrc := "r20" 
+        }
+        
+        out .= "mov r90, " . strSrc . Chr(10)
+        out .= "mov r91, 0" . Chr(10)
+        
+        out .= "loop6_" . STR(loopCount6) . ":" . Chr(10)
+        
+        if (is_inf_loop != 1) {
+            out .= "cmp r91, r90" . Chr(10)
+            out .= "jge loop6_end" . STR(loopCount6) . Chr(10)
+        }
+        
+        out .= "mov r20, r91" . Chr(10)
+    }
+    else {
+        if (RegExMatch(str1, "^\d+$")) {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop6_" . STR(loopCount6) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop6_end" . STR(loopCount6) . Chr(10)
+        }
+        else if (str1 = "-1") {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, 0" . Chr(10) . ".loop6_" . STR(loopCount6) . ":" . Chr(10)
+        }
+        else {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, [" . str1 . "]" . Chr(10) . ".loop6_" . STR(loopCount6) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop6_end" . STR(loopCount6) . Chr(10)
+        }
+    }
+}
         else if (Trim(A_LoopField) = "loopend6") or (Trim(A_LoopField) = "endloop6") {
             if (is_arm = 1) {
                 out .= ".cloop6_end" . STR(loopCount6) . ":" . Chr(10) . "    add x20, x20, #1" . Chr(10) . "    sub x19, x19, #1" . Chr(10) . "    b .loop6_" . STR(loopCount6) . Chr(10) . ".loop6_end" . STR(loopCount6) . ":" . Chr(10) . "    ldp x19, x20, [sp], #16" . Chr(10)
@@ -2297,67 +3875,90 @@ str strArg := ""
             }
             loopCount6++
         }
-        else if (SubStr(StrLower(A_LoopField), 1, 7) = "loop7, ") {
-            str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7))
-            if (is_arm = 1) {
-                out .= "    stp x19, x20, [sp, #-16]!" . Chr(10)
-                out .= "    mov x20, xzr" . Chr(10)
-                if (Trim(str1) = "rax") {
-                    out .= "    mov x19, x0" . Chr(10)
-                }
-                else if (RegExMatch(str1, "^\d+$")) {
-                    out .= "    mov x19, #" . str1 . Chr(10)
-                }
-                else if (Trim(str1) = "A_Index") {
-                    out .= "    mov x19, x20" . Chr(10)
-                }
-                else {
-                    int isStackVar := 0
-                    if (inFunc = 1) {
-                        Loop, % funcArgsArr.size() {
-                            if (Trim(funcArgsArr[A_Index]) = str1) {
-                                isStackVar := 1
-                                break
-                            }
-                        }
-                    }
-                    if (isStackVar = 1) {
-                        out .= "    ldr x19, =" . str1 . Chr(10)
-                    }
-                    else {
-                        out .= "    ldr x9, =" . str1 . Chr(10) . "    ldr x19, [x9]" . Chr(10)
+else if (SubStr(StrLower(A_LoopField), 1, 7) = "loop7, ") {
+    str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7))
+    is_inf_loop := 0
+    if (is_arm = 1) {
+        out .= "    stp x19, x20, [sp, #-16]!" . Chr(10)
+        out .= "    mov x20, xzr" . Chr(10)
+        if (Trim(str1) = "rax") {
+            out .= "    mov x19, x0" . Chr(10)
+        }
+        else if (str1 = "-1") {
+            is_inf_loop := 1
+            out .= "    mov x19, #0" . Chr(10)
+        }
+        else if (RegExMatch(str1, "^\d+$")) {
+            out .= "    mov x19, #" . str1 . Chr(10)
+        }
+        else if (Trim(str1) = "A_Index") {
+            out .= "    mov x19, x20" . Chr(10)
+        }
+        else {
+            int isStackVar := 0
+            if (inFunc = 1) {
+                Loop, % funcArgsArr.size() {
+                    if (Trim(funcArgsArr[A_Index]) = str1) {
+                        isStackVar := 1
+                        break
                     }
                 }
-                out .= ".loop7_" . STR(loopCount7) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop7_end" . STR(loopCount7) . Chr(10)
             }
-            else if (is_oryx = 1) {
-                        out .= "meta " . A_LoopField . Chr(10)
-                ; --- ORYX IR (Loop 7) ---
-                out .= "push r90" . Chr(10)
-                out .= "push r91" . Chr(10)
-                
-                strSrc := str1
-                if (str1 = "rax") { strSrc := "r0" }
-                else if (str1 = "A_Index") { strSrc := "r20" }
-                
-                out .= "mov r90, " . strSrc . Chr(10)
-                out .= "mov r91, 0" . Chr(10)
-                
-                out .= "loop7_" . STR(loopCount7) . ":" . Chr(10)
-                out .= "cmp r91, r90" . Chr(10)
-                out .= "jge loop7_end" . STR(loopCount7) . Chr(10)
-                
-                out .= "mov r20, r91" . Chr(10)
+            if (isStackVar = 1) {
+                out .= "    ldr x19, =" . str1 . Chr(10)
             }
             else {
-                if (RegExMatch(str1, "^\d+$")) {
-                    out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop7_" . STR(loopCount7) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop7_end" . STR(loopCount7) . Chr(10)
-                }
-                else {
-                    out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, [" . str1 . "]" . Chr(10) . ".loop7_" . STR(loopCount7) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop7_end" . STR(loopCount7) . Chr(10)
-                }
+                out .= "    ldr x9, =" . str1 . Chr(10) . "    ldr x19, [x9]" . Chr(10)
             }
         }
+        
+        if (is_inf_loop = 1) {
+            out .= ".loop7_" . STR(loopCount7) . ":" . Chr(10)
+        }
+        else {
+            out .= ".loop7_" . STR(loopCount7) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop7_end" . STR(loopCount7) . Chr(10)
+        }
+    }
+    else if (is_oryx = 1) {
+        out .= "meta " . A_LoopField . Chr(10)
+        out .= "push r90" . Chr(10)
+        out .= "push r91" . Chr(10)
+        
+        strSrc := str1
+        if (str1 = "rax") { 
+            strSrc := "r0" 
+        }
+        else if (str1 = "-1") {
+            is_inf_loop := 1
+        }
+        else if (str1 = "A_Index") { 
+            strSrc := "r20" 
+        }
+        
+        out .= "mov r90, " . strSrc . Chr(10)
+        out .= "mov r91, 0" . Chr(10)
+        
+        out .= "loop7_" . STR(loopCount7) . ":" . Chr(10)
+        
+        if (is_inf_loop != 1) {
+            out .= "cmp r91, r90" . Chr(10)
+            out .= "jge loop7_end" . STR(loopCount7) . Chr(10)
+        }
+        
+        out .= "mov r20, r91" . Chr(10)
+    }
+    else {
+        if (RegExMatch(str1, "^\d+$")) {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop7_" . STR(loopCount7) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop7_end" . STR(loopCount7) . Chr(10)
+        }
+        else if (str1 = "-1") {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, 0" . Chr(10) . ".loop7_" . STR(loopCount7) . ":" . Chr(10)
+        }
+        else {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, [" . str1 . "]" . Chr(10) . ".loop7_" . STR(loopCount7) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop7_end" . STR(loopCount7) . Chr(10)
+        }
+    }
+}
         else if (Trim(A_LoopField) = "loopend7") or (Trim(A_LoopField) = "endloop7") {
             if (is_arm = 1) {
                 out .= ".cloop7_end" . STR(loopCount7) . ":" . Chr(10) . "    add x20, x20, #1" . Chr(10) . "    sub x19, x19, #1" . Chr(10) . "    b .loop7_" . STR(loopCount7) . Chr(10) . ".loop7_end" . STR(loopCount7) . ":" . Chr(10) . "    ldp x19, x20, [sp], #16" . Chr(10)
@@ -2378,67 +3979,90 @@ str strArg := ""
             }
             loopCount7++
         }
-        else if (SubStr(StrLower(A_LoopField), 1, 7) = "loop8, ") {
-            str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7))
-            if (is_arm = 1) {
-                out .= "    stp x19, x20, [sp, #-16]!" . Chr(10)
-                out .= "    mov x20, xzr" . Chr(10)
-                if (Trim(str1) = "rax") {
-                    out .= "    mov x19, x0" . Chr(10)
-                }
-                else if (RegExMatch(str1, "^\d+$")) {
-                    out .= "    mov x19, #" . str1 . Chr(10)
-                }
-                else if (Trim(str1) = "A_Index") {
-                    out .= "    mov x19, x20" . Chr(10)
-                }
-                else {
-                    int isStackVar := 0
-                    if (inFunc = 1) {
-                        Loop, % funcArgsArr.size() {
-                            if (Trim(funcArgsArr[A_Index]) = str1) {
-                                isStackVar := 1
-                                break
-                            }
-                        }
-                    }
-                    if (isStackVar = 1) {
-                        out .= "    ldr x19, =" . str1 . Chr(10)
-                    }
-                    else {
-                        out .= "    ldr x9, =" . str1 . Chr(10) . "    ldr x19, [x9]" . Chr(10)
+else if (SubStr(StrLower(A_LoopField), 1, 7) = "loop8, ") {
+    str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7))
+    is_inf_loop := 0
+    if (is_arm = 1) {
+        out .= "    stp x19, x20, [sp, #-16]!" . Chr(10)
+        out .= "    mov x20, xzr" . Chr(10)
+        if (Trim(str1) = "rax") {
+            out .= "    mov x19, x0" . Chr(10)
+        }
+        else if (str1 = "-1") {
+            is_inf_loop := 1
+            out .= "    mov x19, #0" . Chr(10)
+        }
+        else if (RegExMatch(str1, "^\d+$")) {
+            out .= "    mov x19, #" . str1 . Chr(10)
+        }
+        else if (Trim(str1) = "A_Index") {
+            out .= "    mov x19, x20" . Chr(10)
+        }
+        else {
+            int isStackVar := 0
+            if (inFunc = 1) {
+                Loop, % funcArgsArr.size() {
+                    if (Trim(funcArgsArr[A_Index]) = str1) {
+                        isStackVar := 1
+                        break
                     }
                 }
-                out .= ".loop8_" . STR(loopCount8) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop8_end" . STR(loopCount8) . Chr(10)
             }
-            else if (is_oryx = 1) {
-                        out .= "meta " . A_LoopField . Chr(10)
-                ; --- ORYX IR (Loop 8) ---
-                out .= "push r90" . Chr(10)
-                out .= "push r91" . Chr(10)
-                
-                strSrc := str1
-                if (str1 = "rax") { strSrc := "r0" }
-                else if (str1 = "A_Index") { strSrc := "r20" }
-                
-                out .= "mov r90, " . strSrc . Chr(10)
-                out .= "mov r91, 0" . Chr(10)
-                
-                out .= "loop8_" . STR(loopCount8) . ":" . Chr(10)
-                out .= "cmp r91, r90" . Chr(10)
-                out .= "jge loop8_end" . STR(loopCount8) . Chr(10)
-                
-                out .= "mov r20, r91" . Chr(10)
+            if (isStackVar = 1) {
+                out .= "    ldr x19, =" . str1 . Chr(10)
             }
             else {
-                if (RegExMatch(str1, "^\d+$")) {
-                    out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop8_" . STR(loopCount8) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop8_end" . STR(loopCount8) . Chr(10)
-                }
-                else {
-                    out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, [" . str1 . "]" . Chr(10) . ".loop8_" . STR(loopCount8) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop8_end" . STR(loopCount8) . Chr(10)
-                }
+                out .= "    ldr x9, =" . str1 . Chr(10) . "    ldr x19, [x9]" . Chr(10)
             }
         }
+        
+        if (is_inf_loop = 1) {
+            out .= ".loop8_" . STR(loopCount8) . ":" . Chr(10)
+        }
+        else {
+            out .= ".loop8_" . STR(loopCount8) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop8_end" . STR(loopCount8) . Chr(10)
+        }
+    }
+    else if (is_oryx = 1) {
+        out .= "meta " . A_LoopField . Chr(10)
+        out .= "push r90" . Chr(10)
+        out .= "push r91" . Chr(10)
+        
+        strSrc := str1
+        if (str1 = "rax") { 
+            strSrc := "r0" 
+        }
+        else if (str1 = "-1") {
+            is_inf_loop := 1
+        }
+        else if (str1 = "A_Index") { 
+            strSrc := "r20" 
+        }
+        
+        out .= "mov r90, " . strSrc . Chr(10)
+        out .= "mov r91, 0" . Chr(10)
+        
+        out .= "loop8_" . STR(loopCount8) . ":" . Chr(10)
+        
+        if (is_inf_loop != 1) {
+            out .= "cmp r91, r90" . Chr(10)
+            out .= "jge loop8_end" . STR(loopCount8) . Chr(10)
+        }
+        
+        out .= "mov r20, r91" . Chr(10)
+    }
+    else {
+        if (RegExMatch(str1, "^\d+$")) {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop8_" . STR(loopCount8) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop8_end" . STR(loopCount8) . Chr(10)
+        }
+        else if (str1 = "-1") {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, 0" . Chr(10) . ".loop8_" . STR(loopCount8) . ":" . Chr(10)
+        }
+        else {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, [" . str1 . "]" . Chr(10) . ".loop8_" . STR(loopCount8) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop8_end" . STR(loopCount8) . Chr(10)
+        }
+    }
+}
         else if (Trim(A_LoopField) = "loopend8") or (Trim(A_LoopField) = "endloop8") {
             if (is_arm = 1) {
                 out .= ".cloop8_end" . STR(loopCount8) . ":" . Chr(10) . "    add x20, x20, #1" . Chr(10) . "    sub x19, x19, #1" . Chr(10) . "    b .loop8_" . STR(loopCount8) . Chr(10) . ".loop8_end" . STR(loopCount8) . ":" . Chr(10) . "    ldp x19, x20, [sp], #16" . Chr(10)
@@ -2459,67 +4083,90 @@ str strArg := ""
             }
             loopCount8++
         }
-        else if (SubStr(StrLower(A_LoopField), 1, 7) = "loop9, ") {
-            str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7))
-            if (is_arm = 1) {
-                out .= "    stp x19, x20, [sp, #-16]!" . Chr(10)
-                out .= "    mov x20, xzr" . Chr(10)
-                if (Trim(str1) = "rax") {
-                    out .= "    mov x19, x0" . Chr(10)
-                }
-                else if (RegExMatch(str1, "^\d+$")) {
-                    out .= "    mov x19, #" . str1 . Chr(10)
-                }
-                else if (Trim(str1) = "A_Index") {
-                    out .= "    mov x19, x20" . Chr(10)
-                }
-                else {
-                    int isStackVar := 0
-                    if (inFunc = 1) {
-                        Loop, % funcArgsArr.size() {
-                            if (Trim(funcArgsArr[A_Index]) = str1) {
-                                isStackVar := 1
-                                break
-                            }
-                        }
-                    }
-                    if (isStackVar = 1) {
-                        out .= "    ldr x19, =" . str1 . Chr(10)
-                    }
-                    else {
-                        out .= "    ldr x9, =" . str1 . Chr(10) . "    ldr x19, [x9]" . Chr(10)
+else if (SubStr(StrLower(A_LoopField), 1, 7) = "loop9, ") {
+    str1 := Trim(StringTrimLeft(Trim(A_LoopField), 7))
+    is_inf_loop := 0
+    if (is_arm = 1) {
+        out .= "    stp x19, x20, [sp, #-16]!" . Chr(10)
+        out .= "    mov x20, xzr" . Chr(10)
+        if (Trim(str1) = "rax") {
+            out .= "    mov x19, x0" . Chr(10)
+        }
+        else if (str1 = "-1") {
+            is_inf_loop := 1
+            out .= "    mov x19, #0" . Chr(10)
+        }
+        else if (RegExMatch(str1, "^\d+$")) {
+            out .= "    mov x19, #" . str1 . Chr(10)
+        }
+        else if (Trim(str1) = "A_Index") {
+            out .= "    mov x19, x20" . Chr(10)
+        }
+        else {
+            int isStackVar := 0
+            if (inFunc = 1) {
+                Loop, % funcArgsArr.size() {
+                    if (Trim(funcArgsArr[A_Index]) = str1) {
+                        isStackVar := 1
+                        break
                     }
                 }
-                out .= ".loop9_" . STR(loopCount9) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop9_end" . STR(loopCount9) . Chr(10)
             }
-            else if (is_oryx = 1) {
-                        out .= "meta " . A_LoopField . Chr(10)
-                ; --- ORYX IR (Loop 9) ---
-                out .= "push r90" . Chr(10)
-                out .= "push r91" . Chr(10)
-                
-                strSrc := str1
-                if (str1 = "rax") { strSrc := "r0" }
-                else if (str1 = "A_Index") { strSrc := "r20" }
-                
-                out .= "mov r90, " . strSrc . Chr(10)
-                out .= "mov r91, 0" . Chr(10)
-                
-                out .= "loop9_" . STR(loopCount9) . ":" . Chr(10)
-                out .= "cmp r91, r90" . Chr(10)
-                out .= "jge loop9_end" . STR(loopCount9) . Chr(10)
-                
-                out .= "mov r20, r91" . Chr(10)
+            if (isStackVar = 1) {
+                out .= "    ldr x19, =" . str1 . Chr(10)
             }
             else {
-                if (RegExMatch(str1, "^\d+$")) {
-                    out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop9_" . STR(loopCount9) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop9_end" . STR(loopCount9) . Chr(10)
-                }
-                else {
-                    out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, [" . str1 . "]" . Chr(10) . ".loop9_" . STR(loopCount9) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop9_end" . STR(loopCount9) . Chr(10)
-                }
+                out .= "    ldr x9, =" . str1 . Chr(10) . "    ldr x19, [x9]" . Chr(10)
             }
         }
+        
+        if (is_inf_loop = 1) {
+            out .= ".loop9_" . STR(loopCount9) . ":" . Chr(10)
+        }
+        else {
+            out .= ".loop9_" . STR(loopCount9) . ":" . Chr(10) . "    cmp x19, #0" . Chr(10) . "    b.eq .loop9_end" . STR(loopCount9) . Chr(10)
+        }
+    }
+    else if (is_oryx = 1) {
+        out .= "meta " . A_LoopField . Chr(10)
+        out .= "push r90" . Chr(10)
+        out .= "push r91" . Chr(10)
+        
+        strSrc := str1
+        if (str1 = "rax") { 
+            strSrc := "r0" 
+        }
+        else if (str1 = "-1") {
+            is_inf_loop := 1
+        }
+        else if (str1 = "A_Index") { 
+            strSrc := "r20" 
+        }
+        
+        out .= "mov r90, " . strSrc . Chr(10)
+        out .= "mov r91, 0" . Chr(10)
+        
+        out .= "loop9_" . STR(loopCount9) . ":" . Chr(10)
+        
+        if (is_inf_loop != 1) {
+            out .= "cmp r91, r90" . Chr(10)
+            out .= "jge loop9_end" . STR(loopCount9) . Chr(10)
+        }
+        
+        out .= "mov r20, r91" . Chr(10)
+    }
+    else {
+        if (RegExMatch(str1, "^\d+$")) {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, " . str1 . Chr(10) . ".loop9_" . STR(loopCount9) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop9_end" . STR(loopCount9) . Chr(10)
+        }
+        else if (str1 = "-1") {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, 0" . Chr(10) . ".loop9_" . STR(loopCount9) . ":" . Chr(10)
+        }
+        else {
+            out .= "push r12" . Chr(10) . "push r13" . Chr(10) . "xor r13, r13" . Chr(10) . "mov r12, [" . str1 . "]" . Chr(10) . ".loop9_" . STR(loopCount9) . ":" . Chr(10) . "cmp r12, 0" . Chr(10) . "je .loop9_end" . STR(loopCount9) . Chr(10)
+        }
+    }
+}
         else if (Trim(A_LoopField) = "loopend9") or (Trim(A_LoopField) = "endloop9") {
             if (is_arm = 1) {
                 out .= ".cloop9_end" . STR(loopCount9) . ":" . Chr(10) . "    add x20, x20, #1" . Chr(10) . "    sub x19, x19, #1" . Chr(10) . "    b .loop9_" . STR(loopCount9) . Chr(10) . ".loop9_end" . STR(loopCount9) . ":" . Chr(10) . "    ldp x19, x20, [sp], #16" . Chr(10)
@@ -7845,7 +9492,7 @@ else if (is_oryx = 1) {      out .= "meta " . A_LoopField . Chr(10)
         ; Place this AFTER your main compilation loop finishes generating 'out'
         Loop, % funcArgsArr.size() {
             if (is_arm = 1) {
-                out := RegExReplace(out, Chr(61) . "\b" . Trim(funcArgsArr[A_Index]) . "\b", "[sp, #" . STR(8 + ( (funcArgsArr.size() - A_Index) * 8 )) . "]")
+                out := RegExReplace(out, Chr(61) . "\b" . Trim(funcArgsArr[A_Index]) . "\b", "[sp, #" . STR((A_Index * 8)) . "]")
             }
             if (is_arm = 0) and (is_oryx = 1) {
                 out := RegExReplace(out, "\b" . Trim(funcArgsArr[A_Index]) . "\b", "r" . STR(A_Index + 50))
@@ -8327,6 +9974,111 @@ else if (is_oryx = 1) {      out .= "meta " . A_LoopField . Chr(10)
     
     
     }
+    
+
+
+
+    
+if (COUNT_programmingBlock_InTheTranspiledLang != 0)
+{
+    Loop, % COUNT_programmingBlock_InTheTranspiledLang
+    {
+        codeOUT := StrReplace(codeOUT, "programmingBlock_InTheTranspiledLang-programmingBlock_InTheTranspiledLang-AA" . STR(A_Index + 1) . "AA", programmingBlock_InTheTranspiledLang[A_Index])
+    }
+}
+
+
+if (langToConvertTo = "x86-64")
+{
+    if (COUNT_programmingBlock_CPP != 0)
+    {
+        Loop, % COUNT_programmingBlock_CPP
+        {
+            codeOUT := StrReplace(codeOUT, "programmingBlock_CPP-programmingBlock_CPP-AA" . STR(A_Index + 1) . "AA", programmingBlock_CPP[A_Index])
+        }
+    }
+}
+else
+{
+    if (COUNT_programmingBlock_CPP != 0)
+    {
+        Loop, % COUNT_programmingBlock_CPP
+        {
+                codeOUT := StrReplace(codeOUT, "programmingBlock_CPP-programmingBlock_CPP-AA" . STR(A_Index + 1) . "AA", Chr(10))
+        }
+    }
+}
+
+
+if (langToConvertTo = "arm")
+{
+    if (COUNT_programmingBlock_PY != 0)
+    {
+        Loop, % COUNT_programmingBlock_PY
+        {
+            codeOUT := StrReplace(codeOUT, "programmingBlock_PY-programmingBlock_PY-AA" . STR(A_Index + 1) . "AA", programmingBlock_PY[A_Index])
+        }
+    }
+}
+else
+{
+    if (COUNT_programmingBlock_PY != 0)
+    {
+        Loop, % COUNT_programmingBlock_PY
+        {
+                codeOUT := StrReplace(codeOUT, "programmingBlock_PY-programmingBlock_PY-AA" . STR(A_Index + 1) . "AA", Chr(10))
+        }
+    }
+}
+
+
+
+if (langToConvertTo = "oryx")
+{
+    if (COUNT_programmingBlock_JS != 0)
+    {
+        Loop, % COUNT_programmingBlock_JS
+        {
+            codeOUT := StrReplace(codeOUT, "programmingBlock_JS-programmingBlock_JS-AA" . STR(A_Index + 1) . "AA", programmingBlock_JS[A_Index])
+        }
+    }
+}
+else
+{
+    if (COUNT_programmingBlock_JS != 0)
+    {
+        Loop, % COUNT_programmingBlock_JS
+        {
+                codeOUT := StrReplace(codeOUT, "programmingBlock_JS-programmingBlock_JS-AA" . STR(A_Index + 1) . "AA", Chr(10))
+        }
+    }
+}
+
+
+if (langToConvertTo = "x86-64-ring0")
+{
+    if (COUNT_programmingBlock_GO != 0)
+    {
+        Loop, % COUNT_programmingBlock_GO
+        {
+            codeOUT := StrReplace(codeOUT, "programmingBlock_GO-programmingBlock_GO-AA" . STR(A_Index + 1) . "AA", programmingBlock_GO[A_Index])
+        }
+    }
+}
+else
+{
+    if (COUNT_programmingBlock_GO != 0)
+    {
+        Loop, % COUNT_programmingBlock_GO
+        {
+                codeOUT := StrReplace(codeOUT, "programmingBlock_GO-programmingBlock_GO-AA" . STR(A_Index + 1) . "AA", Chr(10))
+        }
+    }
+}
+
+    
+    
+    
     return codeOUT
 }
 main
@@ -8346,6 +10098,7 @@ else {
             paramsTemp_fileName := Trim(StringTrimRight(paramsTemp, 5))          
         }
         if (A_Index = 1) {
+        langToConvertTo := paramsTemp
             if (paramsTemp = "x86-64") {
                 is_arm := 0
                 is_oryx := 0

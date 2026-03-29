@@ -1,3 +1,21 @@
+# TODO
+
+### HTLL Upgrade Plan
+
+1. **Better array loops** – `Loop, arr.size {` automatically handles indexing inside.  
+2. **Infinite loops** – `Loop {` runs forever.  
+3. **`include`** – Include other HTLL source files.  
+4. **Inline assembly / Programming blocks** – Embed target‑specific assembly or target language code.  
+5. **Array parameters** – Functions can take arrays (passed by copy).  
+6. **Return types** – `func int name() { return 5 }`.  
+7. **Local scope** – Variables inside functions are truly local.  
+8. **Bitwise operators** – `&`, `|`, `^`, `~`, `<<`, `>>`.  
+9. **Basic expressions** – `z := x + y - 5` left to right.  
+
+---
+
+## For build-ins in HTLL
+
 ### List (Sorted by Difficulty)
 
 1.  `StrLen`
@@ -9,7 +27,7 @@
 7.  `SubStr`
 8.  `Trim`
 9.  `InStr`
-10. `STR`
+10. `INT_To_STR`
 11. `StrSplit`
 12. `RegExMatch`
 13. `StrReplace`
@@ -48,7 +66,7 @@ funcend
 func InStr(haystack, needle)
 funcend
 
-func STR(val)
+func INT_To_STR(val)
 funcend
 
 func StrSplit(input, delim, num)

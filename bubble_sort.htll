@@ -1,0 +1,36 @@
+arr nums
+nums.add 90
+nums.add 11
+nums.add 64
+
+int n := 3 ; size
+
+int i := 0
+int temp := 0
+int a := 0
+int j := 0
+int jp1 := 0
+int limit := 0
+
+Loop, n {
+    limit := n - i - 1
+    Loop, limit {
+        j := A_Index
+        jp1 := j + 1
+        nums.index j
+        temp := rax
+        nums.index jp1
+        a := rax
+        if (temp > a) {
+            nums.set j, a
+            nums.set jp1, temp
+        }
+    }
+    i += 1
+}
+
+Loop, n {
+    nums.index A_Index
+    print(rax)
+}
+

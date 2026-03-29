@@ -61,62 +61,78 @@ print_str:
 
 
 
-
-
 $$$$print_char$$$$
 print_char:
+    ; 1. Save all registers to the stack
     push rdi
     push rbx
     push rcx
     push rdx
     push rax
     push rsi
-    cmp al, 10
-    je .newline
-    mov cl, al
-    mov rax, [cursor_y]
-    mov rbx, 80
-    mul rbx
-    add rax, [cursor_x]
-    shl rax, 1
-    
-    lea rdi, [video_buffer + rax] ; <--- TARGETS BUFFER
-    
-    mov byte [rdi], cl
-    mov byte [rdi+1], 0x0F
-    inc qword [cursor_x]
+
+    ; 2. CRITICAL FIX: Save the character (AL) into BL immediately.
+    ; Since we pushed RBX, we can use BL as a safe scratchpad for this function.
+    mov bl, al
+
+    ; 3. Handle Newline Character (ASCII 10)
+    cmp bl, 10
+    je .handle_newline
+
+    ; 4. Handle Horizontal Line Wrapping
     cmp qword [cursor_x], 80
-    jl .check_scroll
-.newline:
+    jl .x_ok
     mov qword [cursor_x], 0
     inc qword [cursor_y]
-.check_scroll:
+.x_ok:
+
+    ; 5. CRITICAL FIX: Ensure we scroll BEFORE calculating the memory address
+    cmp qword [cursor_y], 25
+    jl .y_ok
+    call .scroll_logic
+.y_ok:
+
+    ; 6. Calculate Memory Offset: (y * 80 + x) * 2
+    mov rax, [cursor_y]
+    imul rax, 80        ; imul is safe, it won't clobber RDX like 'mul' does
+    add rax, [cursor_x]
+    shl rax, 1          ; Multiply by 2 (char + attribute)
+
+    ; 7. Write to the Buffer
+    lea rdi, [video_buffer + rax]
+    mov [rdi], bl       ; Write the character we saved in BL
+    mov byte [rdi+1], 0x0F ; White text on Black background
+    
+    inc qword [cursor_x]
+    jmp .done
+
+.handle_newline:
+    mov qword [cursor_x], 0
+    inc qword [cursor_y]
     cmp qword [cursor_y], 25
     jl .done
-    
-    ; Scroll the buffer
+    call .scroll_logic
+    jmp .done
+
+.scroll_logic:
+    ; Move the entire screen up by one line (160 bytes)
     lea rsi, [video_buffer + 160]
     lea rdi, [video_buffer]
-    mov rcx, 480
-.scroll_loop:
-    mov rax, [rsi]
-    mov [rdi], rax
-    add rsi, 8
-    add rdi, 8
-    dec rcx
-    jnz .scroll_loop
+    mov rcx, 480        ; 3840 bytes / 8 bytes per qword
+    cld
+    rep movsq
     
-    ; Clear last line in buffer
+    ; Clear the newly created bottom line with spaces
     lea rdi, [video_buffer + 3840]
-    mov rax, 0x0F200F200F200F20
-    mov rcx, 20
-.clear_loop:
-    mov [rdi], rax
-    add rdi, 8
-    loop .clear_loop
+    mov rax, 0x0F200F200F200F20 ; "Space" char with white attribute
+    mov rcx, 20         ; 160 bytes / 8
+    rep stosq
+    
     mov qword [cursor_y], 24
-    mov qword [cursor_x], 0
+    ret
+
 .done:
+    ; Restore all registers and return
     pop rsi
     pop rax
     pop rdx
@@ -137,7 +153,6 @@ print_char:
 
 
 
-
 $$$$array_clear$$$$
 ; array_clear: Resets the array size to 0.
 ; [In] RDI: Pointer to the array struct.
@@ -146,11 +161,6 @@ array_clear:
     ret
 %%%%array_clear%%%%    
 $$$$get_user_input$$$$
-; ==========================================================
-; get_user_input
-; [In] RDI: Destination Array (to store input)
-; [In] RSI: Prompt Array (to print first)
-; ==========================================================
 get_user_input:
     push rbx
     push rcx
@@ -164,12 +174,10 @@ get_user_input:
     mov r13, rsi
 
     ; --- 1. Print Prompt ---
-    ; Check if prompt array has data
     mov rax, [r13 + 8]
     cmp rax, 0
     je .read_start
 
-    ; Print the prompt characters
     mov rcx, rax
     mov rbx, [r13]
     xor rdx, rdx
@@ -178,82 +186,66 @@ get_user_input:
     call print_char
     inc rdx
     loop .prompt_loop
+    call draw_all ; Show the prompt immediately
 
 .read_start:
-    ; --- 2. Read Loop ---
 .wait_key:
-    ; Read Status
     in al, 0x64  
-    ; Data ready?
     test al, 1
     jz .wait_key
 
-    ; Read Scancode
     in al, 0x60
-    ; Key release?
     test al, 0x80
     jnz .wait_key
 
-    ; Map Scancode
     lea rdx, [scan_map]
     and rax, 0xFF
     mov al, [rdx + rax]
     
     cmp al, 0
     je .wait_key
-
-    ; Enter
     cmp al, 10
     je .input_done
-
-    ; Backspace
     cmp al, 8
     je .handle_backspace
 
-    ; Valid Char: Echo and Store
+    ; Valid Char: Echo to buffer
     call print_char
     
-    ; Append to R12 (Dest Array)
+    ; --- THE FIX: Blit to hardware so user sees the character ---
+    call draw_all
+    
     mov rdi, r12
-    ; Pass char in RSI (as per our convention)
     movzx rsi, al
     call array_append
-    
     jmp .wait_key
 
 .handle_backspace:
-    ; Check if there is anything to delete
-    ; r12 holds the input_bufferr pointer
+    ; Safety Guard: Don't backspace if we are at the start of the line!
+    cmp qword [cursor_x], 0
+    je .wait_key
+    
+    ; Safety Guard: Don't backspace if the input buffer is empty!
     cmp qword [r12 + 8], 0  
-    ; If buffer is empty, do nothing
     je .wait_key
 
-    ; Pop the character from our internal buffer first
     mov rdi, r12
     call array_pop
 
-    ; Now, move the cursor back on screen
     dec qword [cursor_x]
-    ; Note: This doesn't handle wrapping to the previous line yet, but works for single lines.
-
-    ; Calculate the video memory address of the character we want to erase
     mov rax, [cursor_y]
-    mov rbx, 80
-    mul rbx
+    imul rax, 80
     add rax, [cursor_x]
     shl rax, 1
-    add rax, 0xB8000
-
-    ; Write a black space with white foreground over it
-    mov word [rax+0], 0x0F20
-    
+    lea rdi, [video_buffer + rax]
+    mov word [rdi], 0x0F20 ; Space in buffer
+    call draw_all
     jmp .wait_key
 
 .input_done:
-    ; Print newline
     mov al, 10
     call print_char
-
+    call draw_all ; Final newline sync
     pop r13
     pop r12
     pop rdi
@@ -263,7 +255,6 @@ get_user_input:
     pop rbx
     ret
 %%%%get_user_input%%%%
-    
 
 
 
@@ -312,6 +303,7 @@ print_number:
     ; Print newline
     mov al, 10
     call print_char
+    call draw_all
 
     pop rdx
     pop rcx
@@ -321,54 +313,36 @@ print_number:
 %%%%print_number%%%%
 
 $$$$input$$$$
-; input: Reads line from PS/2 Keyboard into buffer at RDI
-; [In] RDI: Buffer pointer
-; [Out] RAX: Length
 input:
     push rdi
     push rbx
-    ; Count
     mov rbx, 0 
 
 .wait_key:
-    ; Read Status Register
     in al, 0x64
-    ; Bit 0: Output Buffer Full?
     test al, 1
-    ; Spin until data exists
     jz .wait_key
-
-    ; Read Scancode
     in al, 0x60
-    
-    ; Ignore Key Release (scancodes > 0x80 usually)
     test al, 0x80
     jnz .wait_key
 
-    ; Map Scancode to ASCII
     lea rdx, [scan_map]
     and rax, 0xFF
     mov al, [rdx + rax]
     
     cmp al, 0
-    ; Unknown key
     je .wait_key
-
-    ; Enter
     cmp al, 10
     je .finish
-
-    ; Backspace
     cmp al, 8
     je .handle_backspace
 
-    ; Store Char
     mov [rdi], al
     inc rdi
     inc rbx
     
-    ; Echo to screen
     call print_char
+    call draw_all ; <--- Sync every key
     jmp .wait_key
 
 .handle_backspace:
@@ -376,20 +350,27 @@ input:
     je .wait_key
     dec rdi
     dec rbx
-    ; Visual backspace
-    mov al, 8
-    ; (Our print_char logic needs to handle this visually, but for now simple echo)
-    call print_char
+    
+    ; Logic to erase in buffer
+    dec qword [cursor_x]
+    mov rax, [cursor_y]
+    push rbx
+    mov rbx, 80
+    mul rbx
+    add rax, [cursor_x]
+    shl rax, 1
+    lea rdx, [video_buffer + rax]
+    mov word [rdx], 0x0F20
+    pop rbx
+    
+    call draw_all ; <--- Sync backspace
     jmp .wait_key
 
 .finish:
-    ; Null terminate
     mov byte [rdi], 0
-    
-    ; Print newline
     mov al, 10
     call print_char
-
+    call draw_all
     mov rax, rbx
     pop rbx
     pop rdi

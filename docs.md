@@ -1,48 +1,46 @@
-# The HTLL Documentation: A Guide to Zero-Bloat Programming
+# The HTLL Documentation: A Guide to Zero-Bloat Systems Programming
 
-### The Power of Minimalism: A Concrete Example
+## The Power of Minimalism
 
-HTLL is not an academic exercise; it is a practical tool for creating hyper-efficient software. Its simplicity translates directly to size and performance.
+HTLL is not an academic exercise; it is a brutal, practical tool for creating hyper-efficient, multi-architecture software. It strips away the heavy abstractions of modern languages (like C's dependency on `libc`) and forces the programmer to interact intimately with memory, registers, and execution flow.
 
-*   A standard `Hello, World!` program in HTLL compiles to a **440-byte** x86-64 assembly (`.s`) file. When assembled, the final **statically linked** binary x86-64 file is only **255 bytes**.
-*   A more complex program, like a full Bubble Sort algorithm, produces a final **statically linked** executable x86-64 of just **1.1 kilobytes**.
+The result is absolute minimal footprint:
+* A standard `Hello, World!` program in HTLL compiles to a **440-byte** x86-64 assembly (`.s`) file.
+* When assembled, the final **statically linked** binary x86-64 file is only **255 bytes**.
+* A complex program, like a full Bubble Sort algorithm, produces a final statically linked executable of just **1.1 kilobytes**.
 
-This is the result of rejecting unnecessary layers of abstraction.
+HTLL targets **x86-64**, **AArch64 (ARM)**, and the **Oryx VM**.
 
 ---
 
 ## Table of Contents
-
-0.  [Rules](#rules)
-1.  [The 'Types Are a Lie' Doctrine](#1-the-types-are-a-lie-doctrine)
-2.  [The `main` Entry Point: Rules of Execution](#2-the-main-entry-point-rules-of-execution)
-3.  [Variables: 64-bit Integers](#3-variables-64-bit-integers)
-4.  [Arrays: The Universal Byte Buffer](#4-arrays-the-universal-byte-buffer)
-5.  [Terminal I/O: Printing and Input](#5-terminal-io-printing-and-input)
-6.  [Control Flow: Loops](#6-control-flow-loops)
-7.  [Control Flow: Conditionals](#7-control-flow-conditionals)
-8.  [Control Flow: Goto](#8-control-flow-goto)
-9.  [Functions: Scope, Parameters, and Variables](#9-functions-scope-parameters-and-variables)
-10. [The Array Parameter Solution: The Buffer Pattern](#10-the-array-parameter-solution-the-buffer-pattern)
-11. [File System Operations](#11-file-system-operations)
-12. [System Commands & Features](#12-system-commands--features)
-13. [Syntax Reference & Flexibility](#13-syntax-reference--flexibility)
-14. [Comprehensive All-In-One Example](#14-comprehensive-all-in-one-example)
-15. [**HTLL Quirks & Gotchas: A Mandatory Review**](#15-htll-quirks--gotchas-a-mandatory-review)
+0. [Rules](#rules)
+1. [The "Types Are a Lie" Doctrine](#1-the-types-are-a-lie-doctrine)
+2. [File Structure: Includes, Globals, and `main`](#2-file-structure-includes-globals-and-main)
+3. [Variables, Scope, & The Double-Init Law](#3-variables-scope--the-double-init-law)
+4. [Expressions & Bitwise Math (Strict Left-to-Right)](#4-expressions--bitwise-math-strict-left-to-right)
+5. [Arrays: The Universal Byte Buffer](#5-arrays-the-universal-byte-buffer)
+6. [Control Flow: Conditionals & Jumps](#6-control-flow-conditionals--jumps)
+7. [Control Flow: Loops (Standard, Array, Infinite)](#7-control-flow-loops-standard-array-infinite)
+8. [Functions: Declarations, Returns, & The Parameter Copy Law](#8-functions-declarations-returns--the-parameter-copy-law)
+9. [Terminal & File I/O](#9-terminal--file-io)
+10. [System Features: Command Line Args & Syscalls](#10-system-features-command-line-args--syscalls)
+11. [Inline Assembly & Target Architecture Blocks](#11-inline-assembly--target-architecture-blocks)
+12. [Function Parameters, Return Values & The Loop Return Ban](#13-function-parameters-return-values--the-loop-return-ban)
+13. [Example: Bubble Sort](#13-example-bubble-sort)
+14. [**HTLL Quirks & Gotchas: The Survival Guide**](#12-htll-quirks--gotchas-the-survival-guide)
 
 ---
 
 # Rules
 
 ### 1. Data Types (The "Types are a Lie" Doctrine)
-*   **Integers (`int` / `nint`):**
-    *   64-bit signed integers.
-    *   `int` and `nint` are functionally identical.
+*   **Integers (`int`):**
+    *   64-bit signed integer.
     *   **Global Scope Rule:** All variables defined anywhere (except function params) are **global** and initialized only once.
 *   **Arrays (`arr`):**
     *   Universal dynamic byte buffers.
     *   Can hold ASCII text, integers, or raw data.
-    *   **NOT** passable as function parameters.
 *   **The `rax` Register:**
     *   This is the volatile "working memory" of the compiler.
     *   **Behavior:** It is overwritten by almost every operation (`.size`, `.index`, math, etc.).
@@ -61,580 +59,527 @@ This is the result of rejecting unnecessary layers of abstraction.
     *   *Correct:* `x++`
 *   **Comments:** Require a preceding space if on the same line (e.g., `code ; comment`).
 
-### 3. Math & Logic (NO EXPRESSIONS)
-*   **Rule:** **Expressions do not exist.** You cannot perform math and assignment in the same step unless it is a compound assignment.
-    *   *Illegal:* `z := x + y`
+### 3. Math & Logic (LEFT TO RIGHT EXPRESSIONS)
+*   **Rule:** **Expressions are limited. ONLY After assignment operators (`:=`, `+=`, etc.) and the `return` keyword.**
+    *   *Here are all the operators:* `+`, `-`, `*`, `//`, `%`, `<<`, `>>`, `&`, `|`, `^`
+    *   *Legal:* `z := x + y`
+    *   *Legal:* `return x + y`
+    *   *Illegal:* `z := x + (y * 5 + 7)`
     *   *Illegal:* `if (x + 1 > 5)`
-*   **The "Line-by-Line" Workflow:** To add two numbers into a third variable, you must do it in steps:
-    ```ahk
-    z := x
-    z += y
-    ```
+    *   *Illegal:* `funcName(x, y + 5)`
+    *   *Illegal:* `arrName.index i + 5`
 *   **Allowed Math Operations:**
-    *   `+=` (Add to variable)
-    *   `-=` (Subtract from variable)
-    *   `*=` (Multiply variable)
-    *   `++` (Increment)
-    *   `--` (Decrement)
-*   **Assignment:** `:=`
+    *   `+=`, `-=`, `*=`, `//=`, `%=`, `<<=`, `>>=`, `&=`, `|=`, `^=`
+    *   `++` (Increment), `--` (Decrement)
+    *   **Assignment:** `:=`
 
 ### 4. Control Flow (Brackets & Limits)
 *   **The 9-Level Limit:** You can only nest blocks (Loops/Ifs) up to **9 levels deep**.
-    *   This is a hard limit of the parser stack.
 *   **Loops:**
-    *   **Syntax:** `Loop, <count> {` or `Loop, rax {`
-    *   **Termination:** `}`
+    *   **Syntax:** `Loop, <count> {`, `Loop, arrName.size {`, `Loop, rax {`, or `Loop {` (infinite).
     *   **Iterator:** `A_Index` (Always refers to the *innermost* active loop).
-    *   **`continue`:** Skips the rest of the current iteration and jumps to the next.
-    *   **`break`:** Immediately terminates the loop.
+    *   **`continue`:** Skips to the next iteration of the innermost loop.
+    *   **`break`:** Terminates the innermost loop.
 *   **Conditionals:**
     *   **Syntax:** `if (<operand1> <operator> <operand2>) {`
-    *   **Termination:** `}`
     *   **Operators:** ` = `, ` != `, ` > `, ` < `, ` >= `, ` <= ` (Spaces required!).
-    *   **Logic:** NO `else`. NO `and`. NO `or`. You must use `goto` or nested `if` blocks to simulate this.
+    *   **Logic:** NO `else`. NO `and`. NO `or`. Use `goto` or nested `if` blocks.
 *   **Jumps:**
-    *   `togo <label>`: Defines a jump target.
-    *   `goto <label>`: Unconditional jump.
+    *   `togo <label>`: Defines a jump target. The label name must be unique.
+    *   `goto <label>`: Unconditional jump to a previously defined `togo` label.
 
 ### 5. Array Methods & Manipulation
-*   **`arradd <arr> <text>`:**
-    *   Appends text to the array.
-    *   **NO QUOTES ALLOWED.** (e.g., `arradd mybuf Hello World`).
-    *   **TRIMS SPACES:** Trailing spaces are automatically removed.
-*   **`.add <value>`:** Appends a raw 64-bit value or an ASCII code (e.g., `.add 32` for a space).
-*   **`.pop`:** Removes the last element from the array.
-*   **`.clear`:** Resets the array size to 0.
-*   **`.size`:** Calculates the size and puts it into `rax`.
-*   **`.index <i_val>`:** Retrieves value at index `i_val` and puts it into `rax`.
-*   **`.set <idx>, <val>`:** Overwrites the value at a specific index.
-*   **`.copy <src_arr>`:** Copies contents of source array to destination array.
+*   **`arradd <arr> <text>`:** Appends text. **NO QUOTES ALLOWED.** Trims trailing spaces.
+*   **`.add <value>`:** Appends a raw 64-bit value or an ASCII code.
+*   **`.pop`:** Removes the last element.
+*   **`.clear`:** Resets array size to 0.
+*   **`.size`:** Puts size into `rax`.
+*   **`.index <i_val>`:** Puts value at index `i_val` into `rax`.
+*   **`.set <idx>, <val>`:** Overwrites value at index.
+*   **`.copy <src_arr>`:** Copies contents of source array.
 
-### 6. Functions & Scope
-*   **Definition:** `func <name>(param1, param2) {`
-*   **Termination:** `}`
-*   **Parameters:** These are the **ONLY** local variables in the entire language. They are pushed to the stack.
-*   **No Nesting:** You cannot define a function inside another function.
-*   **The Anti-Pattern:** Do **not** define variables (`int x := 0`) inside a function. They will be global and only initialize once.
-*   **The Buffer Pattern:** Since you cannot pass arrays as parameters, you must agree on a global `arr` to use as a shared data buffer between the caller and the function.
-
-### 7. Terminal I/O
+### 6. Terminal I/O
 *   **`print(<value>)`:** Prints integer value of a variable or register.
 *   **`print("text")`:** Prints a double-quoted string literal.
 *   **`print("")`:** Prints a newline (ASCII 10).
-*   **`print_rax_as_char`:** Interprets the value in `rax` as an ASCII code and prints the corresponding character.
-*   **`input <dest_arr>, <prompt_arr>`:** Displays the text in `prompt_arr`, then reads from standard input into `dest_arr`.
+*   **`print_rax_as_char`:** Interprets `rax` as an ASCII code and prints the character.
+*   **`input <dest_arr>, <prompt_arr>`:** Displays prompt, reads stdin into `dest_arr`.
 
-### 8. File System I/O (Direct Syscalls)
-*   **Read:**
-    *   `fileread <dest_arr>, "file.txt"` (Literal filename)
-    *   `fileread_arr <dest_arr>, <filename_arr>` (Filename in an array)
-*   **Append:**
-    *   `fileappend "file.txt", <source_arr>`
-    *   `fileappend_arr <filename_arr>, <source_arr>`
-*   **Delete:**
-    *   `filedelete "file.txt"`
-    *   `filedelete_arr <filename_arr>`
+### 7. File System I/O (Direct Syscalls)
+*   **Read:** `fileread <dest_arr>, "file.txt"` or `fileread_arr <dest_arr>, <filename_arr>`
+*   **Append:** `fileappend "file.txt", <source_arr>` or `fileappend_arr <filename_arr>, <source_arr>`
+*   **Delete:** `filedelete "file.txt"` or `filedelete_arr <filename_arr>`
 
-### 9. System Internals
-*   **`main` Label:**
-    *   Mandatory if functions are used (must be placed after definitions).
-    *   Optional if writing a simple top-down script.
-*   **`args_array`:**
-    *   A special global array automatically populated at startup.
-    *   Contains command-line arguments.
-    *   **Separator:** Each argument is separated by a newline character (ASCII 10) inside the array.
+### 8. System Internals
+*   **`main` Label:** Mandatory if functions are used (must be placed after definitions).
+*   **`args_array`:** A special global array populated at startup with command-line arguments. Each argument is separated by a newline character (ASCII 10).
 *   **`Sleep, <ms>`:** Pauses execution via a kernel sleep syscall.
 
-### 10. Quirks & Gotchas (Mandatory Knowledge)
-*   **No Booleans:** True/False must be handled via integers (1/0).
-*   **Manual ASCII:** To add a space to a string builder, you must use `.add 32`. `arradd` will strip it.
-*   **Stack Management:** The parser manages the stack for you, but you must respect the 9-level nesting limit.
-*   **No Expressions:** Never try to do math inside an `if` statement or an assignment. One operation per line.
-
-
----
-
-### 1. The 'Types Are a Lie' Doctrine
-
-In low-level computing, distinct data types like "string" or "boolean" don't truly exist. There are only bytes of data. A "type" is simply how you decide to *interpret* those bytes. HTLL is built on this truth.
-
-The `arr` type is a raw buffer of bytes. It can function as a "string" if you fill it with ASCII values and print them as characters. It can function as a list of "integers" if you fill it with numbers and perform arithmetic. You, the programmer, are in complete control of data representation.
-
-**Example 1: Dual-purpose buffer**
-```ahk
-arr buffer
-arradd buffer Some text ; Use as a "string"
-buffer.clear
-buffer.add 1991         ; Now use as a list of numbers
-```
-
-**Example 2: Populating with character literals**
-You can also build up text using single-quoted character literals.
-```ahk
-arr greeting
-greeting.add 'H'
-greeting.add 'e'
-greeting.add 'l'
-greeting.add 'l'
-greeting.add 'o'
-; The array now holds the ASCII values [72, 101, 108, 108, 111]
-```
+### 9. Quirks & Gotchas (Mandatory Knowledge)
+*   **No Booleans:** Use integers (1/0).
+*   **Manual ASCII:** `arradd` strips spaces. Use `.add 32` to add a space to an array.
+*   **Limited Expressions:** Never do math inside an `if` statement or a function call.
+*   **The Parameter Copy Law:** When passing an array parameter to *another* function, you MUST copy it to a local array first.
+*   **The Double-Init Law:** Local variables in functions retain their values. You MUST re-initialize them on every call if you need a clean state.
+*   **Array Assignment:** The `:=` operator is ONLY used on an array to capture a function's return value. To copy one array to another, you MUST use `.copy`.
 
 ---
 
-### 2. The `main` Entry Point: Rules of Execution
+## 1. The "Types Are a Lie" Doctrine
 
-The `main` label tells the compiler where your program's execution begins. Its usage has specific rules:
+In low-level computing, distinct data types like "string" or "boolean" don't truly exist. There are only bytes of data in memory. A "type" is simply how the programmer decides to interpret those bytes at runtime. HTLL enforces this truth.
 
-1.  **If you have no `func` definitions:** The `main` label is **optional**. The compiler will execute from the top of the file. You can still add it for clarity if you wish.
-2.  **If you have `func` definitions:** The `main` label is **mandatory**. You must place it after all your global variable and function definitions to mark the start of execution.
+* **Integers (`int`)**: 64-bit signed integers. Booleans do not exist; use `1` and `0`.
+* **Arrays (`arr`)**: Universal, 0-indexed, dynamic byte buffers. You can fill them with ASCII values to act as "strings," or raw numbers to act as "lists." Each element is 64 bits.
+* **No Negative Indices**: HTLL does not support negative numbers in its core logic design. Indices and lengths are strictly positive.
 
 ---
 
-### 3. Variables: 64-bit Integers
+## 2. File Structure: Includes, Globals, and `main`
 
-HTLL supports 64-bit integers. Following the global scope rule, they should be defined at the top of your file for clarity.
+An HTLL file has a strict hierarchical structure.
 
-**Types:** `int` and `nint` (functionally identical).
+1.  **Includes**: Must be at the very top.
+2.  **Global Variables**: Must be declared before any functions or `main`.
+3.  **Functions**: Defined next.
+4.  **`main`**: The mandatory entry point if functions are present.
 
-**Syntax:** No spaces are allowed between a variable name and the `++` or `--` operators.
+### Example 1: Basic Structure
 
 ```ahk
-; --- Declaration and Initialization ---
-int counter := 0
-int value := 50
+include "HTLL_Lib.htll"
 
-; --- Operations ---
-value += 10  ; value is now 60
-value -= 5   ; value is now 55
-value *= 2   ; value is now 110
-value++      ; value is now 111
-value--      ; value is now 110
-counter := value ; Assignment
+; 1. Globals
+int g_system_status := 1
+
+; 2. Functions
+func do_nothing() {
+    return 0
+}
+
+; 3. Main Entry
+main
+    print("System starting...")
 ```
 
 ---
 
-### 4. Arrays: The Universal Byte Buffer
+## 3. Variables, Scope, & The Double-Init Law
 
-Arrays are the core data structure in HTLL. They are dynamically-sized buffers that hold 64-bit values.
+Variables in HTLL are strictly managed. Understanding scope and memory allocation is critical.
 
-**Handling Spaces with `arradd`**
-The `arradd` command is designed for efficiency and trims any trailing spaces from its input. This means you cannot add a space at the end of a line with it. To add a space or other specific characters, you must use the `.add` method with the character's ASCII value. The value for a space is `32`.
+### Rule 1: The Global Prefix
+Any variable declared outside a function or `main` is global. To prevent compiler errors, **all global variables MUST be prefixed with `g_` or `global_`**.
 
-**Example: Creating a spaced prompt**
+### Rule 2: Strict Declarations
+You **cannot** evaluate expressions on the same line as a declaration. Declarations only accept a single numeric literal.
+* **Illegal**: `int x := 5 + 5`
+* **Legal**: `int x := 5` then on a new line: `x += 5`
+
+### Rule 3: The Double-Initialization Law (CRITICAL)
+
+Local variables inside `main` or a `func` are allocated statically. They are only zeroed out *once* when the program launches. If a function is called multiple times, its local variables will retain their values from the previous call. **To ensure a clean state, you MUST declare the variable and immediately re‑assign it.**
+
+**❌ Without double‑init (unexpected behavior):**
+
 ```ahk
-arr prompt
-; Correct way to create "Name: "
-arradd prompt Name:
-prompt.add 32 ; This adds the trailing space
+func increment_test() {
+    int counter := 0   ; allocated once, initialised to 0 only at program start
+    counter += 1
+    print(counter)
+}
+
+main
+    increment_test()   ; Prints 1
+    increment_test()   ; Prints 2 (counter kept its value from last call)
+```
+
+**✅ With double‑init (correct behavior):**
+
+```ahk
+func increment_test() {
+    int counter := 0   ; allocation (occurs once)
+    counter := 0       ; DOUBLE-INIT: forces reset on every call
+    counter += 1
+    print(counter)
+}
+
+main
+    increment_test()   ; Prints 1
+    increment_test()   ; Prints 1 (because counter was reset)
 ```
 
 ---
 
-### 5. Terminal I/O: Printing and Input
+## 4. Expressions & Bitwise Math (Strict Left-to-Right)
 
-*   `print(<value>)`: Prints the numeric value of a variable or number.
-*   `print("text")`: Prints a double-quoted string literal.
-*   `print("")`: This is the standard method for printing a newline character.
-*   `print_rax_as_char`: Interprets the numeric value in `rax` as an ASCII code and prints the corresponding character.
-*   `input <dest_arr>, <prompt_arr>`: Displays the text in `prompt_arr`, then reads from standard input into `dest_arr`.
+HTLL supports robust, multi-operand mathematical and bitwise expressions on assignments and return statements.
+
+**CRITICAL RULE: No Parentheses Allowed.**
+Expressions are evaluated strictly from **Left to Right**. Standard order of operations (PEMDAS) does not apply. `10 + 5 * 2` is evaluated as `(10 + 5) * 2 = 30`.
+
+### Operators Available:
+* **Math**: `+`, `-`, `*`, `//` (Floor Division), `%` (Modulo)
+* **Bitwise**: `&` (AND), `|` (OR), `^` (XOR), `<<` (Left Shift), `>>` (Right Shift)
+* **Compound**: `+=`, `-=`, `*=`, `//=`, `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=`
+* **Unary**: `++`, `--` (Must be directly attached: `x++`)
+
+### Example: Left-to-Right Evaluation
+
+```ahk
+int calc := 0
+calc := 0
+
+; Evaluated as: (((10 + 5) - 2) * 3) // 2
+calc := 10 + 5 - 2 * 3 // 2
+print(calc) ; Prints 19
+```
 
 ---
 
-### 6. Control Flow: Loops
+## 5. Arrays: The Universal Byte Buffer
 
-Loops are **zero-indexed** and can be nested up to 9 levels.
+Arrays are 0-indexed dynamic buffers.
 
-**Syntax:** `Loop, <count>`
+*   **`arradd <arr> <text>`**: Appends text directly. **NO QUOTES ALLOWED.**
+*   **`.add <val>`**: Appends a 64-bit integer or ASCII code (`.add 32` for space).
+*   **`.pop`**: Removes the last element.
+*   **`.clear`**: Empties the array.
+*   **`.size`**: Calculates length and puts it into `rax`.
+*   **`.index <idx>`**: Retrieves value at index and puts it into `rax`.
+*   **`.set <idx>, <val>`**: Overwrites value at index.
+*   **`.copy <src>`**: Deep copies from another array.
 
-**Example 1: Basic zero-indexed loop**
+### Array Assignment Rule (CRITICAL)
+The `:=` operator is **only** used to assign an array when capturing the return value of a function. To copy the contents of one existing array to another, you **must** use the `.copy` method. Direct assignment `arr1 := arr2` is illegal.
+
+### Example: Array Math (Retrieving from RAX)
+**Rule:** You must cache `rax` into a variable immediately after calling `.index` or `.size` before using it.
+
 ```ahk
-; This will print 0, 1, 2, 3, 4
-Loop, 5 {
+arr numbers
+numbers.add 50
+numbers.add 150
+
+numbers.index 1
+int val := 0
+val := rax ; Cache RAX immediately!
+
+val += 50
+print(val) ; Prints 200
+```
+
+---
+
+## 6. Control Flow: Conditionals & Jumps
+
+Conditionals require strict spacing around operators: ` = `, ` != `, ` > `, ` < `, ` >= `, ` <= `.
+There is **no** `else`, `and`, or `or` keyword. You must use nested `if` statements or jumps.
+
+**CRITICAL RULE:** You **cannot** use `rax` or array methods directly inside an `if ( )` statement.
+
+### Jumps and Labels
+HTLL uses `togo` and `goto` for non-linear control flow.
+*   **`togo <label>`**: Defines a jump target. A label is a unique identifier that marks a line of code.
+*   **`goto <label>`**: Performs an unconditional jump to the specified `togo` label.
+
+### Example: Simulating "ELSE" (Goto/Togo)
+
+```ahk
+int status := 0
+status := 0
+
+if (status = 1) {
+    print("Status is 1")
+    goto skip_else
+}
+
+; This code runs only if the 'if' is false
+print("Status is NOT 1") ; The 'else' block
+
+togo skip_else
+print("Done.")
+```
+
+---
+
+## 7. Control Flow: Loops (Standard, Array, Infinite)
+
+HTLL has a maximum nesting limit of 9 levels. The current iterator is always `A_Index` (0-indexed).
+*   `Loop, <count> {` - Fixed iterations.
+*   `Loop, <arr>.size {` - Automatic array iteration.
+*   `Loop {` - Infinite loop (requires manual `break`).
+
+The `break` and `continue` keywords only affect the **innermost** active loop.
+
+### Example: Nested Loops & `continue`
+
+```ahk
+Loop, 3 {
+    if (A_Index = 1) {
+        continue ; Skips index 1 of the outer loop
+    }
+    print("Outer:")
     print(A_Index)
 }
 ```
 
-**Example 2: Iterating over an array**
-```ahk
-arr data_arr
-data_arr.add 11
-data_arr.add 22
-data_arr.add 33
+---
 
-data_arr.size ; Place size (3) into rax
-Loop, rax {
-    data_arr.index A_Index
+## 8. Functions: Declarations, Returns, & The Parameter Copy Law
+
+Functions establish true local scope.
+
+### Function Declaration and Parameters
+The syntax for defining a function is:
+`func [return_type] <name>([type] <param1>, [type] <param2>, ...)`
+
+*   **Return Type**: `int` or `arr`. If omitted, the function cannot use the `return` keyword.
+*   **Parameters**: Comma-separated list. Parameter type is optional; if omitted, it defaults to `int`.
+
+### The `return` Statement
+The `return` keyword sends a value back to the caller.
+*   **Syntax**: `return <value_or_expression>`
+*   **Rule**: Expressions are allowed after `return` and are evaluated strictly Left-to-Right.
+*   A function declared with a return type (`int` or `arr`) **must** end with a `return` statement.
+
+### THE PARAMETER COPY LAW (CRITICAL)
+If your function receives an array as a parameter, and you want to pass that data into *another* function, you **must not** pass the parameter directly. You must `.copy` it to a newly declared local array, and pass the copy. This prevents the compiler from destroying the reference.
+
+### Example 1: The Parameter Copy Law in Action
+
+```ahk
+func process_text(arr text) {
+    print("Processing...")
+}
+
+func pass_text_down(arr input_param) {
+    arr safe_copy
+    safe_copy.copy input_param ; MUST BE COPIED!
+    
+    process_text(safe_copy)    ; SAFE TO PASS
+}
+
+main
+    arr my_str
+    arradd my_str Data
+    pass_text_down(my_str)
+```
+
+### Example 2: Returning an Array
+
+```ahk
+func arr create_buffer() {
+    arr result
+    result.clear
+    result.add 99
+    return result
+}
+
+main
+    arr my_res
+    my_res := create_buffer() ; Legal use of := with an array
+    my_res.index 0
+    int v := 0
+    v := rax
+    print(v) ; Prints 99
+```
+
+---
+
+## 9. Terminal & File I/O
+
+* `print(<val>)`: Prints integer.
+* `print("<literal>")`: Prints quoted string.
+* `print("")`: Prints newline (ASCII 10).
+* `input <dest>, <prompt>`: Reads stdin.
+
+**File Syscalls:** `fileread`, `fileappend`, `filedelete` (append `_arr` to use array names instead of literals).
+
+---
+
+## 10. System Features: Command Line Args & Syscalls
+
+* `args_array`: A reserved global array automatically populated with OS arguments separated by ASCII 10.
+* `Sleep, <ms>`: Kernel pause.
+
+---
+
+## 11. Inline Assembly & Target Architecture Blocks
+
+Embed native assembly or language bytecode. The compiler intelligently strips blocks that don't match the build target.
+**Rule:** Delimiters (`___start <target>` / `___end <target>`) must be on their own completely empty lines.
+
+### Example: OS-Specific Branches
+
+```ahk
+___start x86-64
+    mov rdi, 1
+___end x86-64
+
+___start arm
+    mov x0, #1
+___end arm
+```
+
+---
+
+## 12. Function Parameters, Return Values & The Loop Return Ban
+
+### Parameters
+- **`arr`** may appear as a type keyword in the parameter list to indicate an array parameter.  
+- Integer parameters have **no type keyword**; they are just names.  
+- **Examples:**
+  ```
+  func process(arr data)          ; array parameter
+  func calc(a, b, arr buffer)     ; two ints, one array
+  ```
+
+### Return Values
+- A function may be prefixed with **`arr`** to indicate it returns an array.
+  - If no `arr` prefix is used, the function returns an integer via `rax`.
+- To return a value, use `return <expr>` (simple expression or variable name).
+- The returned value is placed in the `rax` register.
+- **Capturing integer return:**  
+  Call the function, then immediately assign `rax` to an integer variable.  
+  *Declaration and assignment must be separate steps.*
+
+  ```ahk
+  func add(a, b) {
+      return a + b
+  }
+  main
+      int sum       ; declare first
+      add(5, 3)
+      sum := rax    ; assign after call
+  ```
+
+- **Capturing array return:**  
+  Use the `arr` prefix in the function signature. Call the function and use the `:=` operator to assign the result to an array variable.  
+  *Again, declare the array first, then assign separately.*
+
+  ```ahk
+  func arr make_buffer() {
+      arr buf
+      buf.add 42
+      return buf
+  }
+  main
+      arr my_buf       ; declare first
+      my_buf := make_buffer()   ; assign after call
+  ```
+
+### THE LOOP RETURN BAN
+- **Do not** place a `return` statement inside any loop (`Loop`, `Loop, <count>`, `Loop, <arr>.size`, infinite loop).
+- **Why:** It compiles but will cause a **segmentation fault** at runtime.
+- **Correct pattern:** Use a flag variable, break out of the loop, then return after the loop.
+
+  **❌ Illegal (segfault):**
+
+  ```ahk
+  func find_zero(arr data) {
+      Loop, data.size {
+          data.index A_Index
+          int v := 0
+          v := rax
+          if (v = 0) {
+              return 1   ; FORBIDDEN You are going to get a segmentation fault most likely.
+          }
+      }
+      return 0
+  }
+  ```
+
+  **✅ Correct:**
+
+  ```ahk
+  func find_zero(arr data) {
+      int found := 0
+      found := 0
+      int v := 0
+      v := 0
+      Loop, data.size {
+          data.index A_Index
+          v := rax
+          if (v = 0) {
+              found := 1
+              break
+          }
+      }
+      return found
+  }
+  ```
+
+### Quick Reminder
+- **The Parameter Copy Law** still applies: if you pass an array parameter to another function, you **must** copy it first with `.copy`.
+- `rax` is clobbered by many operations; capture it immediately after a function call or array method.
+- All variable declarations (`int`, `arr`) must be done on their own line before any assignment to them.
+
+---
+
+## 13. Example: Bubble Sort
+
+This example demonstrates a complete bubble sort implementation that sorts a small array of integers. When compiled for x86‑64 Linux using FASM, the resulting statically linked executable is just **1.1 KiB** (1109 bytes).
+
+```ahk
+arr nums
+nums.add 90
+nums.add 11
+nums.add 64
+
+int n := 3 ; size
+
+int i := 0
+int temp := 0
+int a := 0
+int j := 0
+int jp1 := 0
+int limit := 0
+
+Loop, n {
+    limit := n - i - 1
+    Loop, limit {
+        j := A_Index
+        jp1 := j + 1
+        nums.index j
+        temp := rax
+        nums.index jp1
+        a := rax
+        if (temp > a) {
+            nums.set j, a
+            nums.set jp1, temp
+        }
+    }
+    i += 1
+}
+
+Loop, n {
+    nums.index A_Index
     print(rax)
 }
 ```
 
-**Example 3: Nested Loops and `A_Index`**
-```ahk
-Loop, 2 { ; Outer loop from 0 to 1
-    print("Outer:")
-    print(A_Index) ; This A_Index belongs to the outer loop
-    
-    Loop, 3 { ; Inner loop from 0 to 2
-        print("  Inner:")
-        print(A_Index) ; This A_Index belongs to the inner loop
-    }
-}
-```
+This program creates an array with three integers, sorts them in ascending order, and prints each value on a new line. The binary size is a testament to HTLL’s zero‑bloat philosophy.
 
 ---
 
-### 7. Control Flow: Conditionals
-
-Conditional logic requires parentheses.
-
-**Operators:** `=`, `!=`, `>`, `<`, `>=`, `<=`
-
-**Example 1: Simple check**
-```ahk
-int val := 10
-if (val = 10) {
-    print("Value is 10.")
-}
-```
-
-**Example 2: Simulating an `else` block**
-HTLL does not have an `else` keyword. You achieve this with `goto`.
-```ahk
-int access_level := 5
-if (access_level > 8) {
-    print("Admin access granted.")
-    goto end_check
-}
-print("Standard access.")
-togo end_check
-```
-
----
-
-### 8. Control Flow: `goto`
-
-`goto` provides raw control over the execution path by jumping to a defined label.
-
-*   `togo <label_name>`: Defines a jump target.
-*   `goto <label_name>`: Jumps execution to the label.
-
-**Example: A `goto`-based loop**
-```ahk
-int counter := 0
-togo loop_start
-    counter++
-    print(counter)
-    if (counter < 3) {
-        goto loop_start
-    }
-print("Loop finished.")
-```
-
----
-
-### 9. Functions: Scope, Parameters, and Variables
-
-#### Function Parameters: True Local Scope
-Function parameters are the **only** local variables in HTLL. They are pushed onto the stack when the function is called and exist only for the duration of that function's execution.
-
-**Shadowing:**
-HTLL supports parameter shadowing. If you define a function parameter with the same name as a global variable, the compiler automatically isolates the parameter. Inside the function, that name refers to the local stack value. Outside, it refers to the global variable.
-
-**Example: Safe Shadowing**
-```ahk
-int x := 10  ; Global variable
-
-func my_func(x) { ; This 'x' is a local parameter, shadowing the global 'x'
-    x += 5        ; This modifies the local 'x' on the stack (20 + 5)
-    print(x)      ; Prints 25
-}
-
-main
-    my_func(20) ; We pass 20 to the function.
-    print(x)    ; Prints 10. The global 'x' was never touched.
-```
-
-#### Defining Variables Inside Functions: The Anti-Pattern
-**Do not define variables inside functions (`int i := 0`).** While the syntax is allowed, it does not behave as you might expect from other languages. Due to HTLL's global nature, the variable is created globally and initialized *only once* when the compiler first sees it. It will **not** be reset on subsequent function calls.
-
-**The Wrong Way (Bugged Logic):**
-```ahk
-func counter_broken() {
-    int i := 0 ; This line only truly runs once during compilation!
-    i++
-    print(i)
-}
-
-main
-    counter_broken() ; Prints 1
-    counter_broken() ; Prints 2, because 'i' was not reset to 0
-    counter_broken() ; Prints 3
-```
-
-**The Correct Way (Declare Globally, Reset Locally):**
-```ahk
-int i := 0 ; 1. Declare the variable in the global scope.
-
-func counter_correct() {
-    i := 0 ; 2. Reset the variable to its starting value inside the function.
-    i++
-    print(i)
-}
-
-main
-    counter_correct() ; Prints 1
-    counter_correct() ; Prints 1
-    counter_correct() ; Prints 1
-```
-
----
-
-### 10. The Array Parameter Solution: The Buffer Pattern
-
-**CRITICAL RULE REVISITED:** You **cannot** pass an array as a parameter to a function.
-
-This is a core design choice. The correct way to have a function process array data is to use the "Global Buffer Pattern." You and the function agree on a global array to use as a shared workspace. The caller places data into the buffer, and the function reads from it.
-
-**Example: Correctly processing array data**
-```ahk
-arr my_data
-arr shared_buffer ; This is the agreed-upon global buffer
-
-; This function is designed to work ONLY with 'shared_buffer'
-func process_data_in_buffer() {
-    print("Processing data...")
-    shared_buffer.size
-    Loop, rax {
-        shared_buffer.index A_Index
-        rax++ ; Increment the value
-        print(rax)
-    }
-}
-
-main
-    ; 1. Load your primary data
-    my_data.add 100
-    my_data.add 200
-    
-    ; 2. Copy the data to the shared buffer before calling
-    shared_buffer.copy my_data
-    
-    ; 3. Call the function, which now operates on the buffer
-    process_data_in_buffer()
-```
-
----
-
-### 11. File System Operations
-
-HTLL provides direct syscalls for file I/O. For each operation, there are two versions: one that takes a double-quoted string literal for the filename, and a more flexible `_arr` version that takes an array containing the filename.
-
-*   `fileread <dest_arr>, "file.txt"` / `fileread_arr <dest_arr>, <filename_arr>`
-*   `fileappend "file.txt", <source_arr>` / `fileappend_arr <filename_arr>, <source_arr>`
-*   `filedelete "file.txt"` / `filedelete_arr <filename_arr>`
-
-**Example: Reading, Writing, and Deleting a file**
-```ahk
-arr content_buffer
-arr filename_buffer
-
-main
-    arradd filename_buffer temp_file.txt
-    arradd content_buffer This is a test.
-    content_buffer.add 10 ; Add a newline
-
-    ; Write the content to the file
-    print("Writing to file...")
-    fileappend_arr filename_buffer, content_buffer
-
-    ; Clear the buffer and read the file back
-    content_buffer.clear
-    print("Reading from file...")
-    fileread_arr content_buffer, filename_buffer
-
-    ; Print the contents
-    content_buffer.size
-    Loop, rax {
-        content_buffer.index A_Index
-        print_rax_as_char
-    }
-
-    ; Clean up
-    print("Deleting file...")
-    filedelete_arr filename_buffer
-```
-
----
-
-### 12. System Commands & Features
-
-#### Command Line Arguments (`args_array`)
-HTLL automatically populates the special global array `args_array` at startup with any command-line arguments you provide. **Do not declare this array yourself.**
-
-Internally, HTLL loops through the arguments provided by the operating system, unpacks them, and appends them to the `args_array` one by one, adding a newline character (ASCII `10`) after each argument to act as a separator.
-
-**Example: Displaying arguments**
-```ahk
-; To run from terminal: ./my_program arg1 "second arg" third
-
-main
-    print("--- Arguments Received ---")
-    args_array.size
-    if (rax = 0) {
-        print("None.")
-        goto args_done
-    }
-        
-    Loop, rax {
-        args_array.index A_Index
-        if (rax = 10) {
-            print("") ; A newline separates each argument
-            continue
-        }
-        print_rax_as_char
-    }
-    
-    togo args_done
-```
-
-#### Sleep
-The `Sleep, <ms>` command pauses execution via a kernel syscall for the specified number of milliseconds.
-
-**Example: Timed execution**
-```ahk
-print("Step 1")
-Sleep, 1000 ; Pause for 1 second (1000 ms)
-print("Step 2")
-```
-
----
-
-### 13. Comprehensive All-In-One Example
-
-This single program demonstrates the correct usage of globals, functions, the buffer pattern, I/O, loops, and conditionals to perform a series of tasks.
-
-```ahk
-;#######################################################
-;# HTLL All-In-One Demonstration
-;#######################################################
-
-; --- Global Data & Buffers ---
-arr log_content_buffer  ; Shared buffer for logging functions
-arr filename_buffer     ; Holds the filename for I/O operations
-arr number_list         ; Primary data array for sorting
-arr user_input          ; Buffer for stdin
-arr prompt              ; Buffer for user prompt text
-
-int swapped := 0
-int i := 0
-int n := 0
-int item1 := 0
-int item2 := 0
-
-; --- Function to sort the global 'number_list' via Bubble Sort ---
-func sort_number_list() {
-    print("--- Sorting List ---")
-    togo sort_start_label
-        swapped := 0
-        number_list.size
-        n := rax
-        n-- ; Adjust for zero-based index
-
-        Loop, n {
-            i := A_Index
-            number_list.index i
-            item1 := rax
-
-            i++
-            number_list.index i
-            item2 := rax
-
-            if (item1 > item2) {
-                number_list.set A_Index, item2
-                number_list.set i, item1
-                swapped := 1
-            }
-        }
-        
-        if (swapped = 1) {
-            goto sort_start_label
-        }
-    print("Sort complete.")
-}
-
-; --- Function to append the contents of 'log_content_buffer' to disk ---
-func append_to_log() {
-    ; This function uses the agreed-upon global buffers
-    fileappend_arr filename_buffer, log_content_buffer
-    
-    ; Also append a newline for readability
-    log_content_buffer.clear
-    log_content_buffer.add 10
-    fileappend_arr filename_buffer, log_content_buffer
-}
-
-;#######################################################
-;# MAIN EXECUTION BLOCK
-;#######################################################
-main
-    ; --- 1. Setup ---
-    arradd filename_buffer demo_output.log
-    filedelete_arr filename_buffer ; Start with a clean file
-
-    ; --- 2. Populate and Sort Data ---
-    number_list.add 42
-    number_list.add 8
-    number_list.add 1991
-    number_list.add 100
-    sort_number_list()
-
-    ; --- 3. Log the Sorted Data ---
-    log_content_buffer.clear
-    arradd log_content_buffer Sorted list written to disk.
-    append_to_log()
-    print("Log updated.")
-
-    ; --- 4. Get User Input and Log It ---
-    print("--- User Input ---")
-    arradd prompt Enter a message:
-    prompt.add 32 ; Add trailing space for prompt
-    input user_input, prompt
-    
-    log_content_buffer.clear
-    log_content_buffer.copy user_input
-    append_to_log()
-    print("User message logged.")
-
-    ; --- 5. Read and Display the Final Log File ---
-    print("--- Final Log Contents ---")
-    log_content_buffer.clear ; Reuse buffer for reading
-    fileread_arr log_content_buffer, filename_buffer
-    
-    log_content_buffer.size
-    Loop, rax {
-        log_content_buffer.index A_Index
-        print_rax_as_char
-    }
-    
-    print("--- DEMO COMPLETE ---")
-```
-
----
-
-### 15. HTLL Quirks & Gotchas: A Mandatory Review
-
-This is a summary of the most important, non-obvious rules of HTLL. Internalize them.
-
-*   **`arradd` USES NO QUOTES:** The most common mistake. `arradd my_arr Some text` is correct. `arradd my_arr "Some text"` is **wrong**. To add a space at the end of text, you must append it manually with `.add 32`.
-*   **ALL DECLARED VARIABLES ARE GLOBAL:** There is no local variable declaration. `int x := 0` inside a function creates a global `x` that is initialized only once. The only local scope is for *function parameters*. Doing so will cause big problems, so just DO NOT declare variables inside a function body.
-*   **ARRAYS ARE NOT PARAMETERS:** You cannot pass an array to a function like `my_func(my_array)`. This is forbidden. You must use the Global Buffer Pattern described in section 10.
-*   **`args_array` IS RESERVED:** Do not declare `arr args_array`. The system provides it.
-*   **NO `else`, `and`, `or`:** These constructs do not exist. You must build equivalent logic using `goto` and nested `if` statements. This is intentional.
-*   **`print("")` IS FOR NEWLINES:** This is the specific syntax trick to print a newline character.
-*   **SPACE BEFORE END-OF-LINE COMMENTS:** A comment at the end of a line needs a space. `x++ ; comment` is correct. `x++;comment` is wrong.
-*   **NESTING IS FINITE:** You have 9 levels. If you need more, your code is too complex and must be refactored into smaller functions.
+## 14. HTLL Quirks & Gotchas: The Survival Guide
+
+If your code is failing to compile or causing a segmentation fault, you have violated one of these core laws:
+
+*   **THE PARAMETER COPY LAW**: You cannot pass an array parameter directly into another function (`func1(arr p) { func2(p) }`). You MUST `.copy` it to a local array first.
+*   **THE DOUBLE-INIT LAW**: You must re-initialize local variables (`x := 0`) inside functions if you need a clean state, otherwise they retain data from previous calls.
+*   **STRICT SPACING**: You MUST put spaces around binary operators (`x += 5`) and after control keywords (`if (`, `Loop {`).
+*   **NO EXPRESSIONS IN ARGS/CONDITIONALS**: `MyFunc(x + 1)` and `if (x + 1 > 5)` are illegal. Calculate the value into a variable first.
+*   **NO PARENTHESES IN MATH**: Expressions are strictly Left-to-Right. `()` does not exist.
+*   **CACHE `rax` IMMEDIATELY**: After `.size` or `.index`, store `rax` in a variable. Do not use `rax` directly in an `if` statement.
+*   **`arradd` USES NO QUOTES**: `arradd my_arr Hello` is correct. To append a space, use `.add 32`.
+*   **`togo` DEFINES A LABEL**: `togo my_label` creates a jump target. `goto my_label` jumps to it.
+*   **ARRAY ASSIGNMENT IS FORBIDDEN**: You cannot write `arr1 := arr2`. Use `arr1.copy arr2`. The only time `:=` is used with an array is to receive a function's return value: `my_arr := func_that_returns_arr()`.
+*   **GLOBALS NEED A PREFIX**: All top-level variables must start with `g_` or `global_`.
+*   **NO `else`, `and`, `or`:** These constructs do not exist. Build equivalent logic using `goto` and nested `if` statements. This is intentional.
+*   **NESTING IS FINITE:** You have 9 levels. If you need more, your code is too complex and must be refactored.
+*   **int size is forbidden:** You cannot declare an integer or an array with the name size. This is going to break everything. Size is a reserved keyword. Do not use it as a variable name or an array name. Same with the str. That's also another keyword and a name and you must not use it.
 
 ---
 
@@ -642,4 +587,5 @@ In conclusion: **C is bloated.**
 
 You have been told your whole life that C is the pinnacle of minimalism. This is a lie. The dependency on `libc` and the complexity of its toolchains introduce unnecessary bloat.
 
-HTLL is an experiment in true minimalism. The trade-off is its specificity: it only targets only a few architectures (x86-64 and AArch64) and one operating system (Linux). But within that domain, it offers unparalleled control and efficiency.
+HTLL is an experiment in true minimalism. The trade-off is its specificity: it only targets a few architectures (x86-64 and AArch64) and one operating system (Linux). But within that domain, it offers unparalleled control and efficiency.
+

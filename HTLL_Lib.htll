@@ -1,584 +1,775 @@
+func StrLen(arr string) {
+    int the_size := 0
+    string.size   ; place size in rax
+    the_size := rax
+    return the_size
+}
 
-int rax_fake := 0
-arr my_string
-arr my_string2
-arr InStr_string_test
-int size_out := 0
-; ------------------------------------------
-; ------------------------------------------
-; ------------------------------------------
-arr func_arr
-int countChars_counter := 0
-arr StringTrimLeft_arr_help
-int StrLower_val := 0
-arr SubStr_arr_help
-int i := 0
+; Chr(num) – returns an array with the character for ASCII code num
+func arr Chr(num) {
+    arr result
+    result.add num
+    return result
+}
 
-; Global variables for Trim logic
-int trim_start_idx := 0
-int trim_end_idx := 0
-int trim_char := 0
-int trim_len := 0
-arr trim_buffer
+func arr StringTrimRight(arr string, n) {
+    Loop, n {
+        string.pop
+    }
+    return string
+}
 
-arr InStr_string
-int InStr_string_len := 0
-; ------------------------------------------
+; StringTrimLeft(string, n) – returns a new array with n bytes removed from the start
+func arr StringTrimLeft(arr string, n) {
+    arr result
+    int rax_temp := 0
+    Loop, string.size {
+        if (A_Index >= n) {
+            string.index A_Index
+            rax_temp := rax
+            result.add rax_temp
+        }
+    }
+    return result
+}
 
-func StrLen()
-func_arr.size
-return rax
-funcend
+; countChars(s, c) – returns the number of times byte c appears in array s
+func countChars(arr s, c) {
+    int count := 0
+    int rax_temp := 0
+    count := 0
+    s.size
+    rax_temp := rax
+    Loop, rax_temp {
+        s.index A_Index
+        rax_temp := rax
+        if (rax_temp = c) {
+            count++
+        }
+    }
+    return count
+}
 
-func Chr(num)
-return num
-funcend
+; SubStr(s, start, len) – returns a substring starting at start (1-based) for len characters
+func arr SubStr(arr s, start, len) {
+    arr result
+    int rax_temp := 0
+    s.size
+    rax_temp := rax
+    int end
+    end := rax_temp
+    if (len > 0) {
+        end := start + len - 1
+    }
+    Loop, s.size {
+        if (A_Index >= start) {
+            if (A_Index <= end) {
+                s.index A_Index
+                rax_temp := rax
+                result.add rax_temp
+            }
+        }
+    }
+    return result
+}
 
-func StringTrimRight(count)
-Loop, count
-func_arr.pop
-loopend
-funcend
-
-func countChars(one_char)
-countChars_counter := 0
-func_arr.size
-Loop, rax
-func_arr.index A_Index
-rax_fake := rax
-if (rax_fake = one_char)
-countChars_counter++
-endif
-loopend
-return countChars_counter
-funcend
-
-
-func StringTrimLeft(count)
-StringTrimLeft_arr_help.clear
-func_arr.size
-Loop, rax
-if (A_Index >= count)
-func_arr.index A_Index
-StringTrimLeft_arr_help.add rax
-endif
-loopend
-func_arr.copy StringTrimLeft_arr_help 
-
-funcend
-
-
-func StrLower()
-func_arr.size
-Loop, rax
-    func_arr.index A_Index
-    StrLower_val := rax
-    ; Check if 'A' (65) <= val <= 'Z' (90)
-    if (StrLower_val >= 65)
-        if2 (StrLower_val <= 90)
-            StrLower_val += 32 ; Convert to lowercase
-            func_arr.set A_Index, StrLower_val
-        endif2
-    endif
-loopend
-funcend
-
-
-
-func SubStr(start, len)
-    SubStr_arr_help.clear
-    func_arr.size
+; Trim(s) – returns a new array with leading/trailing whitespace removed
+func arr Trim(arr s) {
+    int what_size := 0
+    arr result
+    s.size
+    what_size := rax
+    int i := 0
     i := 0
-    Loop, rax
-        i++ ; 1 indexed i need
-        if (i >= start)
-                if2 (i <= len)
-                    func_arr.index A_Index
-                    SubStr_arr_help.add rax
-            endif2
-        endif
-    loopend
-    func_arr.copy SubStr_arr_help
-funcend
+    int j := 0
+    j := 0
+    j := what_size - 1
+    int isSpace := 0
+    int char := 0
 
+    ; find first non-whitespace
+    Loop, what_size {
+        s.index i
+        char := rax
+        isSpace := 0
+        if (char = 32) {
+            isSpace := 1
+        }
+        if (char = 9) {
+            isSpace := 1
+        }
+        if (char = 10) {
+            isSpace := 1
+        }
+        if (char = 13) {
+            isSpace := 1
+        }
+        if (char = 11) {
+            isSpace := 1
+        }
+        if (char = 12) {
+            isSpace := 1
+        }
+        if (isSpace = 0) {
+            break
+        }
+        i++
+    }
 
+    ; find last non-whitespace
+    Loop, what_size {
+        s.index j
+        char := rax
+        isSpace := 0
+        if (char = 32) {
+            isSpace := 1
+        }
+        if (char = 9) {
+            isSpace := 1
+        }
+        if (char = 10) {
+            isSpace := 1
+        }
+        if (char = 13) {
+            isSpace := 1
+        }
+        if (char = 11) {
+            isSpace := 1
+        }
+        if (char = 12) {
+            isSpace := 1
+        }
+        if (isSpace = 0) {
+            break
+        }
+        j--
+    }
 
-func Trim()
-    ; 1. Find Start Index (Skip leading whitespace)
-    trim_start_idx := 0
-    func_arr.size
-    Loop, rax
-        func_arr.index A_Index
-        trim_char := rax
-        
-        ; Check if whitespace (Space=32, Tab=9, LF=10, CR=13)
-        if (trim_char = 32)
-            trim_start_idx++
-            continue
-        endif
-        if (trim_char = 9)
-            trim_start_idx++
-            continue
-        endif
-        if (trim_char = 10)
-            trim_start_idx++
-            continue
-        endif
-        if (trim_char = 13)
-            trim_start_idx++
-            continue
-        endif
-        
-        ; If we hit a non-whitespace, stop scanning
-        break
-    loopend
+    ; copy range i to j into result
+    Loop, what_size {
+        if (A_Index >= i) {
+            if (A_Index <= j) {
+                s.index A_Index
+                char := rax
+                result.add char
+            }
+        }
+    }
+    return result
+}
 
-    ; 2. Find End Index (Skip trailing whitespace)
-    func_arr.size
-    trim_end_idx := rax
-    trim_end_idx-- ; Convert to 0-based index for scanning backward
+; InStr(haystack, needle, startPos) – returns 1‑based position or 0
+func InStr(arr haystack, arr needle, startPos) {
+    arr h_copy
+    h_copy.copy haystack
+    arr n_copy
+    n_copy.copy needle
     
-    togo trim_scan_backward
-        if (trim_end_idx < trim_start_idx)
-            goto trim_scan_done ; String is empty or all whitespace
-        endif
+    int hlen := 0
+    int nlen := 0
+    int i := 0
+    int j := 0
+    int match_it := 0
+    int hc := 0
+    int nc := 0
+    int end_limit := 0
+    int idx := 0
+    int loop_cnt := 0
+    int found_pos := 0
 
-        func_arr.index trim_end_idx
-        trim_char := rax
-
-        if (trim_char = 32)
-            trim_end_idx--
-            goto trim_scan_backward
-        endif
-        if (trim_char = 9)
-            trim_end_idx--
-            goto trim_scan_backward
-        endif
-        if (trim_char = 10)
-            trim_end_idx--
-            goto trim_scan_backward
-        endif
-        if (trim_char = 13)
-            trim_end_idx--
-            goto trim_scan_backward
-        endif
-        
-        ; Found non-whitespace
-        goto trim_scan_done
-
-    togo trim_scan_done
-
-    ; 3. Calculate Length and Extract
-    ; Length = (End - Start) + 1
-    trim_len := trim_end_idx
-    trim_len -= trim_start_idx
-    trim_len++
-
-    ; Use manual copy logic (essentially SubStr) to fill trim_buffer
-    trim_buffer.clear
+    h_copy.size
+    hlen := rax
+    n_copy.size
+    nlen := rax
     
-    if (trim_len > 0)
-        Loop, trim_len
-            ; Calculate source index: start_idx + A_Index
-            int curr_idx := trim_start_idx
-            curr_idx += A_Index
-            
-            func_arr.index curr_idx
-            trim_buffer.add rax
-        loopend
-    endif
+    ; Explicitly initialize found_pos to hlen (Not Found)
+    found_pos := hlen
 
-    ; 4. Result back to func_arr
-    func_arr.copy trim_buffer
-funcend
+    if (nlen = 0) {
+        return 0
+    }
+    if (nlen > hlen) {
+        return hlen
+    }
 
-
-
-
-int Is2arr_equal_size1 := 0
-int Is2arr_equal_temp := 0
-int Is2arr_equal_count := 0
-
-
-arr Is2arr_equal_ARG1
-arr Is2arr_equal_ARG2
-func Is2arr_equal()
-
-Is2arr_equal_ARG1.size 
-Is2arr_equal_size1 := rax
-Is2arr_equal_ARG2.size 
-
-rax_fake := rax
-if (Is2arr_equal_size1 != rax_fake)
-return 0
-endif
-
-rax_fake := rax
-if (Is2arr_equal_size1 = rax_fake)
-if (Is2arr_equal_size1 = 0)
-return 1
-endif2
-endif
-
-Is2arr_equal_temp := 0
-Is2arr_equal_count := 0
-
-Loop, Is2arr_equal_size1
-Is2arr_equal_ARG1.index A_Index
-Is2arr_equal_temp := rax
-Is2arr_equal_ARG2.index A_Index
-rax_fake := rax
-if (Is2arr_equal_temp = rax_fake)
-Is2arr_equal_count++
-goto Is2arr_equal_else_simulate
-endif
-rax_fake := rax
-if (Is2arr_equal_temp != rax_fake)
-return 0
-endif
-togo Is2arr_equal_else_simulate
-
-endloop
-
-if (Is2arr_equal_count = Is2arr_equal_size1)
-return 1
-endif
-
-return 0
-funcend
-
-
-arr InStr_temp
-arr InStr_ARG1
-int InStr_out_num := 0
-func InStr()
-
-
-
-    InStr_temp.clear
-    InStr_string_len := 0    
-    InStr_ARG1.copy func_arr
-    ; InStr_string is the needle in the hay InStr_ARG1
-    InStr_string.size
-    InStr_string_len := rax
-    func_arr.size
-    Loop, rax
-        InStr_temp.clear
-        
-
-if (A_Index > 0)        
-
-
-func_arr.copy InStr_ARG1
-StringTrimLeft(1)
-InStr_ARG1.copy func_arr
-InStr_ARG1.size
-rax_fake := rax
-if2 (rax_fake <= InStr_string_len)
-pop r13
-pop r12
-return 0
-endif2
-
-    func_arr.copy InStr_ARG1
-    SubStr(1, InStr_string_len)
-    InStr_temp.copy func_arr
-
-Is2arr_equal_ARG1.copy InStr_temp
-Is2arr_equal_ARG2.copy InStr_string
-Is2arr_equal()
-
-rax_fake := rax
-if2 (rax_fake = 1)
-InStr_out_num := A_Index
-pop r13
-pop r12
-return InStr_out_num
-endif2
-
-
-    goto else_InStr_func
-endif
-if (A_Index = 0)        
-    func_arr.copy InStr_ARG1
-    SubStr(1, InStr_string_len)
-    InStr_temp.copy func_arr
-Is2arr_equal_ARG1.copy InStr_temp
-Is2arr_equal_ARG2.copy InStr_string
-Is2arr_equal()
-rax_fake := rax
-if2 (rax_fake = 1)
-InStr_out_num := A_Index
-pop r13
-pop r12
-return InStr_out_num
-endif2
-
-endif
-togo else_InStr_func
-
-
-
-     
-    endloop
+    i := startPos
+    end_limit := hlen - nlen
     
+    if (i > end_limit) {
+        return hlen
+    }
 
-    
-    
-    return 0 
-funcend
+    loop_cnt := end_limit - i
+    loop_cnt += 1
 
+    Loop, loop_cnt {
+        match_it := 1
+        j := 0
+        Loop, nlen {
+            idx := i + j
+            h_copy.index idx
+            hc := rax
+            n_copy.index j
+            nc := rax
+            if (hc != nc) {
+                match_it := 0
+                break
+            }
+            j++
+        }
+        if (match_it = 1) {
+            found_pos := i
+            break
+        }
+        i++
+    }
+    return found_pos
+}
 
+func arr StrLower(arr s) {
+    int len := 0
+    int c := 0
+    arr result
 
-; --- Globals for the STR function ---
-int STR_main_num := 0
-arr STR_temp_buffer ; For holding the reversed digits
+    s.size
+    len := rax
 
-int quotient_counter := 0
-int remainder_val := 0
+    Loop, len {
+        s.index A_Index
+        c := rax
+        if (c >= 65) {
+            if (c <= 90) {
+                c += 32
+            }
+        }
+        result.add c
+    }
+    return result
+}
 
-func INT_To_STR()
-    ; Handle the edge case of zero
-    if (STR_main_num = 0)
-        func_arr.clear
-        func_arr.add 48 ; Add ASCII for '0'
-        return
-    endif
+; INT_To_STR(num) – converts an integer to an array of ASCII characters
+func arr INT_To_STR(num) {
+    arr result
+    arr temp_buffer
+    int remainder_val := 0
+    int current_digit := 0
+    int actual_str_len := 0
+    int temp_size := 0
 
-    STR_temp_buffer.clear
-    remainder_val := STR_main_num
+    ; Handle 0 edge case immediately
+    if (num = 0) {
+        result.add 48
+        return result
+    }
 
-    ; --- PHASE 1: Extraction Loop ---
+    remainder_val := num
+
+    ; Extract digits in reverse order (e.g., 123 -> '3', '2', '1')
     togo str_extraction_loop
-        ; This is our "Mod/Div Machine"
-        quotient_counter := 0
-        togo mod_div_machine_loop
-            if (remainder_val < 10)
-                goto mod_div_machine_done
-            endif
-            remainder_val -= 10
-            quotient_counter++
-            goto mod_div_machine_loop
-        togo mod_div_machine_done
-
-        ; Now, remainder_val is the digit (0-9)
-        ; and quotient_counter is the new number for the next iteration.
-
-        remainder_val += 48 ; Convert digit to ASCII
-        STR_temp_buffer.add remainder_val
+        current_digit := remainder_val
+        current_digit %= 10
+        current_digit += 48
+        temp_buffer.add current_digit
         
-        remainder_val := quotient_counter
-        if (remainder_val > 0)
+        remainder_val //= 10
+        
+        if (remainder_val > 0) {
             goto str_extraction_loop
-        endif
+        }
 
-    ; --- PHASE 2: Reversal Loop ---
-    func_arr.clear
-    STR_temp_buffer.size
-    Loop, rax
-        ; We need to index backwards. The last item is at index (size - 1).
-        ; So, the index is (size - 1) - A_Index.
-        STR_temp_buffer.size
-        int current_idx := rax
-        current_idx--
-        current_idx -= A_Index
+    ; Get the size of our reversed buffer
+    temp_buffer.size
+    actual_str_len := rax
+
+    ; Loop backwards to put them in the right order
+    Loop, actual_str_len {
+        temp_size := actual_str_len
+        temp_size--
+        temp_size -= A_Index
         
-        STR_temp_buffer.index current_idx
-        func_arr.add rax
-    loopend
-funcend
+        temp_buffer.index temp_size
+        result.add rax
+    }
 
+    return result
+}
 
-arr StrSplit_haystack
-arr StrSplit_needle
-arr StrSplit_out_buffer
-int StrSplit_int1 := 0
-int StrSplit_int2 := 0
-int StrSplit_int3 := 0
-int StrSplit_int4 := 0
-func StrSplit(num)
-    StrSplit_needle.size
-    StrSplit_int1 := rax
-    
+; StrReplace(haystack, needle, replacement) – Replaces all occurrences of needle with replacement
+func arr StrReplace(arr haystack, arr needle, arr replacement) {
+    arr h_local
+    h_local.copy haystack
+    arr n_local
+    n_local.copy needle
+    arr r_local
+    r_local.copy replacement
 
-    StrSplit_haystack.size
-    StrSplit_int3 := rax
-    
+    arr result
+    arr t_arr
+    int hl := 0
+    int nl_val := 0
+    int sPos := 0
+    int p := 0
+    int sub_l := 0
+
+    h_local.size
+    hl := rax
+    n_local.size
+    nl_val := rax
+
+    ; Body Initializations
+    sPos := 0
+    result.clear
+
+    if (nl_val = 0) {
+        result.copy h_local
+        return result
+    }
+
+    togo replace_loop
+        InStr(h_local, n_local, sPos)
+        p := rax
+
+        if (p = hl) {
+            goto end_replace_loop
+        }
+
+        sub_l := p - sPos
+        if (sub_l > 0) {
+            t_arr := SubStr(h_local, sPos, sub_l)
+            Loop, t_arr.size {
+                t_arr.index A_Index
+                result.add rax
+            }
+        }
+
+        Loop, r_local.size {
+            r_local.index A_Index
+            result.add rax
+        }
+
+        sPos := p + nl_val
+        if (sPos < hl) {
+            goto replace_loop
+        }
         
-    if (num = 1)
+    togo end_replace_loop
 
-    func_arr.copy StrSplit_haystack
-    InStr_string.copy StrSplit_needle
-    InStr()
-    StrSplit_int2 := rax
+    if (sPos < hl) {
+        sub_l := hl - sPos
+        t_arr := SubStr(h_local, sPos, sub_l)
+        Loop, t_arr.size {
+            t_arr.index A_Index
+            result.add rax
+        }
+    }
+    return result
+}
+
+; StrSplit(inputStr, delimiter, num) – Returns the Nth token (1-based)
+func arr StrSplit(arr inputStr, arr delimiter, num) {
+    arr i_local
+    i_local.copy inputStr
+    arr d_local
+    d_local.copy delimiter
+
+    arr res
+    int h_len := 0
+    int d_len := 0
+    int s_pos := 0
+    int e_pos := 0
+    int cur_count := 0
+    int sub_len := 0
+
+    i_local.size
+    h_len := rax
+    d_local.size
+    d_len := rax
+
+    ; BODY INITIALIZATIONS (Crucial for repeated calls!)
+    cur_count := 0
+    s_pos := 0
+    res.clear
+
+    if (d_len = 0) {
+        return res
+    }
+
+    togo split_loop
+        cur_count += 1
+        InStr(i_local, d_local, s_pos)
+        e_pos := rax
+
+        if (cur_count = num) {
+            if (e_pos = h_len) {
+                res := SubStr(i_local, s_pos, 0)
+            } 
+            if (e_pos != h_len) {
+                sub_len := e_pos - s_pos
+                res := SubStr(i_local, s_pos, sub_len)
+            }
+            goto end_split_loop
+        }
+
+        if (e_pos = h_len) {
+            goto end_split_loop
+        }
+
+        s_pos := e_pos + d_len
+        if (s_pos < h_len) {
+            goto split_loop
+        }
+
+    togo end_split_loop
+    return res
+}
+
+func arr LoopParseFunc(arr var, arr delim1, arr delim2, num) {
+    arr v_local
+    v_local.copy var
+    arr d1_local
+    d1_local.copy delim1
+    arr d2_local
+    d2_local.copy delim2
+
+    arr res
+    int v_len := 0
+    int d1_len := 0
+    int d2_len := 0
+    int i := 0
+    int j := 0
+    int char_val := 0
+    int is_delim := 0
+    int t_start := 0
+    int t_count := 0
+    int in_t := 0
+    int s_len := 0
+    int stop_searching := 0
+
+    v_local.size
+    v_len := rax
+    d1_local.size
+    d1_len := rax
+    d2_local.size
+    d2_len := rax
+
+    ; BODY INITIALIZATIONS
+    t_count := 0
+    in_t := 0
+    stop_searching := 0
+    res.clear
+
+    ; Case 1: No delimiters provided (Return Nth character)
+    if (d1_len = 0) {
+        if (d2_len = 0) {
+            if (num > 0) {
+                if (num <= v_len) {
+                    j := num - 1
+                    v_local.index j
+                    res.add rax
+                }
+            }
+            stop_searching := 1
+        }
+    }
+
+    ; Case 2: Normal Multi-Delimiter Split
+    if (stop_searching = 0) {
+        i := 0
+        Loop, v_len {
+            v_local.index i
+            char_val := rax
+
+            is_delim := 0
+            ; Check Delimiter 1
+            if (d1_len > 0) {
+                j := 0
+                Loop, d1_len {
+                    d1_local.index j
+                    if (rax = char_val) {
+                        is_delim := 1
+                    }
+                    j += 1
+                }
+            }
+            ; Check Delimiter 2
+            if (is_delim = 0) {
+                if (d2_len > 0) {
+                    j := 0
+                    Loop, d2_len {
+                        d2_local.index j
+                        if (rax = char_val) {
+                            is_delim := 1
+                        }
+                        j += 1
+                    }
+                }
+            }
+
+            if (is_delim = 0) {
+                if (in_t = 0) {
+                    in_t := 1
+                    t_count += 1
+                    t_start := i
+                }
+            }
+
+            if (is_delim = 1) {
+                if (in_t = 1) {
+                    in_t := 0
+                    if (t_count = num) {
+                        s_len := i - t_start
+                        res := SubStr(v_local, t_start, s_len)
+                        stop_searching := 1
+                        break ; Safe break (pops r12/r13)
+                    }
+                }
+            }
+            i += 1
+        }
+        
+        ; Final check for the last token if it hasn't been found yet
+        if (stop_searching = 0) {
+            if (in_t = 1) {
+                if (t_count = num) {
+                    res := SubStr(v_local, t_start, 0)
+                }
+            }
+        }
+    }
+
+    return res ; THE ONLY RETURN IN THE FUNCTION
+}
+
+func RegExMatch(arr haystack, arr needle, startPos) {
+    arr h_loc
+    h_loc.copy haystack
+    arr n_loc
+    n_loc.copy needle
+
+    int h_len := 0
+    int n_len := 0
+    int cur_i := 0
+    int hi := 0
+    int ni := 0
+    int match_ok := 0
+    int c_h := 0
+    int c_n := 0
+    int is_w := 0
+    int pr_w := 0
+    int tmp_val := 0
+    int res_pos := 0
+    int is_esc := 0
+
+    h_loc.size
+    h_len := rax
+    n_loc.size
+    n_len := rax
     
-    func_arr.copy StrSplit_haystack
-    SubStr(1, StrSplit_int2)
-    StrSplit_out_buffer.copy func_arr
+    ; Correct Not Found value
+    res_pos := h_len
+
+    if (n_len = 0) {
+        return 0
+    }
+
+    cur_i := startPos
     
-    endif
+    togo match_outer
+        if (cur_i >= h_len) {
+            goto match_outer_end
+        }
+        
+        hi := cur_i
+        ni := 0
+        match_ok := 1
+
+        togo match_inner
+            if (ni >= n_len) {
+                goto match_inner_end
+            }
+
+            n_loc.index ni
+            c_n := rax
+            is_esc := 0
+
+            if (c_n = 92) { ; '\'
+                ni += 1
+                n_loc.index ni
+                c_n := rax
+                is_esc := 1
+
+                if (c_n = 100) { ; '\d'
+                    if (hi >= h_len) { match_ok := 0 }
+                    if (hi < h_len) {
+                        h_loc.index hi
+                        c_h := rax
+                        if (c_h < 48) { match_ok := 0 }
+                        if (c_h > 57) { match_ok := 0 }
+                        hi += 1
+                    }
+                }
+                
+                if (c_n = 98) { ; '\b'
+                    is_w := 0
+                    if (hi < h_len) {
+                        h_loc.index hi
+                        tmp_val := rax
+                        if (tmp_val > 47) { if (tmp_val < 58) { is_w := 1 } }
+                        if (tmp_val > 64) { if (tmp_val < 91) { is_w := 1 } }
+                        if (tmp_val > 96) { if (tmp_val < 123) { is_w := 1 } }
+                    }
+                    pr_w := 0
+                    if (hi > 0) {
+                        tmp_val := hi - 1
+                        h_loc.index tmp_val
+                        tmp_val := rax
+                        if (tmp_val > 47) { if (tmp_val < 58) { pr_w := 1 } }
+                        if (tmp_val > 64) { if (tmp_val < 91) { pr_w := 1 } }
+                        if (tmp_val > 96) { if (tmp_val < 123) { pr_w := 1 } }
+                    }
+                    if (is_w = pr_w) { match_ok := 0 }
+                }
+            }
+
+            ; THE FIX: Only run literal match if we didn't just process an escape!
+            if (is_esc = 0) {
+                if (hi >= h_len) { match_ok := 0 }
+                if (hi < h_len) {
+                    h_loc.index hi
+                    c_h := rax
+                    if (c_h != c_n) { match_ok := 0 }
+                    hi += 1
+                }
+            }
+
+            if (match_ok = 0) {
+                goto match_inner_end
+            }
+            
+            ni += 1
+            goto match_inner
+
+        togo match_inner_end
+
+        if (match_ok = 1) {
+            res_pos := cur_i
+            goto match_outer_end
+        }
+        
+        cur_i += 1
+        goto match_outer
+
+    togo match_outer_end
+    return res_pos
+}
+
+func arr RegExReplace(arr input, arr pattern, arr replacement) {
+    arr i_loc
+    i_loc.copy input
+    arr p_loc
+    p_loc.copy pattern
+    arr r_loc
+    r_loc.copy replacement
     
-    if (num = 2)
+    arr out_arr
+    arr sub_chunk
+    int tot_len := 0
+    int pat_len := 0
+    int cur_p := 0
+    int m_pos := 0
+    int chunk_l := 0
+    int rax_val := 0
+    int r_len := 0
+    int sc_len := 0
     
+    int m_len := 0
+    int ni := 0
+    int c_n := 0
+    int is_esc := 0
+
+    i_loc.size
+    tot_len := rax
+    p_loc.size
+    pat_len := rax
+    r_loc.size
+    r_len := rax
     
-    func_arr.copy StrSplit_haystack
-    InStr_string.copy StrSplit_needle
-    InStr()
-    StrSplit_int2 := rax
-    StrSplit_int2 += StrSplit_int1
-    StrSplit_int2++
-    func_arr.copy StrSplit_haystack
-    SubStr(StrSplit_int2, StrSplit_int3)
-    StrSplit_out_buffer.copy func_arr
-    
-    
-    
-    endif
-    if (num > 2)
-    print("StrSplit CANT HAVE MORE THEN 2 PLS FIX IT!!!")
-    print("StrSplit CANT HAVE MORE THEN 2 PLS FIX IT!!!")
-    print("StrSplit CANT HAVE MORE THEN 2 PLS FIX IT!!!")
-    endif
+    cur_p := 0
+    out_arr.clear
 
-    
-    
+    m_len := 0
+    ni := 0
+    togo calc_mlen
+        if (ni >= pat_len) { goto calc_mlen_end }
+        p_loc.index ni
+        c_n := rax
+        is_esc := 0
+        if (c_n = 92) {
+            ni += 1
+            p_loc.index ni
+            c_n := rax
+            is_esc := 1
+            if (c_n = 100) { m_len += 1 } 
+            if (c_n = 98) { m_len += 0 }
+        }
+        if (is_esc = 0) { m_len += 1 }
+        ni += 1
+        goto calc_mlen
+    togo calc_mlen_end
 
-    
+    if (m_len = 0) { m_len := 1 } 
 
-funcend
+    togo repl_engine
+        RegExMatch(i_loc, p_loc, cur_p)
+        m_pos := rax
 
-; ------------------------------------------
-; ------------------------------------------
-; ------------------------------------------
+        if (m_pos = tot_len) { goto repl_engine_end }
 
-main
+        chunk_l := m_pos - cur_p
+        if (chunk_l > 0) {
+            sub_chunk := SubStr(i_loc, cur_p, chunk_l)
+            sub_chunk.size
+            sc_len := rax
+            ni := 0
+            togo copy_before
+                if (ni >= sc_len) { goto copy_before_end }
+                sub_chunk.index ni
+                rax_val := rax
+                out_arr.add rax_val
+                ni += 1
+                goto copy_before
+            togo copy_before_end
+        }
 
-arradd my_string Hello Man
-my_string2.add 10
-my_string2.add 10
-my_string2.add 65
-my_string2.add 66
-my_string2.add 67
-my_string2.add 32
-my_string2.add 32
-my_string2.add 32
+        ni := 0
+        togo copy_repl
+            if (ni >= r_len) { goto copy_repl_end }
+            r_loc.index ni
+            rax_val := rax
+            out_arr.add rax_val
+            ni += 1
+            goto copy_repl
+        togo copy_repl_end
 
-func_arr.copy my_string
-StrLen()
-size_out := rax
+        cur_p := m_pos + m_len
+        if (cur_p < tot_len) { goto repl_engine }
 
-print("The Size is:")
-print(size_out)
+    togo repl_engine_end
 
-print("-----------------------------------------")
-Chr(65)
-print_rax_as_char
-print("")
-print("-----------------------------------------")
-
-func_arr.copy my_string
-StringTrimRight(2)
-my_string.copy func_arr
-my_string.size
-Loop, rax
-my_string.index A_Index
-print_rax_as_char
-loopend
-print("")
-print("-----------------------------------------")
-func_arr.copy my_string
-countChars('l')
-print(rax)
-print("-----------------------------------------")
-
-func_arr.copy my_string
-StringTrimLeft(2)
-my_string.copy func_arr
-my_string.size
-Loop, rax
-my_string.index A_Index
-print_rax_as_char
-loopend
-print("")
-
-print("-----------------------------------------")
-func_arr.copy my_string
-StrLower()
-my_string.copy func_arr
-my_string.size
-Loop, rax
-my_string.index A_Index
-print_rax_as_char
-loopend
-print("")
-print("-----------------------------------------")
-func_arr.copy my_string
-SubStr(3, 5)
-my_string.copy func_arr
-my_string.size
-Loop, rax
-my_string.index A_Index
-print_rax_as_char
-loopend
-print("")
-print("-----------------------------------------")
-func_arr.copy my_string2
-Trim()
-my_string2.copy func_arr
-my_string2.size
-Loop, rax
-my_string2.index A_Index
-print_rax_as_char
-loopend
-print("")
-print("-----------------------------------------")
-
-arradd my_string2 Hello man234 how are doing man
-arradd InStr_string_test how are
-
-func_arr.copy my_string2
-InStr_string.copy InStr_string_test
-InStr()
-print(rax)
-print("")
-print("-----------------------------------------")
-
-
-    STR_main_num := 5000
-    INT_To_STR() ; func_arr now contains ['1', '9', '9', '1']
-    ; Print the result to prove it works
-    func_arr.size
-    Loop, rax
-        func_arr.index A_Index
-        print_rax_as_char
-    loopend
-    print("")
-print("-----------------------------------------")
-
-
-
-    arr StrSplit_my_data
-    arr StrSplit_my_delimiter
-    arr StrSplit_out
-
-    arradd StrSplit_my_data if (var1 = 4)
-    arradd StrSplit_my_delimiter  =
-    StrSplit_my_delimiter.add 32
-
-    StrSplit_haystack.copy StrSplit_my_data
-    StrSplit_needle.copy StrSplit_my_delimiter
-    StrSplit(1)
-StrSplit_out.copy StrSplit_out_buffer
-
-    StrSplit_out.size
-    Loop, rax
-        StrSplit_out.index A_Index
-        print_rax_as_char
-    loopend
-    print("")
-print("-----------------------------------------")
-
-
-; ------------------------------------------
-; print a new line at the end just in case
-print("")
+    if (cur_p < tot_len) {
+        chunk_l := tot_len - cur_p
+        sub_chunk := SubStr(i_loc, cur_p, chunk_l)
+        sub_chunk.size
+        sc_len := rax
+        ni := 0
+        togo copy_after
+            if (ni >= sc_len) { goto copy_after_end }
+            sub_chunk.index ni
+            rax_val := rax
+            out_arr.add rax_val
+            ni += 1
+            goto copy_after
+        togo copy_after_end
+    }
+    return out_arr
+}

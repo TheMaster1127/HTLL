@@ -118,7 +118,7 @@ main
 
         ; 4. Default behavior: Echo
         echo_input()
-        
+        draw_all()
     goto shell_loop
 
     togo shell_exit
