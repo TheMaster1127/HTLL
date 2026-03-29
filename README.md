@@ -185,6 +185,13 @@ HTLL programs such as `ring0_test.htll` demonstrate:
 * Simple game and visual demos
 * A clock in UTC+2
 
+HTLL programs such as `random_ring0.htll` demonstrate:
+
+* Direct screen drawing
+* 80×50 text-mode graphics
+* Random number generator in ring 0
+* Terminal allows you to set the minimum and maximum random number
+
 ### Repository
 
 HT-Kernel is hosted here:
